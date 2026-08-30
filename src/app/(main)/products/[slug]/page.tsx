@@ -1,0 +1,216 @@
+"use client";
+
+import { use } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ShoppingCart, Shield, ArrowRight, Plus, Minus, Phone } from "lucide-react";
+import { useCartStore } from "@/store/cart";
+
+interface ProductDetail {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number | null;
+  subcategory?: string;
+  specs?: Record<string, string>;
+  category: { slug: string; name: string };
+  brand: { slug: string; name: string };
+  images: { url: string; alt: string; isPrimary: boolean }[];
+}
+
+export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const addItem = useCartStore((s) => s.addItem);
+  const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/products/${slug}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setProduct(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [slug]);
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("fa-IR").format(price) + " تومان";
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    for (let i = 0; i < quantity; i++) {
+      addItem({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price || 0,
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
+          <p className="text-gray-500 mt-4">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
+          <p className="text-gray-500 text-lg">محصول یافت نشد</p>
+          <Link href="/products" className="text-blue-600 hover:underline mt-4 inline-block">
+            بازگشت به محصولات
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Breadcrumb */}
+      <div className="text-sm text-gray-500 mb-6">
+        <Link href="/" className="hover:text-blue-600">خانه</Link>
+        <span className="mx-2">/</span>
+        <Link href="/products" className="hover:text-blue-600">محصولات</Link>
+        <span className="mx-2">/</span>
+        <Link href={`/products?category=${product.category.slug}`} className="hover:text-blue-600">{product.category.name}</Link>
+        <span className="mx-2">/</span>
+        <span className="text-gray-900">{product.name}</span>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 md:p-8">
+          {/* Image */}
+          <div className="group">
+            <div className="bg-gray-50 rounded-xl h-96 flex items-center justify-center overflow-hidden">
+              {product.images?.[0]?.url ? (
+                <Image
+                  src={product.images[0].url}
+                  alt={product.name}
+                  width={400}
+                  height={400}
+                  className="object-contain max-h-full max-w-full transition-transform duration-300 ease-out group-hover:scale-110"
+                  unoptimized
+                />
+              ) : (
+                <span className="text-gray-400">تصویر محصول</span>
+              )}
+            </div>
+          </div>
+
+          {/* Details */}
+          <div>
+            <div className="text-sm text-gray-500 mb-2">{product.brand.name}</div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.name}</h1>
+
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              {product.price ? (
+                <span className="text-3xl font-bold text-blue-600">
+                  {formatPrice(product.price)}
+                </span>
+              ) : (
+                <div>
+                  <span className="text-lg text-gray-500">قیمت: </span>
+                  <span className="text-lg font-bold text-blue-600">تماس بگیرید</span>
+                </div>
+              )}
+            </div>
+
+            {/* Quantity & Add to Cart */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center border border-gray-300 rounded-lg">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="p-3 hover:bg-gray-100"
+                >
+                  <Minus size={18} />
+                </button>
+                <span className="px-6 py-3 font-medium min-w-[60px] text-center">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="p-3 hover:bg-gray-100"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <ShoppingCart size={20} />
+                افزودن به سبد خرید
+              </button>
+            </div>
+
+            {/* Features */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Shield size={18} className="text-blue-600" />
+                ضمانت اصالت
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Phone size={18} className="text-green-600" />
+                مشاوره رایگان
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-t border-gray-100 p-6 md:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Description */}
+            <div>
+              <h2 className="text-xl font-bold mb-4">توضیحات محصول</h2>
+              <div className="text-gray-600 leading-relaxed whitespace-pre-line">
+                {product.description}
+              </div>
+            </div>
+
+            {/* Specifications */}
+            {product.specs && Object.keys(product.specs).length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold mb-4">مشخصات فنی</h2>
+                <table className="w-full">
+                  <tbody>
+                    {Object.entries(product.specs).map(([key, value]) => (
+                      <tr key={key} className="border-b border-gray-100 last:border-0">
+                        <td className="py-3 text-gray-600 w-1/3">{key}</td>
+                        <td className="py-3 font-medium">{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Contact CTA */}
+      <div className="mt-8 bg-blue-600 text-white rounded-xl p-6 md:p-8 text-center">
+        <h3 className="text-xl font-bold mb-2">سوالی دارید؟ با ما تماس بگیرید</h3>
+        <p className="text-blue-100 mb-4">مشاوران ما آماده پاسخگویی به سوالات فنی شما هستند</p>
+        <a
+          href="tel:+982133532602"
+          className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
+        >
+          تماس تلفنی
+          <ArrowRight size={18} />
+        </a>
+      </div>
+    </div>
+  );
+}
