@@ -1,0 +1,28 @@
+# deploy
+Dockerfile
+docker-compose.yml
+entrypoint.sh
+.env.production.example
+
+# deps / build
+node_modules
+.next
+.git
+.agents
+.claude
+.windsurf
+
+# data backups (only dev.db + public/uploads are shipped deliberately)
+dev_backup_*.db
+*.db-wal
+*.db-shm
+
+# misc
+.DS_Store
+*.tsbuildinfo
+.vercel
+npm-debug.log*
+
+# secrets (never ship .env)
+.env*
+!.env.production.example
