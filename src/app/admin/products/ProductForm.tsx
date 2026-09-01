@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowRight, Upload, X } from "lucide-react";
+import { Save, ArrowRight, Upload, X, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 interface Category {
@@ -29,6 +29,7 @@ interface ProductForm {
   active: boolean;
   featured: boolean;
   specifications: string;
+  sourceUrl: string;
 }
 
 export default function ProductEditPage({ productId }: { productId?: string }) {
@@ -50,6 +51,7 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
     active: true,
     featured: false,
     specifications: "",
+    sourceUrl: "",
   });
   const [images, setImages] = useState<{ id?: string; url: string; alt: string; isPrimary: boolean }[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -79,6 +81,7 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
             active: product.active ?? true,
             featured: product.featured ?? false,
             specifications: product.specifications || "",
+            sourceUrl: product.sourceUrl || "",
           });
           if (product.images) {
             setImages(product.images);
@@ -179,6 +182,17 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
+          {form.sourceUrl && (
+            <a
+              href={form.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"
+            >
+              <ExternalLink size={14} />
+              مشاهده در سایت cncparts.ir
+            </a>
+          )}
         </div>
 
         <div>

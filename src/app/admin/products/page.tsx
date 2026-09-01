@@ -11,6 +11,7 @@ import {
   Package,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 
 const toPersianNumber = (n: number) => n.toLocaleString("fa-IR");
@@ -23,6 +24,7 @@ interface Product {
   stock: number;
   active: boolean;
   featured: boolean;
+  sourceUrl?: string;
   category: { name: string } | null;
   brand: { name: string } | null;
   images: { url: string }[];
@@ -223,6 +225,17 @@ export default function AdminProductsPage() {
                         >
                           <Eye size={15} />
                         </Link>
+                        {product.sourceUrl && (
+                          <Link
+                            href={product.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="مشاهده در cncparts.ir"
+                            className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-400"
+                          >
+                            <ExternalLink size={15} />
+                          </Link>
+                        )}
                         <button
                           onClick={() => setDeleteId(product.id)}
                           className="p-1.5 hover:bg-red-50 rounded-lg text-red-600"

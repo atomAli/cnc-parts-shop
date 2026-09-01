@@ -67,6 +67,7 @@ model Product {
   discountPrice   Float?
   stock           Int            @default(0)
   sku             String?
+  sourceUrl       String?
   featured        Boolean        @default(false)
   active          Boolean        @default(true)
   categoryId      String
