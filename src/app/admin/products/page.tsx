@@ -187,7 +187,14 @@ export default function AdminProductsPage() {
                         </div>
                         <div>
                           <div className="font-medium text-sm">{product.name}</div>
-                          <div className="text-xs text-gray-500">{product.brand?.name || "-"}</div>
+                          <div className="text-xs text-gray-500 flex items-center gap-1">
+                            <span>{product.brand?.name || "-"}</span>
+                            {!product.sourceUrl && (
+                              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px] font-medium">
+                                بدون لینک cncparts
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>

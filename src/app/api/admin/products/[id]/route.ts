@@ -46,6 +46,7 @@ export async function PUT(
       specifications: body.specifications ? JSON.stringify(body.specifications) : undefined,
       active: body.active,
       featured: body.featured,
+      sourceUrl: body.sourceUrl || null,
     },
   });
 

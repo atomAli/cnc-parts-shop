@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       specifications: body.specifications ? JSON.stringify(body.specifications) : null,
       active: body.active ?? true,
       featured: body.featured ?? false,
+      sourceUrl: body.sourceUrl || null,
     },
   });
 

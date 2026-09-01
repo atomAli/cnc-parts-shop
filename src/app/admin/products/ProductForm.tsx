@@ -182,17 +182,34 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
-          {form.sourceUrl && (
-            <a
-              href={form.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"
-            >
-              <ExternalLink size={14} />
-              مشاهده در سایت cncparts.ir
-            </a>
-          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">لینک سایت cncparts.ir</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              dir="ltr"
+              value={form.sourceUrl}
+              onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })}
+              placeholder="https://shop.cncparts.ir/categories/..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-left font-mono text-sm"
+            />
+            {form.sourceUrl && (
+              <a
+                href={form.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="مشاهده در سایت cncparts.ir"
+                className="shrink-0 p-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50"
+              >
+                <ExternalLink size={18} />
+              </a>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            لینک محصول متناظر در سایت مرجع cncparts.ir را وارد کنید تا قیمت و مشخصات از همان صفحه رهگیری شود.
+          </p>
         </div>
 
         <div>
