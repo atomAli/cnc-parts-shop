@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local data / uploaded images (never commit)
+dev.db
+dev_backup_pre_dedup.db
+/public/uploads/
+
 # vercel
 .vercel
 
