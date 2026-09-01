@@ -73,8 +73,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=services" className="hover:text-white transition-colors">
-                  خدمات
+                <Link href="/repairs" className="hover:text-white transition-colors">
+                  خدمات تعمیرات
                 </Link>
               </li>
             </ul>

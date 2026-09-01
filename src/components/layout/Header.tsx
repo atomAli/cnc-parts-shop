@@ -32,10 +32,7 @@ const mechanicalSubs = [
 ];
 
 const services = [
-  { name: "تعمیرات", slug: "repairs" },
-  { name: "قالب‌سازی", slug: "plastic-injection" },
-  { name: "اجرای پروژه", slug: "project-implementation" },
-  { name: "فروش دستگاه", slug: "device-sale" },
+  { name: "تعمیرات", slug: "repairs", href: "/repairs" },
 ];
 
 export default function Header() {
@@ -265,7 +262,7 @@ export default function Header() {
               {/* Services + Quick Links */}
               <div>
                 <Link
-                  href="/products?category=services"
+                  href="/repairs"
                   className="flex items-center gap-2 mb-4 text-purple-600 hover:text-purple-700 font-bold"
                 >
                   <div className="bg-purple-100 p-2 rounded-lg">
@@ -277,7 +274,7 @@ export default function Header() {
                   {services.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=services&sub=${sub.slug}`}
+                        href={sub.href}
                         className="block px-3 py-1.5 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
