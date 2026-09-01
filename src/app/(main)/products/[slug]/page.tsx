@@ -4,7 +4,8 @@ import { use } from "react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Shield, ArrowRight, Plus, Minus, Phone } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { ShoppingCart, Shield, ArrowRight, Plus, Minus, Phone, ExternalLink, Pencil, Lock } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 
 interface ProductDetail {
@@ -13,6 +14,7 @@ interface ProductDetail {
   slug: string;
   description: string;
   price: number | null;
+  sourceUrl?: string;
   subcategory?: string;
   specs?: Record<string, string>;
   category: { slug: string; name: string };
@@ -23,6 +25,8 @@ interface ProductDetail {
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const addItem = useCartStore((s) => s.addItem);
+  const { data: session, status } = useSession();
+  const isAdmin = !!session && (session.user as any)?.role === "ADMIN";
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +86,39 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Admin actions */}
+      {isAdmin && product.id && (
+        <div className="flex flex-wrap items-center gap-3 mb-6 p-3 bg-gray-900 rounded-xl text-sm">
+          <span className="text-gray-400 flex items-center gap-1.5">
+            <Lock size={14} />
+            پنل ادمین:
+          </span>
+          <Link
+            href={`/admin/products/${product.id}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            <Pencil size={14} />
+            ویرایش محصول
+          </Link>
+          {(product.sourceUrl || "").trim() ? (
+            <a
+              href={product.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+            >
+              <ExternalLink size={14} />
+              مشاهده در سایت cncparts
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 text-gray-400 rounded-lg cursor-not-allowed" title="این محصول در سایت cncparts.ir پیوند ندارد">
+              <ExternalLink size={14} />
+              بدون لینک cncparts
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-blue-600">خانه</Link>
