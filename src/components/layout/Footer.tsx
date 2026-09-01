@@ -22,7 +22,7 @@ export default function Footer() {
                 CNC
               </div>
               <div>
-                <div className="font-bold text-white">قطعات CNC</div>
+                <div className="font-bold text-white">مارکت CNC</div>
                 <div className="text-xs text-gray-400">فروشگاه تخصصی</div>
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={16} />
-                <span>info@cncparts.ir</span>
+                <span>info@cncmarket.ir</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={16} className="mt-1 shrink-0" />
@@ -104,7 +104,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
-          © {year} فروشگاه قطعات CNC. تمامی حقوق محفوظ است.
+          © {year} فروشگاه مارکت CNC. تمامی حقوق محفوظ است.
         </div>
       </div>
     </footer>

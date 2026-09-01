@@ -1,45 +1,53 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET() {
-  try {
-    const brands = await prisma.brand.findMany({
-      include: {
-        _count: { select: { products: true } },
-      },
-      orderBy: { name: "asc" },
-    });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const category = searchParams.get("category") || "";
+  const sub = searchParams.get("sub") || "";
 
-    return NextResponse.json(brands);
-  } catch (error) {
-    console.error("Error fetching brands:", error);
-    return NextResponse.json(
-      { error: "خطا در دریافت برندها" },
-      { status: 500 }
-    );
+  let categoryId: string | undefined;
+
+  if (sub) {
+    const subCat = await prisma.category.findUnique({ where: { slug: sub } });
+    categoryId = subCat?.id;
+  } else if (category) {
+    const parentCat = await prisma.category.findUnique({ where: { slug: category } });
+    if (parentCat) {
+      const childIds = (await prisma.category.findMany({
+        where: { parentId: parentCat.id },
+        select: { id: true },
+      })).map((c) => c.id);
+      categoryId = parentCat.id;
+      // For parent category, we need brands from all children
+      const brands = await prisma.brand.findMany({
+        where: {
+          products: {
+            some: {
+              categoryId: { in: [parentCat.id, ...childIds] },
+            },
+          },
+        },
+        include: { _count: { select: { products: true } } },
+        orderBy: { name: "asc" },
+      });
+      return NextResponse.json(brands);
+    }
   }
-}
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { name, slug, logo, website } = body;
-
-    const brand = await prisma.brand.create({
-      data: {
-        name,
-        slug,
-        logo,
-        website,
-      },
-    });
-
-    return NextResponse.json(brand, { status: 201 });
-  } catch (error) {
-    console.error("Error creating brand:", error);
-    return NextResponse.json(
-      { error: "خطا در ایجاد برند" },
-      { status: 500 }
-    );
+  if (!categoryId) {
+    return NextResponse.json([]);
   }
+
+  const brands = await prisma.brand.findMany({
+    where: {
+      products: {
+        some: { categoryId },
+      },
+    },
+    include: { _count: { select: { products: true } } },
+    orderBy: { name: "asc" },
+  });
+
+  return NextResponse.json(brands);
 }

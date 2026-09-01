@@ -47,7 +47,7 @@ export default function ContactPage() {
               </a>
 
               <a
-                href="mailto:info@cncparts.ir"
+                href="mailto:info@cncmarket.ir"
                 className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
@@ -55,7 +55,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500">ایمیل</div>
-                  <div className="font-medium">info@cncparts.ir</div>
+                  <div className="font-medium">info@cncmarket.ir</div>
                 </div>
               </a>
 

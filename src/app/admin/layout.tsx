@@ -17,12 +17,14 @@ import {
   Menu,
   X,
   ChevronLeft,
+  BadgeDollarSign,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 const menuItems = [
   { href: "/admin", label: "داشبورد", icon: LayoutDashboard },
   { href: "/admin/products", label: "محصولات", icon: Package },
+  { href: "/admin/prices", label: "مدیریت قیمت", icon: BadgeDollarSign },
   { href: "/admin/categories", label: "دسته‌بندی‌ها", icon: FolderTree },
   { href: "/admin/brands", label: "برندها", icon: Award },
   { href: "/admin/orders", label: "سفارشات", icon: ShoppingCart },

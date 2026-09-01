@@ -1,4 +1,4 @@
-// Static product data scraped from cncparts.ir
+// Static product data scraped from cncmarket.ir
 // This is used as fallback when database is not available
 
 export interface StaticProduct {
@@ -84,8 +84,8 @@ export const brands = [
   { id: "b13", name: "DSG" },
 ];
 
-// Products scraped from cncparts.ir/shop categories
-// Products scraped from cncparts.ir/shop categories
+// Products scraped from cncmarket.ir/shop categories
+// Products scraped from cncmarket.ir/shop categories
 const _products_0: StaticProduct[] = [
   {
     id: "sr001",
@@ -96,7 +96,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "slip-ring",
     price: null,
     description: "اسلیپ رینگ (روتاری کانکتور) Asiantool مدل A2S",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a2s.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a2s.jpg",
     specs: { "برند": "Asiantool", "مدل": "A2S" },
   },
   {
@@ -108,7 +108,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "slip-ring",
     price: null,
     description: "اسلیپ رینگ (روتاری کانکتور) Asiantool مدل A2H",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a2h.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a2h.jpg",
     specs: { "برند": "Asiantool", "مدل": "A2H" },
   },
   {
@@ -120,7 +120,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "slip-ring",
     price: null,
     description: "اسلیپ رینگ (روتاری کانکتور) Asiantool مدل A3H",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a3h.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a3h.jpg",
     specs: { "برند": "Asiantool", "مدل": "A3H" },
   },
   {
@@ -132,7 +132,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "slip-ring",
     price: null,
     description: "اسلیپ رینگ (روتاری کانکتور) Asiantool مدل A4H",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a4h.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a4h.jpg",
     specs: { "برند": "Asiantool", "مدل": "A4H" },
   },
   {
@@ -144,7 +144,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "slip-ring",
     price: null,
     description: "اسلیپ رینگ (روتاری کانکتور) Asiantool مدل A6H",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a6h.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/slip-ring/multi/a6h.jpg",
     specs: { "برند": "Asiantool", "مدل": "A6H" },
   },
   {
@@ -156,7 +156,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "controller",
     price: null,
     description: "کنترلر dsp سه محور RichAuto مدل B11",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/dsp.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/dsp.jpeg",
     specs: { "برند": "RichAuto", "مدل": "B11", "تعداد محور": "3" },
   },
   {
@@ -168,7 +168,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "controller",
     price: null,
     description: "کنترلر dsp چهار محور RichAuto مدل B18",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/dsp_604367636.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/dsp_604367636.jpeg",
     specs: { "برند": "RichAuto", "مدل": "B18", "تعداد محور": "4" },
   },
   {
@@ -180,7 +180,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "controller",
     price: null,
     description: "کابل کنترلر 2.5 متری RichAuto",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/cable2_5.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/cable2_5.jpeg",
     specs: { "برند": "RichAuto", "طول": "2.5 متر" },
   },
   {
@@ -192,7 +192,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "controller",
     price: null,
     description: "کابل کنترلر 5 متری RichAuto",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/cable5.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/cable5.jpeg",
     specs: { "برند": "RichAuto", "طول": "5 متر" },
   },
   {
@@ -204,7 +204,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 42HS04",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/42hs04.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/42hs04.jpeg",
     specs: { "برند": "HQM", "مدل": "42HS04", "سایز": "42mm" },
   },
   {
@@ -216,7 +216,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 57HS09",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/57hs09.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/57hs09.jpeg",
     specs: { "برند": "HQM", "مدل": "57HS09", "سایز": "57mm" },
   },
   {
@@ -228,7 +228,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 57HS13",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/57hs13b.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/57hs13b.jpg",
     specs: { "برند": "HQM", "مدل": "57HS13", "سایز": "57mm" },
   },
   {
@@ -240,7 +240,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 57HS22",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/57hs22.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/57hs22.jpeg",
     specs: { "برند": "HQM", "مدل": "57HS22", "سایز": "57mm" },
   },
   {
@@ -252,7 +252,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 86HS35",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs35_b.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs35_b.jpg",
     specs: { "برند": "HQM", "مدل": "86HS35", "سایز": "86mm" },
   },
   {
@@ -264,7 +264,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 86HS45",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs45.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs45.jpeg",
     specs: { "برند": "HQM", "مدل": "86HS45", "سایز": "86mm" },
   },
   {
@@ -276,7 +276,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 86HS85",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs85.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs85.jpeg",
     specs: { "برند": "HQM", "مدل": "86HS85", "سایز": "86mm" },
   },
   {
@@ -288,7 +288,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ موتور HQM مدل 86HS120",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs120.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/86hs120.jpeg",
     specs: { "برند": "HQM", "مدل": "86HS120", "سایز": "86mm" },
   },
   {
@@ -300,7 +300,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ درایو HQM مدل DM542",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/dm542.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/dm542.jpeg",
     specs: { "برند": "HQM", "مدل": "DM542" },
   },
   {
@@ -312,7 +312,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ درایو HQM مدل DM860",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/dm860.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/dm860.jpeg",
     specs: { "برند": "HQM", "مدل": "DM860" },
   },
   {
@@ -324,7 +324,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "step-motor",
     price: null,
     description: "استپ درایو HQM مدل DM556",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/dm556.jpeg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/dm556.jpeg",
     specs: { "برند": "HQM", "مدل": "DM556" },
   },
   {
@@ -540,7 +540,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "vacuum-pump",
     price: null,
     description: "پمپ وکیوم روغنی 100 بار مدل فرس",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/whatsapp_image_2020-08-23_at_11_09_13.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/whatsapp_image_2020-08-23_at_11_09_13.jpg",
     specs: { "برند": "فرس", "فشار": "100 بار" },
   },
   {
@@ -552,7 +552,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "vacuum-pump",
     price: null,
     description: "پمپ وکیوم روغنی 40 بار مدل فرس",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/whatsapp_image_2020-08-23_at_11_09_13_1414021496.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/whatsapp_image_2020-08-23_at_11_09_13_1414021496.jpg",
     specs: { "برند": "فرس", "فشار": "40 بار" },
   },
   {
@@ -564,7 +564,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "spindle-motor",
     price: null,
     description: "اسپیندل موتور هرتز مدل 750w-ER16-24000RPM",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
     specs: { "برند": "هرتز", "توان": "750w", "سوزن": "ER16", "سرعت": "24000RPM" },
   },
   {
@@ -576,7 +576,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "spindle-motor",
     price: null,
     description: "اسپیندل موتور هرتز مدل 1.5Kw-ER25-18000RPM",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
     specs: { "برند": "هرتز", "توان": "1.5Kw", "سوزن": "ER25", "سرعت": "18000RPM" },
   },
   {
@@ -588,7 +588,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "spindle-motor",
     price: null,
     description: "اسپیندل موتور هرتز مدل 2.2Kw-ER25-18000RPM",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
     specs: { "برند": "هرتز", "توان": "2.2Kw", "سوزن": "ER25", "سرعت": "18000RPM" },
   },
   {
@@ -600,7 +600,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "spindle-motor",
     price: null,
     description: "اسپیندل موتور هرتز مدل 4Kw-ER25-18000RPM",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
     specs: { "برند": "هرتز", "توان": "4Kw", "سوزن": "ER25", "سرعت": "18000RPM" },
   },
   {
@@ -612,7 +612,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "spindle-motor",
     price: null,
     description: "اسپیندل موتور هرتز مدل 5.5Kw-ER32-18000RPM",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
     specs: { "برند": "هرتز", "توان": "5.5Kw", "سوزن": "ER32", "سرعت": "18000RPM" },
   },
   {
@@ -624,7 +624,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "spindle-motor",
     price: null,
     description: "اسپیندل موتور هرتز مدل 7Kw-ER32-18000RPM",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/barcode.png",
     specs: { "برند": "هرتز", "توان": "7Kw", "سوزن": "ER32", "سرعت": "18000RPM" },
   },
   {
@@ -636,7 +636,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "nut-support",
     price: null,
     description: "ساپورت مهره BSG سایز 16",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support.jpg",
     specs: { "برند": "BSG", "سایز": "16" },
   },
   {
@@ -648,7 +648,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "nut-support",
     price: null,
     description: "ساپورت مهره BSG سایز 20",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support_1992454996.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support_1992454996.jpg",
     specs: { "برند": "BSG", "سایز": "20" },
   },
   {
@@ -660,7 +660,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "nut-support",
     price: null,
     description: "ساپورت مهره BSG سایز 25",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support_751343862.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support_751343862.jpg",
     specs: { "برند": "BSG", "سایز": "25" },
   },
   {
@@ -672,7 +672,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "nut-support",
     price: null,
     description: "ساپورت مهره BSG سایز 32",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support_181732884.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/nut_support_181732884.jpg",
     specs: { "برند": "BSG", "سایز": "32" },
   },
   {
@@ -684,7 +684,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SRJ40",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling.jpg",
     specs: { "مدل": "SRJ40" },
   },
   {
@@ -696,7 +696,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SRJ55",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1913074670.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1913074670.jpg",
     specs: { "مدل": "SRJ55" },
   },
   {
@@ -708,7 +708,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SRJ65",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1635042563.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1635042563.jpg",
     specs: { "مدل": "SRJ65" },
   },
   {
@@ -720,7 +720,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SRJ80",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1620883342.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1620883342.jpg",
     specs: { "مدل": "SRJ80" },
   },
   {
@@ -732,7 +732,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SDW54-60",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_934983263.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_934983263.jpg",
     specs: { "مدل": "SDW54-60" },
   },
   {
@@ -744,7 +744,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SDW54-120",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_501344934.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_501344934.jpg",
     specs: { "مدل": "SDW54-120" },
   },
   {
@@ -756,7 +756,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SDW54-200",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_970489409.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_970489409.jpg",
     specs: { "مدل": "SDW54-200" },
   },
   {
@@ -768,7 +768,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "coupling",
     price: null,
     description: "کوپلینگ مدل SDW54-220",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1839309199.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/coupling_1839309199.jpg",
     specs: { "مدل": "SDW54-220" },
   },
   {
@@ -780,7 +780,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور مدل دلتا 400 وات ساده",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_480393780.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_480393780.jpg",
     specs: { "برند": "Delta", "توان": "400W", "نوع": "ساده" },
   },
   {
@@ -792,7 +792,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور مدل دلتا 400 وات ترمزدار",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor2_1728799595.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor2_1728799595.jpg",
     specs: { "برند": "Delta", "توان": "400W", "نوع": "ترمزدار" },
   },
   {
@@ -804,7 +804,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور مدل دلتا 750 وات ساده",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1.jpg",
     specs: { "برند": "Delta", "توان": "750W", "نوع": "ساده" },
   },
   {
@@ -816,7 +816,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور مدل دلتا 750 وات ترمزدار",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor2.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor2.jpg",
     specs: { "برند": "Delta", "توان": "750W", "نوع": "ترمزدار" },
   },
   {
@@ -828,7 +828,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور 1 کیلو وات 2000 دور مدل دلتا",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_1371578063.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_1371578063.jpg",
     specs: { "برند": "Delta", "توان": "1Kw", "سرعت": "2000rpm" },
   },
   {
@@ -840,7 +840,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور 2 کیلو وات 2000 دور مدل دلتا",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_1850341570.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_1850341570.jpg",
     specs: { "برند": "Delta", "توان": "2Kw", "سرعت": "2000rpm" },
   },
   {
@@ -852,7 +852,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور آلفا 400 وات مدل CMA-C2060414",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_938189831.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_938189831.jpg",
     specs: { "برند": "Alpha", "توان": "400W", "مدل": "CMA-C2060414" },
   },
   {
@@ -864,7 +864,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور آلفا 750 وات مدل CMA-C2080719",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_314380489.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_314380489.jpg",
     specs: { "برند": "Alpha", "توان": "750W", "مدل": "CMA-C2080719" },
   },
   {
@@ -876,7 +876,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور آلفا 1 کیلووات مدل CMA-C2101019",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_1900466060.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_1900466060.jpg",
     specs: { "برند": "Alpha", "توان": "1Kw", "مدل": "CMA-C2101019" },
   },
   {
@@ -888,7 +888,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "servo-motor",
     price: null,
     description: "سروو موتور آلفا 1.5 کیلووات مدل CMA-E2131524",
-    imageUrl: "https://cncparts.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_286730746.jpg",
+    imageUrl: "https://cncmarket.ir/images/com_hikashop/upload/thumbnails/300x300f/servomotor1_286730746.jpg",
     specs: { "برند": "Alpha", "توان": "1.5Kw", "مدل": "CMA-E2131524" },
   },
   {
@@ -2511,7 +2511,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 9030000,
     description: "پیچ بال اسکرو 12 گام 2 ballscrew اچ کیو ام HQM مدل SFK-12-02 سه متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFK-12-02", "برند": "HQM" },
   },
   {
@@ -2523,7 +2523,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 12416300,
     description: "پیچ بال اسکرو 16 گام 5 ballscrew هایوین HIWIN مدل FSI-R-16-5-L300",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-16-5", "برند": "HIWIN" },
   },
   {
@@ -2535,7 +2535,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 9030000,
     description: "مهره بال اسکرو 12 گام 2 ballscrew اچ کیو ام HQM مدل SFK-12-02-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFK-12-02-T4", "برند": "HQM" },
   },
   {
@@ -2547,7 +2547,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 1236900,
     description: "ساپورت مهره 16 بالسکرو nut support DSG سایز 16",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
     specs: { "مدل": "DSG-16", "برند": "DSG" },
   },
   {
@@ -2559,7 +2559,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 10365600,
     description: "مهره بال اسکرو 16 گام 5 ballscrew هایوین HIWIN مدل FSI16-05-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI16-05-T3", "برند": "HIWIN" },
   },
   {
@@ -2571,7 +2571,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 1285200,
     description: "ساپورت مهره 20 بالسکرو nut support DSG سایز 20",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
     specs: { "مدل": "DSG-20", "برند": "DSG" },
   },
   {
@@ -2583,7 +2583,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 7723800,
     description: "مهره بال اسکرو 14 گام 2 ballscrew اچ کیو ام HQM مدل SFK-14-02-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFK-14-02-T4", "برند": "HQM" },
   },
   {
@@ -2595,7 +2595,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 9655800,
     description: "پیچ بال اسکرو 14 گام 2 ballscrew اچ کیو ام HQM مدل SFK-14-02",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFK-14-02", "برند": "HQM" },
   },
   {
@@ -2607,7 +2607,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 12417300,
     description: "مهره بال اسکرو 16 گام 5 ballscrew هایوین HIWIN مدل FSI16-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI16-05-T4", "برند": "HIWIN" },
   },
   {
@@ -2619,7 +2619,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 11778900,
     description: "پیچ بال اسکرو 20 گام 5 ballscrew هایوین HIWIN مدل FSI-R-20-5-L300",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-20-5", "برند": "HIWIN" },
   },
   {
@@ -2631,7 +2631,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 16020900,
     description: "پیچ بال اسکرو 20 گام 10 ballscrew هایوین HIWIN مدل FSI-R-20-10-L300",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-20-10", "برند": "HIWIN" },
   },
   {
@@ -2643,7 +2643,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 1245300,
     description: "ساپورت مهره 25 بالسکرو nut support DSG سایز 25",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
     specs: { "مدل": "DSG-25", "برند": "DSG" },
   },
   {
@@ -2655,7 +2655,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 11778900,
     description: "مهره بال اسکرو 20 گام 5 ballscrew هایوین HIWIN مدل FSI20-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI20-05-T4", "برند": "HIWIN" },
   },
   {
@@ -2667,7 +2667,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 2427600,
     description: "پیچ بال اسکرو 16 گام 5 ballscrew اچ کیو ام HQM مدل SFU-16-05 چهار متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-16-05", "برند": "HQM" },
   },
   {
@@ -2679,7 +2679,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 2427600,
     description: "مهره بال اسکرو 16 گام 5 ballscrew اچ کیو ام HQM مدل SFU-16-05-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-16-05-T3", "برند": "HQM" },
   },
   {
@@ -2691,7 +2691,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 2755200,
     description: "مهره بال اسکرو 16 گام 5 ballscrew اچ کیو ام HQM مدل SFU-16-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-16-05-T4", "برند": "HQM" },
   },
   {
@@ -2703,7 +2703,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 16 گام 5 ballscrew اچ کیو ام HQM مدل SFU-16-05 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-16-05", "برند": "HQM" },
   },
   {
@@ -2715,7 +2715,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 1596000,
     description: "پیچ بال اسکرو 20 گام 20 ballscrew هایوین HIWIN مدل FSI-R-20-20-L300",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-20-20", "برند": "HIWIN" },
   },
   {
@@ -2727,7 +2727,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 16020900,
     description: "ساپورت مهره 32 بالسکرو nut support DSG سایز 32",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
     specs: { "مدل": "DSG-32", "برند": "DSG" },
   },
   {
@@ -2739,7 +2739,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 3387300,
     description: "مهره بال اسکرو 20 گام 10 ballscrew هایوین HIWIN مدل FSI20-10-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI20-10-T3", "برند": "HIWIN" },
   },
   {
@@ -2751,7 +2751,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 23723700,
     description: "ساپورت مهره 40 بالسکرو nut support DSG سایز 40",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
     specs: { "مدل": "DSG-40", "برند": "DSG" },
   },
   {
@@ -2763,7 +2763,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 4920300,
     description: "مهره بال اسکرو 20 گام 20 ballscrew هایوین HIWIN مدل FSI20-20-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI20-20-T4", "برند": "HIWIN" },
   },
   {
@@ -2775,7 +2775,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 13194300,
     description: "مهره بال اسکرو 16 گام 10 ballscrew اچ کیو ام HQM مدل SFU-16-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-16-10-T4", "برند": "HQM" },
   },
   {
@@ -2787,7 +2787,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 4920300,
     description: "پیچ بال اسکرو 25 گام 5 ballscrew هایوین HIWIN مدل FSI-R-25-5-L450",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-25-5", "برند": "HIWIN" },
   },
   {
@@ -2799,7 +2799,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 9450000,
     description: "پیچ بال اسکرو 16 گام 10 ballscrew اچ کیو ام HQM مدل SFU-16-10 چهار متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-16-10", "برند": "HQM" },
   },
   {
@@ -2811,7 +2811,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 5310900,
     description: "ساپورت مهره 50 بالسکرو nut support DSG سایز 50",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/NutSupport/BSG/nut_support_bsg.jpg",
     specs: { "مدل": "DSG-50", "برند": "DSG" },
   },
   {
@@ -2823,7 +2823,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 5793900,
     description: "مهره بال اسکرو 20 گام 4 ballscrew اچ کیو ام HQM مدل SFU-20-04-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-20-04-T4", "برند": "HQM" },
   },
   {
@@ -2835,7 +2835,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 17717700,
     description: "پیچ بال اسکرو 20 گام 4 ballscrew اچ کیو ام HQM مدل SFU-20-04 سه متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-20-04", "برند": "HQM" },
   },
   {
@@ -2847,7 +2847,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 13194300,
     description: "پیچ بال اسکرو 25 گام 10 ballscrew هایوین HIWIN مدل FSI-R-25-10-L450",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-25-10", "برند": "HIWIN" },
   },
   {
@@ -2859,7 +2859,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 3045000,
     description: "مهره بال اسکرو 25 گام 5 ballscrew هایوین HIWIN مدل FSI25-05-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI25-05-T3", "برند": "HIWIN" },
   },
   {
@@ -2871,7 +2871,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 28274400,
     description: "مهره بال اسکرو 20 گام 5 ballscrew اچ کیو ام HQM مدل SFU-20-05-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-20-05-T3", "برند": "HQM" },
   },
   {
@@ -2883,7 +2883,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 3017700,
     description: "پیچ بال اسکرو 25 گام 25 ballscrew هایوین HIWIN مدل FSI-R-25-25-L450",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-25-25", "برند": "HIWIN" },
   },
   {
@@ -2895,7 +2895,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 13194300,
     description: "پیچ بال اسکرو 20 گام 5 ballscrew اچ کیو ام HQM مدل SFU-20-05 چهار متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-20-05", "برند": "HQM" },
   },
   {
@@ -2907,7 +2907,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 17448900,
     description: "مهره بال اسکرو 25 گام 5 ballscrew هایوین HIWIN مدل FSI25-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI25-05-T4", "برند": "HIWIN" },
   },
   {
@@ -2919,7 +2919,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 17448900,
     description: "مهره بال اسکرو 25 گام 10 ballscrew هایوین HIWIN مدل FSI25-10-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI25-10-T3", "برند": "HIWIN" },
   },
   {
@@ -2931,7 +2931,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 19794600,
     description: "مهره بال اسکرو 20 گام 5 ballscrew اچ کیو ام HQM مدل SFU-20-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-20-05-T4", "برند": "HQM" },
   },
   {
@@ -2943,7 +2943,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 19794600,
     description: "پیچ بال اسکرو 32 گام 5 ballscrew هایوین HIWIN مدل FSI-R-32-5-L450",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-32-5", "برند": "HIWIN" },
   },
   {
@@ -2955,7 +2955,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 20 گام 5 ballscrew اچ کیو ام HQM مدل SFU-20-05 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-20-05", "برند": "HQM" },
   },
   {
@@ -2967,7 +2967,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 28274400,
     description: "مهره بال اسکرو 25 گام 25 ballscrew هایوین HIWIN مدل FSI25-25-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI25-25-T4", "برند": "HIWIN" },
   },
   {
@@ -2979,7 +2979,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 4477200,
     description: "پیچ بال اسکرو 20 گام 10 ballscrew اچ کیو ام HQM مدل SFU-20-10 چهار متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-20-10", "برند": "HQM" },
   },
   {
@@ -2991,7 +2991,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 4477200,
     description: "مهره بال اسکرو 20 گام 10 ballscrew اچ کیو ام HQM مدل SFU-20-10-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-20-10-T3", "برند": "HQM" },
   },
   {
@@ -3003,7 +3003,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 25447800,
     description: "پیچ بال اسکرو 32 گام 10 ballscrew هایوین HIWIN مدل FSI-R-32-10-L450",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-32-10", "برند": "HIWIN" },
   },
   {
@@ -3015,7 +3015,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 35800800,
     description: "پیچ بال اسکرو 32 گام 32 ballscrew هایوین HIWIN مدل FSI-R-32-32-L450",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-32-32", "برند": "HIWIN" },
   },
   {
@@ -3027,7 +3027,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 5050500,
     description: "پیچ بال اسکرو 20 گام 20 ballscrew اچ کیو ام HQM مدل SFE-20-20 چهار متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFE-20-20", "برند": "HQM" },
   },
   {
@@ -3039,7 +3039,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 19794600,
     description: "مهره بال اسکرو 32 گام 5 ballscrew هایوین HIWIN مدل FSI32-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI32-05-T4", "برند": "HIWIN" },
   },
   {
@@ -3051,7 +3051,7 @@ const _products_0: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 4477200,
     description: "مهره بال اسکرو 20 گام 10 ballscrew اچ کیو ام HQM مدل SFU-20-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-20-10-T4", "برند": "HQM" },
   },
 ];
@@ -3066,7 +3066,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 24410400,
     description: "مهره بال اسکرو 32 گام 10 ballscrew هایوین HIWIN مدل FSI32-10-T3",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI32-10-T3", "برند": "HIWIN" },
   },
   {
@@ -3078,7 +3078,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 3937500,
     description: "پیچ بال اسکرو 25 گام 5 ballscrew اچ کیو ام HQM مدل SFU-25-05 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-25-05", "برند": "HQM" },
   },
   {
@@ -3090,7 +3090,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 27066900,
     description: "پیچ بال اسکرو 40 گام 5 ballscrew هایوین HIWIN مدل FSI-R-40-5-L560",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-40-5", "برند": "HIWIN" },
   },
   {
@@ -3102,7 +3102,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 32986800,
     description: "پیچ بال اسکرو 40 گام 10 ballscrew هایوین HIWIN مدل FSI-R-40-10-L560",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-40-10", "برند": "HIWIN" },
   },
   {
@@ -3114,7 +3114,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 25 گام 5 ballscrew اچ کیو ام HQM مدل SFU-25-05 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-25-05", "برند": "HQM" },
   },
   {
@@ -3126,7 +3126,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 25903500,
     description: "مهره بال اسکرو 32 گام 10 ballscrew هایوین HIWIN مدل FSI32-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI32-10-T4", "برند": "HIWIN" },
   },
   {
@@ -3138,7 +3138,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 7539000,
     description: "مهره بال اسکرو 20 گام 20 ballscrew اچ کیو ام HQM مدل SFS-20-20-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFS-20-20-T4", "برند": "HQM" },
   },
   {
@@ -3150,7 +3150,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 4067700,
     description: "پیچ بال اسکرو 25 گام 10 ballscrew اچ کیو ام HQM مدل SFU-25-10 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-25-10", "برند": "HQM" },
   },
   {
@@ -3162,7 +3162,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 42432600,
     description: "پیچ بال اسکرو 40 گام 20 ballscrew هایوین HIWIN مدل FSI-R-40-20-L560",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-40-20", "برند": "HIWIN" },
   },
   {
@@ -3174,7 +3174,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 3937500,
     description: "مهره بال اسکرو 25 گام 5 ballscrew اچ کیو ام HQM مدل SFU-25-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-25-05-T4", "برند": "HQM" },
   },
   {
@@ -3186,7 +3186,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 35800800,
     description: "مهره بالسکرو 32 گام 32 ballscrew هایوین HIWIN مدل FSI32-32-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI32-32-T4", "برند": "HIWIN" },
   },
   {
@@ -3198,7 +3198,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 26063100,
     description: "مهره بال اسکرو 40 گام 5 ballscrew هایوین HIWIN مدل FSI40-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI40-05-T4", "برند": "HIWIN" },
   },
   {
@@ -3210,7 +3210,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 63151200,
     description: "پیچ بال اسکرو 50 گام 10 ballscrew هایوین HIWIN مدل FSI-R-50-10-L560",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-50-10", "برند": "HIWIN" },
   },
   {
@@ -3222,7 +3222,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 8530200,
     description: "مهره بال اسکرو 25 گام 5 ballscrew اچ کیو ام HQM مدل SFU-25-05-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-25-05-T6", "برند": "HQM" },
   },
   {
@@ -3234,7 +3234,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 25 گام 10 ballscrew اچ کیو ام HQM مدل SFU-25-10 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-25-10", "برند": "HQM" },
   },
   {
@@ -3246,7 +3246,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 113106000,
     description: "پیچ بال اسکرو 63 گام 10 ballscrew هایوین HIWIN مدل FSI-R-63-10-L560",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "FSI-R-63-10", "برند": "HIWIN" },
   },
   {
@@ -3258,7 +3258,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 29958600,
     description: "مهره بال اسکرو 40 گام 10 ballscrew هایوین HIWIN مدل FSI40-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI40-10-T4", "برند": "HIWIN" },
   },
   {
@@ -3270,7 +3270,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 6493200,
     description: "پیچ بال اسکرو 25 گام 25 ballscrew اچ کیو ام HQM مدل SFE-25-25 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFE-25-25", "برند": "HQM" },
   },
   {
@@ -3282,7 +3282,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 4659900,
     description: "مهره بال اسکرو 25 گام 10 ballscrew اچ کیو ام HQM مدل SFU-25-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-25-10-T4", "برند": "HQM" },
   },
   {
@@ -3294,7 +3294,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 42411600,
     description: "مهره بال اسکرو 40 گام 20 ballscrew هایوین HIWIN مدل FSI40-20-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI40-20-T4", "برند": "HIWIN" },
   },
   {
@@ -3306,7 +3306,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 6562500,
     description: "پیچ بال اسکرو 32 گام 5 ballscrew اچ کیو ام HQM مدل SFU-32-05 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-32-05", "برند": "HQM" },
   },
   {
@@ -3318,7 +3318,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 9678900,
     description: "مهره بال اسکرو 25 گام 10 ballscrew اچ کیو ام HQM مدل SFU-25-10-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-25-10-T6", "برند": "HQM" },
   },
   {
@@ -3330,7 +3330,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 59383800,
     description: "مهره بال اسکرو 50 گام 10 ballscrew هایوین HIWIN مدل FSI50-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI50-10-T4", "برند": "HIWIN" },
   },
   {
@@ -3342,7 +3342,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 32 گام 5 ballscrew اچ کیو ام HQM مدل SFU-32-05 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-32-05", "برند": "HQM" },
   },
   {
@@ -3354,7 +3354,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 111222300,
     description: "مهره بالسکرو 63 گام 10 ballscrew هایوین HIWIN مدل FSI63-10-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hiwin/ballscrew-hiwin-fsi.jpg",
     specs: { "مدل": "FSI63-10-T6", "برند": "HIWIN" },
   },
   {
@@ -3366,7 +3366,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 8868300,
     description: "مهره بال اسکرو 25 گام 25 ballscrew اچ کیو ام HQM مدل SFS-25-25-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFS-25-25-T4", "برند": "HQM" },
   },
   {
@@ -3378,7 +3378,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 7217700,
     description: "پیچ بال اسکرو 32 گام 10 ballscrew اچ کیو ام HQM مدل SFU-32-10 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-32-10", "برند": "HQM" },
   },
   {
@@ -3390,7 +3390,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 32 گام 10 ballscrew اچ کیو ام HQM مدل SFU-32-10 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-32-10", "برند": "HQM" },
   },
   {
@@ -3402,7 +3402,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 6234900,
     description: "مهره بال اسکرو 32 گام 5 ballscrew اچ کیو ام HQM مدل SFU-32-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-32-05-T4", "برند": "HQM" },
   },
   {
@@ -3414,7 +3414,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 10592400,
     description: "پیچ بال اسکرو 32 گام 20 ballscrew اچ کیو ام HQM مدل SFS-32-20 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFS-32-20", "برند": "HQM" },
   },
   {
@@ -3426,7 +3426,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 11543700,
     description: "پیچ بال اسکرو 32 گام 32 ballscrew اچ کیو ام HQM مدل SFE-32-32 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFE-32-32", "برند": "HQM" },
   },
   {
@@ -3438,7 +3438,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 12390000,
     description: "مهره بال اسکرو 32 گام 5 ballscrew اچ کیو ام HQM مدل OFU-32-05-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-32-05-T6", "برند": "HQM" },
   },
   {
@@ -3450,7 +3450,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 11155200,
     description: "پیچ بال اسکرو 40 گام 5 ballscrew اچ کیو ام HQM مدل SFU-40-05 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-40-05", "برند": "HQM" },
   },
   {
@@ -3462,7 +3462,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 6892200,
     description: "مهره بال اسکرو 32 گام 10 ballscrew اچ کیو ام HQM مدل SFU-32-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-32-10-T4", "برند": "HQM" },
   },
   {
@@ -3474,7 +3474,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 18690000,
     description: "پیچ بال اسکرو 40 گام 5 ballscrew اچ کیو ام HQM مدل SFU-40-05 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-40-05", "برند": "HQM" },
   },
   {
@@ -3486,7 +3486,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 11482800,
     description: "مهره بال اسکرو 32 گام 10 ballscrew اچ کیو ام HQM مدل OFU-32-10-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-32-10-T6", "برند": "HQM" },
   },
   {
@@ -3498,7 +3498,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 10197600,
     description: "پیچ بال اسکرو 40 گام 10 ballscrew اچ کیو ام HQM مدل SFU-40-10 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-40-10", "برند": "HQM" },
   },
   {
@@ -3510,7 +3510,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 12415200,
     description: "پیچ بال اسکرو 40 گام 10 ballscrew اچ کیو ام HQM مدل SFU-40-10 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-40-10", "برند": "HQM" },
   },
   {
@@ -3522,7 +3522,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 21098700,
     description: "مهره بال اسکرو 32 گام 20 ballscrew اچ کیو ام HQM مدل SFS-32-20-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFS-32-20-T4", "برند": "HQM" },
   },
   {
@@ -3534,7 +3534,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 16646700,
     description: "مهره بال اسکرو 32 گام 32 ballscrew اچ کیو ام HQM مدل SFE-32-32-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFE-32-32-T4", "برند": "HQM" },
   },
   {
@@ -3546,7 +3546,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 7217700,
     description: "پیچ بال اسکرو 40 گام 20 ballscrew اچ کیو ام HQM مدل SFS-40-20 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFS-40-20", "برند": "HQM" },
   },
   {
@@ -3558,7 +3558,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 23625000,
     description: "پیچ بال اسکرو 40 گام 40 ballscrew اچ کیو ام HQM مدل SFE-40-40 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFE-40-40", "برند": "HQM" },
   },
   {
@@ -3570,7 +3570,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 10395000,
     description: "مهره بال اسکرو 40 گام 5 ballscrew اچ کیو ام HQM مدل SFU-40-05-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-40-05-T4", "برند": "HQM" },
   },
   {
@@ -3582,7 +3582,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 9072000,
     description: "مهره بال اسکرو 40 گام 10 ballscrew اچ کیو ام HQM مدل SFU-40-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-40-10-T4", "برند": "HQM" },
   },
   {
@@ -3594,7 +3594,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 14700000,
     description: "مهره بال اسکرو 40 گام 20 ballscrew اچ کیو ام HQM مدل SFS-40-20-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFS-40-20-T4", "برند": "HQM" },
   },
   {
@@ -3606,7 +3606,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 25200000,
     description: "مهره بال اسکرو 40 گام 40 ballscrew اچ کیو ام HQM مدل SFE-40-40-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFE-40-40-T4", "برند": "HQM" },
   },
   {
@@ -3618,7 +3618,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 17955000,
     description: "مهره بال اسکرو 40 گام 5 ballscrew اچ کیو ام HQM مدل OFU-40-05-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-40-05-T6", "برند": "HQM" },
   },
   {
@@ -3630,7 +3630,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 19950000,
     description: "مهره بال اسکرو 40 گام 10 ballscrew اچ کیو ام HQM مدل OFU-40-10-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-40-10-T6", "برند": "HQM" },
   },
   {
@@ -3642,7 +3642,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 13650000,
     description: "پیچ بال اسکرو 50 گام 10 ballscrew اچ کیو ام HQM مدل SFU-50-10 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-50-10", "برند": "HQM" },
   },
   {
@@ -3654,7 +3654,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 14280000,
     description: "مهره بال اسکرو 50 گام 10 ballscrew اچ کیو ام HQM مدل SFU-50-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-50-10-T4", "برند": "HQM" },
   },
   {
@@ -3666,7 +3666,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 50 گام 10 ballscrew اچ کیو ام HQM مدل SFU-50-10 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-50-10", "برند": "HQM" },
   },
   {
@@ -3678,7 +3678,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 27300000,
     description: "مهره بال اسکرو 50 گام 10 ballscrew اچ کیو ام HQM مدل OFU-50-10-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-50-10-T6", "برند": "HQM" },
   },
   {
@@ -3690,7 +3690,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 21000000,
     description: "پیچ بال اسکرو 63 گام 10 ballscrew اچ کیو ام HQM مدل SFU-63-10 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-63-10", "برند": "HQM" },
   },
   {
@@ -3702,7 +3702,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 22050000,
     description: "مهره بال اسکرو 63 گام 10 ballscrew اچ کیو ام HQM مدل SFU-63-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-63-10-T4", "برند": "HQM" },
   },
   {
@@ -3714,7 +3714,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 63 گام 10 ballscrew اچ کیو ام HQM مدل SFU-63-10 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-63-10", "برند": "HQM" },
   },
   {
@@ -3726,7 +3726,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 39900000,
     description: "مهره بال اسکرو 63 گام 10 ballscrew اچ کیو ام HQM مدل OFU-63-10-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-63-10-T6", "برند": "HQM" },
   },
   {
@@ -3738,7 +3738,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 35700000,
     description: "پیچ بال اسکرو 80 گام 10 ballscrew اچ کیو ام HQM مدل SFU-80-10 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-80-10", "برند": "HQM" },
   },
   {
@@ -3750,7 +3750,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 37800000,
     description: "مهره بال اسکرو 80 گام 10 ballscrew اچ کیو ام HQM مدل SFU-80-10-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFU-80-10-T4", "برند": "HQM" },
   },
   {
@@ -3762,7 +3762,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 80 گام 10 ballscrew اچ کیو ام HQM مدل SFU-80-10 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFU-80-10", "برند": "HQM" },
   },
   {
@@ -3774,7 +3774,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 63000000,
     description: "مهره بال اسکرو 80 گام 10 ballscrew اچ کیو ام HQM مدل OFU-80-10-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-80-10-T6", "برند": "HQM" },
   },
   {
@@ -3786,7 +3786,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 42000000,
     description: "پیچ بال اسکرو 80 گام 20 ballscrew اچ کیو ام HQM مدل SFS-80-20 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFS-80-20", "برند": "HQM" },
   },
   {
@@ -3798,7 +3798,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 44100000,
     description: "مهره بال اسکرو 80 گام 20 ballscrew اچ کیو ام HQM مدل SFS-80-20-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFS-80-20-T4", "برند": "HQM" },
   },
   {
@@ -3810,7 +3810,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 80 گام 20 ballscrew اچ کیو ام HQM مدل SFS-80-20 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFS-80-20", "برند": "HQM" },
   },
   {
@@ -3822,7 +3822,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 84000000,
     description: "مهره بال اسکرو 80 گام 20 ballscrew اچ کیو ام HQM مدل OFU-80-20-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-80-20-T6", "برند": "HQM" },
   },
   {
@@ -3834,7 +3834,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 46200000,
     description: "پیچ بال اسکرو 80 گام 25 ballscrew اچ کیو ام HQM مدل SFE-80-25 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFE-80-25", "برند": "HQM" },
   },
   {
@@ -3846,7 +3846,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 48300000,
     description: "مهره بال اسکرو 80 گام 25 ballscrew اچ کیو ام HQM مدل SFE-80-25-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFE-80-25-T4", "برند": "HQM" },
   },
   {
@@ -3858,7 +3858,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 80 گام 25 ballscrew اچ کیو ام HQM مدل SFE-80-25 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFE-80-25", "برند": "HQM" },
   },
   {
@@ -3870,7 +3870,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 94500000,
     description: "مهره بال اسکرو 80 گام 25 ballscrew اچ کیو ام HQM مدل OFU-80-25-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-80-25-T6", "برند": "HQM" },
   },
   {
@@ -3882,7 +3882,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 63000000,
     description: "پیچ بال اسکرو 100 گام 20 ballscrew اچ کیو ام HQM مدل SFS-100-20 شش متری",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFS-100-20", "برند": "HQM" },
   },
   {
@@ -3894,7 +3894,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 66150000,
     description: "مهره بال اسکرو 100 گام 20 ballscrew اچ کیو ام HQM مدل SFS-100-20-T4",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "SFS-100-20-T4", "برند": "HQM" },
   },
   {
@@ -3906,7 +3906,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 0,
     description: "پیچ بال اسکرو 100 گام 20 ballscrew اچ کیو ام HQM مدل SFS-100-20 (زنگار دارد)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/ballscrew.jpg",
     specs: { "مدل": "SFS-100-20", "برند": "HQM" },
   },
   {
@@ -3918,7 +3918,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 126000000,
     description: "مهره بال اسکرو 100 گام 20 ballscrew اچ کیو ام HQM مدل OFU-100-20-T6",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/sfu-bolt.jpg",
     specs: { "مدل": "OFU-100-20-T6", "برند": "HQM" },
   },
   {
@@ -3930,7 +3930,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 8190000,
     description: "مهره بالسکرو دوبل 20 گام 5 (DFU-20-05-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-20-05-T4", "برند": "HQM" },
   },
   {
@@ -3942,7 +3942,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 9030000,
     description: "مهره بالسکرو دوبل 20 گام 10 (DFU-20-10-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-20-10-T4", "برند": "HQM" },
   },
   {
@@ -3954,7 +3954,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 10290000,
     description: "مهره بالسکرو دوبل 25 گام 5 (DFU-25-05-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-25-05-T4", "برند": "HQM" },
   },
   {
@@ -3966,7 +3966,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 12390000,
     description: "مهره بالسکرو دوبل 25 گام 10 (DFU-25-10-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-25-10-T4", "برند": "HQM" },
   },
   {
@@ -3978,7 +3978,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 14490000,
     description: "مهره بالسکرو دوبل 32 گام 5 (DFU-32-05-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-32-05-T4", "برند": "HQM" },
   },
   {
@@ -3990,7 +3990,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 22260000,
     description: "مهره بالسکرو دوبل 32 گام 10 (DFU-32-10-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-32-10-T4", "برند": "HQM" },
   },
   {
@@ -4002,7 +4002,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 20370000,
     description: "مهره بالسکرو دوبل 40 گام 5 (DFU-40-05-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-40-05-T4", "برند": "HQM" },
   },
   {
@@ -4014,7 +4014,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 27090000,
     description: "مهره بالسکرو دوبل 40 گام 10 (DFU-40-10-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-40-10-T4", "برند": "HQM" },
   },
   {
@@ -4026,7 +4026,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 37800000,
     description: "مهره بالسکرو دوبل 50 گام 10 (DFU-50-10-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-50-10-T4", "برند": "HQM" },
   },
   {
@@ -4038,7 +4038,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 59850000,
     description: "مهره بالسکرو دوبل 63 گام 10 (DFU-63-10-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-63-10-T4", "برند": "HQM" },
   },
   {
@@ -4050,7 +4050,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 77700000,
     description: "مهره بالسکرو دوبل 80 گام 10 (DFU-80-10-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-80-10-T4", "برند": "HQM" },
   },
   {
@@ -4062,7 +4062,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 149100000,
     description: "مهره بالسکرو دوبل 80 گام 20 (DFU-80-20-T4)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballscrew/hqm/double.jpg",
     specs: { "مدل": "DFU-80-20-T4", "برند": "HQM" },
   },
   {
@@ -4074,7 +4074,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-screw-nut-support",
     price: 30000,
     description: "Tnut",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/profile-aluminium/tnut.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/profile-aluminium/tnut.jpg",
     specs: { "مدل": "Tnut", "برند": "Tnut" },
   },
   {
@@ -4086,7 +4086,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 24410400,
     description: "بلبرینگ NSK ان اس کا (جفتی) ساخت ژاپن (بلبرینگ سرامیکی اسپیندل NSK 7008)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "NSK 7008", "برند": "NSK", "کشور": "ژاپن" },
   },
   {
@@ -4098,7 +4098,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 304500,
     description: "بلبرینگ SKF اس کا اف مدل E2.2RSH-6002/C3 ساخت چین (بلبرینگ شیار عمیق skf)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "E2.2RSH-6002/C3", "برند": "SKF" },
   },
   {
@@ -4110,7 +4110,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 333900,
     description: "بلبرینگ SKF اس کا اف مدل E2.2RSH-6003/C3 ساخت چین (بلبرینگ شیار عمیق skf)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "E2.2RSH-6003/C3", "برند": "SKF" },
   },
   {
@@ -4122,7 +4122,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 730800,
     description: "بلبرینگ SKF اس کا اف مدل E2.2RS1-6007/C3 ساخت چین (بلبرینگ شیار عمیق skf)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "E2.2RS1-6007/C3", "برند": "SKF" },
   },
   {
@@ -4134,7 +4134,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 854700,
     description: "بلبرینگ SKF اس کا اف مدل E2.2RS1-6008/C3 ساخت چین (بلبرینگ شیار عمیق skf)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "E2.2RS1-6008/C3", "برند": "SKF" },
   },
   {
@@ -4146,7 +4146,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 333900,
     description: "بلبرینگ SKF اس کا اف مدل E2.2RSH-6202/C3 ساخت چین (بلبرینگ شیار عمیق skf)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "E2.2RSH-6202/C3", "برند": "SKF" },
   },
   {
@@ -4158,7 +4158,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 426300,
     description: "بلبرینگ SKF اس کا اف مدل E2.2RSH-6204/C3 ساخت چین (بلبرینگ شیار عمیق skf)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "E2.2RSH-6204/C3", "برند": "SKF" },
   },
   {
@@ -4170,7 +4170,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 487200,
     description: "بلبرینگ SKF اس کا اف مدل E2.2RSH-6205/C3 ساخت چین (بلبرینگ شیار عمیق skf)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "E2.2RSH-6205/C3", "برند": "SKF" },
   },
   {
@@ -4182,7 +4182,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 8725500,
     description: "بلبرینگ INA آی ان آ مدل ZKLF 3080/2RS",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "ZKLF 3080/2RS", "برند": "INA" },
   },
   {
@@ -4194,7 +4194,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 8725500,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7002DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7002DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4206,7 +4206,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 6982500,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7002DB-2RZ P4 برند LTJM (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7002DB-2RZ", "برند": "LTJM" },
   },
   {
@@ -4218,7 +4218,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 6982500,
     description: "بلبرینگ دور بالای استیل اسپیندل 7002DB-2RZ P4 برند LTJM (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7002DB-2RZ", "برند": "LTJM" },
   },
   {
@@ -4230,7 +4230,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 9517200,
     description: "بلبرینگ دور بالای استیل اسپیندل 7002DB-2RZ P4 برند AKK (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7002DB-2RZ", "برند": "AKK" },
   },
   {
@@ -4242,7 +4242,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 11104800,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7003DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7003DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4254,7 +4254,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 11104800,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7004DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7004DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4266,7 +4266,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 12692400,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7004DB-2RZ P4 برند LTJM (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7004DB-2RZ", "برند": "LTJM" },
   },
   {
@@ -4278,7 +4278,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 12692400,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7005DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7005DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4290,7 +4290,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 12692400,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7005DB-2RZ P4 برند LTJM (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7005DB-2RZ", "برند": "LTJM" },
   },
   {
@@ -4302,7 +4302,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 14277900,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7006DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7006DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4314,7 +4314,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 15865500,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7007DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7007DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4326,7 +4326,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 12814200,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7008DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7008DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4338,7 +4338,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 19532100,
     description: "بلبرینگ دور بالای استیل اسپیندل 7008DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7008DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4350,7 +4350,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 28557900,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7009DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7009DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4362,7 +4362,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 13425300,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7010DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7010DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4374,7 +4374,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 21600600,
     description: "بلبرینگ دور بالای سرامیکی اسپیندل 7205DB-2RZ P4 برند yzyz وای زد (جفتی)",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7205DB-2RZ", "برند": "YZYZ" },
   },
   {
@@ -4386,7 +4386,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 27600300,
     description: "بلبرینگ hqm اچ کیو ام مدل 22214CCW33 ساخت چین",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "22214CCW33", "برند": "HQM", "کشور": "چین" },
   },
   {
@@ -4398,7 +4398,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 0,
     description: "بلبرینگ hqm اچ کیو ام مدل 22214CAW33 ساخت چین",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "22214CAW33", "برند": "HQM", "کشور": "چین" },
   },
   {
@@ -4410,7 +4410,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 0,
     description: "بلبرینگ اسپیندل تول چین 7006DB برند ZEX",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7006DB", "برند": "ZEX" },
   },
   {
@@ -4422,7 +4422,7 @@ const _products_1: StaticProduct[] = [
     subcategory: "ball-bearing",
     price: 0,
     description: "بلبرینگ اسپیندل تول چین 7008DB برند ZEX",
-    imageUrl: "https://shop.cncparts.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
+    imageUrl: "https://shop.cncmarket.ir/images/shop/upload/thumbnails/250x250f/ballbearings/nsk-ball-bearing.jpg",
     specs: { "مدل": "7008DB", "برند": "ZEX" },
   },
   {

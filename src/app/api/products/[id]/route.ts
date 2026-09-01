@@ -1,19 +1,41 @@
-import { NextResponse } from "next/server";
-import { products as staticProducts, categories as staticCategories } from "@/lib/data";
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
 
-  const product = staticProducts.find((p) => p.id === id || p.slug === id);
+  let product = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      category: true,
+      brand: true,
+      images: { orderBy: { order: "asc" } },
+    },
+  });
 
   if (!product) {
-    return NextResponse.json(
-      { error: "محصول یافت نشد" },
-      { status: 404 }
-    );
+    product = await prisma.product.findUnique({
+      where: { slug: id },
+      include: {
+        category: true,
+        brand: true,
+        images: { orderBy: { order: "asc" } },
+      },
+    });
+  }
+
+  if (!product) {
+    return NextResponse.json({ error: "محصول یافت نشد" }, { status: 404 });
+  }
+
+  let specs: Record<string, string> = {};
+  if (product.specifications) {
+    try {
+      specs = JSON.parse(product.specifications);
+    } catch {}
   }
 
   return NextResponse.json({
@@ -22,15 +44,20 @@ export async function GET(
     slug: product.slug,
     description: product.description,
     price: product.price,
-    specs: product.specs,
-    category: {
-      slug: product.category,
-      name: staticCategories.find((c) => c.slug === product.category)?.name || product.category,
-    },
-    brand: {
-      slug: product.brand.toLowerCase(),
-      name: product.brand,
-    },
-    images: product.imageUrl ? [{ id: product.id, url: product.imageUrl, alt: product.name, isPrimary: true }] : [],
+    discountPrice: product.discountPrice,
+    stock: product.stock,
+    specs,
+    category: product.category
+      ? { slug: product.category.slug, name: product.category.name }
+      : { slug: "", name: "" },
+    brand: product.brand
+      ? { slug: product.brand.slug, name: product.brand.name }
+      : { slug: "", name: "" },
+    images: product.images.map((img) => ({
+      id: img.id,
+      url: img.url,
+      alt: img.alt,
+      isPrimary: img.isPrimary,
+    })),
   });
 }

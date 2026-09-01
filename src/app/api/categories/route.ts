@@ -1,25 +1,35 @@
 import { NextResponse } from "next/server";
-import { categories as staticCategories, subcategories as staticSubcategories } from "@/lib/data";
+import prisma from "@/lib/prisma";
 
 export async function GET() {
-  const result = staticCategories.map((cat) => ({
+  const categories = await prisma.category.findMany({
+    where: { parentId: null },
+    include: {
+      children: {
+        include: {
+          _count: { select: { products: true } },
+        },
+        orderBy: { order: "asc" },
+      },
+      _count: { select: { products: true } },
+    },
+    orderBy: { order: "asc" },
+  });
+
+  const result = categories.map((cat) => ({
     id: cat.id,
     name: cat.name,
     slug: cat.slug,
-    icon: cat.icon,
-    children: staticSubcategories
-      .filter((sub) => sub.categoryId === cat.id)
-      .map((sub) => ({
-        id: sub.id,
-        name: sub.name,
-        slug: sub.slug,
-        icon: sub.icon,
-        parentId: cat.id,
-        _count: { products: 0 },
-      })),
-    _count: {
-      products: staticSubcategories.filter((sub) => sub.categoryId === cat.id).length,
-    },
+    icon: cat.image || "📁",
+    children: cat.children.map((child) => ({
+      id: child.id,
+      name: child.name,
+      slug: child.slug,
+      icon: child.image || "📁",
+      parentId: cat.id,
+      _count: { products: child._count.products },
+    })),
+    _count: { products: cat._count.products },
   }));
 
   return NextResponse.json(result);

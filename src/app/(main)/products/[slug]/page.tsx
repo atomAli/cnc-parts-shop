@@ -26,12 +26,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
     fetch(`/api/products/${slug}`)
       .then((r) => r.json())
       .then((data) => {
         setProduct(data);
+        const imgs = data?.images?.filter((i: { url?: string }) => i.url) || [];
+        const primary = imgs.findIndex((i: { isPrimary: boolean }) => i.isPrimary);
+        setActiveImage(primary >= 0 ? primary : 0);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -94,9 +98,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           {/* Image */}
           <div className="group">
             <div className="bg-gray-50 rounded-xl h-96 flex items-center justify-center overflow-hidden">
-              {product.images?.[0]?.url ? (
+              {product.images?.[activeImage]?.url ? (
                 <Image
-                  src={product.images[0].url}
+                  src={product.images[activeImage].url}
                   alt={product.name}
                   width={400}
                   height={400}
@@ -107,6 +111,26 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 <span className="text-gray-400">تصویر محصول</span>
               )}
             </div>
+            {product.images.length > 1 && (
+              <div className="flex gap-2 mt-3">
+                {product.images.map((img, index) => (
+                  <button
+                    key={img.url}
+                    type="button"
+                    onClick={() => setActiveImage(index)}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${
+                      index === activeImage ? "border-blue-600" : "border-transparent"
+                    }`}
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt || product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Details */}

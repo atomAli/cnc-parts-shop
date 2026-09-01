@@ -42,7 +42,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">ورود به حساب کاربری</h1>
-          <p className="mt-2 text-gray-600">فروشگاه قطعات CNC</p>
+          <p className="mt-2 text-gray-600">فروشگاه مارکت CNC</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">

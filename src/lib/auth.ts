@@ -1,5 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,43 +13,33 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.phone || !credentials?.password) {
-          throw new Error("تلفن و رمز عبور الزامی است");
+          return null;
         }
 
-        try {
-          const { default: prisma } = await import("@/lib/prisma");
-          const bcrypt = await import("bcryptjs");
+        const user = await (prisma as any).user.findUnique({
+          where: { phone: credentials.phone },
+        });
 
-          const user = await prisma.user.findUnique({
-            where: { phone: credentials.phone },
-          });
-
-          if (!user) {
-            throw new Error("کاربری با این شماره تلفن یافت نشد");
-          }
-
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-
-          if (!isPasswordValid) {
-            throw new Error("رمز عبور اشتباه است");
-          }
-
-          return {
-            id: user.id,
-            name: user.name,
-            phone: user.phone,
-            email: user.email,
-            role: user.role,
-          };
-        } catch (error: any) {
-          if (error.message?.includes("does not exist")) {
-            throw new Error("دیتابیس متصل نیست. لطفاً ابتدا دیتابیس را راه‌اندازی کنید.");
-          }
-          throw error;
+        if (!user) {
+          return null;
         }
+
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          role: user.role,
+        };
       },
     }),
   ],

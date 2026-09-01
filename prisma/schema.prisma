@@ -74,7 +74,7 @@ model Product {
   brandId         String?
   brand           Brand?         @relation(fields: [brandId], references: [id])
   images          ProductImage[]
-  specifications  Json?
+  specifications  String?
   orderItems      OrderItem[]
   cartItems       CartItem[]
   createdAt       DateTime       @default(now())

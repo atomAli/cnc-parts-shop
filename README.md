@@ -1,4 +1,4 @@
-# CNC Parts Shop — فروشگاه آنلاین قطعات CNC
+# CNC Market — فروشگاه آنلاین مارکت CNC
 
 یک اپلیکیشن فروشگاهی کامل (full-stack) با **Next.js**, **TypeScript** و **Prisma/PostgreSQL** — با احراز هویت، سبد خرید، داشبورد ادمین و API اختصاصی.
 

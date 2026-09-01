@@ -9,7 +9,7 @@ const vazir = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-  title: "فروشگاه قطعات CNC | CNC Parts Shop",
+  title: "فروشگاه مارکت CNC | CNC Market",
   description: "فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی",
 };
 

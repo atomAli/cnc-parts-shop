@@ -8,68 +8,48 @@ import {
   Settings,
   Zap,
   ChevronLeft,
-  ChevronRight,
   Phone,
   Truck,
   Shield,
   Clock,
+  ShoppingCart,
 } from "lucide-react";
 
-const categories = [
-  {
-    name: "قطعات برقی",
-    slug: "electrical",
-    icon: Zap,
-    description: "PLC، HMI، موتور سروو و استپ موتور",
-    color: "bg-blue-500",
-  },
-  {
-    name: "قطعات مکانیکی",
-    slug: "mechanical",
-    icon: Settings,
-    description: "ریل و واگن، بالسکرو، گیربکس و کوپلینگ",
-    color: "bg-green-500",
-  },
-  {
-    name: "خدمات",
-    slug: "services",
-    icon: Wrench,
-    description: "تعمیرات، قالب‌سازی و اجرای پروژه",
-    color: "bg-purple-500",
-  },
-  {
-    name: "محصولات ویژه",
-    slug: "featured",
-    icon: Cpu,
-    description: "پرفروش‌ترین محصولات با بهترین قیمت",
-    color: "bg-orange-500",
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  price: number | null;
+  brand: { name: string } | null;
+  images: { url: string; isPrimary: boolean }[];
+  category: { name: string; slug: string; parentSlug?: string };
+}
+
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("fa-IR").format(price) + " تومان";
 
 const features = [
-  {
-    icon: Truck,
-    title: "ارسال سریع",
-    description: "ارسال به سراسر کشور",
-  },
-  {
-    icon: Shield,
-    title: "ضمانت اصالت",
-    description: "تضمین اصالت کالا",
-  },
-  {
-    icon: Clock,
-    title: "پشتیبانی ۲۴ ساعته",
-    description: "مشاوره تخصصی رایگان",
-  },
-  {
-    icon: Phone,
-    title: "مشاوره فنی",
-    description: "راهنمایی توسط متخصصین",
-  },
+  { icon: Truck, title: "ارسال سریع", description: "ارسال به سراسر کشور" },
+  { icon: Shield, title: "ضمانت اصالت", description: "تضمین اصالت کالا" },
+  { icon: Clock, title: "پشتیبانی ۲۴ ساعته", description: "مشاوره تخصصی رایگان" },
+  { icon: Phone, title: "مشاوره فنی", description: "راهنمایی توسط متخصصین" },
 ];
 
 export default function HomePage() {
+  const [electricalProducts, setElectricalProducts] = useState<Product[]>([]);
+  const [mechanicalProducts, setMechanicalProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products?limit=6")
+      .then((r) => r.json())
+      .then((data) => {
+        const all = data.products || [];
+        setElectricalProducts(all.filter((p: Product) => p.category?.parentSlug === "electrical" || p.category?.slug === "electrical").slice(0, 6));
+        setMechanicalProducts(all.filter((p: Product) => p.category?.parentSlug === "mechanical" || p.category?.slug === "mechanical").slice(0, 6));
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div>
       {/* Hero Section */}
@@ -82,7 +62,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-20 md:py-32 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
-              فروش تخصصی قطعات CNC
+              فروش تخصصی محصولات CNC
             </h1>
             <p className="text-lg md:text-xl mb-8 text-blue-100">
               عرضه کننده انواع قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی از برندهای معتبر جهانی
@@ -124,6 +104,90 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Electrical Products */}
+      {electricalProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 py-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold">قطعات برقی</h2>
+            <Link href="/products?category=electrical" className="text-blue-600 hover:underline flex items-center">
+              مشاهده همه
+              <ChevronLeft size={16} className="mr-1" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {electricalProducts.map((product) => (
+              <Link
+                key={product.id}
+                href={`/products/${product.slug}`}
+                className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <div className="h-48 bg-gray-50 flex items-center justify-center">
+                  {product.images?.[0]?.url ? (
+                    <img src={product.images[0].url} alt={product.name} className="max-h-full max-w-full object-contain p-4" />
+                  ) : (
+                    <div className="text-gray-300 text-sm">تصویر محصول</div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="text-xs text-gray-500 mb-1">{product.brand?.name || ""}</div>
+                  <div className="font-bold group-hover:text-blue-600 transition-colors line-clamp-2">{product.name}</div>
+                  <div className="mt-2">
+                    {product.price ? (
+                      <span className="text-lg font-bold text-blue-600">{formatPrice(product.price)}</span>
+                    ) : (
+                      <span className="text-sm text-gray-500">تماس بگیرید</span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Mechanical Products */}
+      {mechanicalProducts.length > 0 && (
+        <section className="bg-white py-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold">قطعات مکانیکی</h2>
+              <Link href="/products?category=mechanical" className="text-blue-600 hover:underline flex items-center">
+                مشاهده همه
+                <ChevronLeft size={16} className="mr-1" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mechanicalProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.slug}`}
+                  className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="h-48 bg-gray-50 flex items-center justify-center">
+                    {product.images?.[0]?.url ? (
+                      <img src={product.images[0].url} alt={product.name} className="max-h-full max-w-full object-contain p-4" />
+                    ) : (
+                      <div className="text-gray-300 text-sm">تصویر محصول</div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="text-xs text-gray-500 mb-1">{product.brand?.name || ""}</div>
+                    <div className="font-bold group-hover:text-blue-600 transition-colors line-clamp-2">{product.name}</div>
+                    <div className="mt-2">
+                      {product.price ? (
+                        <span className="text-lg font-bold text-blue-600">{formatPrice(product.price)}</span>
+                      ) : (
+                        <span className="text-sm text-gray-500">تماس بگیرید</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Categories */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
@@ -132,79 +196,27 @@ export default function HomePage() {
             ما طیف وسیعی از قطعات و تجهیزات CNC را با بهترین قیمت و کیفیت عرضه می‌کنیم
           </p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={`/products?category=${category.slug}`}
-              className="group bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all"
-            >
-              <div className={`${category.color} text-white w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                <category.icon size={28} />
-              </div>
-              <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
-                {category.name}
-              </h3>
-              <p className="text-gray-600 text-sm">{category.description}</p>
-              <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
-                مشاهده همه
-                <ChevronLeft size={16} className="mr-1" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Popular Subcategories - Electrical */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold">قطعات برقی</h2>
-            <Link href="/products?category=electrical" className="text-blue-600 hover:underline flex items-center">
-              مشاهده همه
-              <ChevronLeft size={16} className="mr-1" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {["PLC", "HMI", "سروموتور", "استپ‌موتور", "اینورتر", "کنترلر", "اسپیندل‌موتور", "پمپ‌وکیوم", "اسلیپ‌رینگ", "کابل انکدر", "کنترلر دما", "کارت رله"].map(
-              (item) => (
-                <Link
-                  key={item}
-                  href={`/products?category=electrical&sub=${encodeURIComponent(item)}`}
-                  className="bg-gray-50 hover:bg-blue-50 p-4 rounded-lg text-center transition-colors border border-gray-100 hover:border-blue-200"
-                >
-                  <div className="text-sm font-medium">{item}</div>
-                </Link>
-              )
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Popular Subcategories - Mechanical */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold">قطعات مکانیکی</h2>
-            <Link href="/products?category=mechanical" className="text-blue-600 hover:underline flex items-center">
-              مشاهده همه
-              <ChevronLeft size={16} className="mr-1" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {["ریل و واگن", "بالسکرو", "بالبوشینگ", "دنده‌شانه‌ای", "گیربکس", "کوپلینگ", "پروفیل", "یاتاقان", "مهره بالسکرو", "ساپورت‌مهره"].map(
-              (item) => (
-                <Link
-                  key={item}
-                  href={`/products?category=mechanical&sub=${encodeURIComponent(item)}`}
-                  className="bg-gray-50 hover:bg-green-50 p-4 rounded-lg text-center transition-colors border border-gray-100 hover:border-green-200"
-                >
-                  <div className="text-sm font-medium">{item}</div>
-                </Link>
-              )
-            )}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <Link
+            href="/products?category=electrical"
+            className="group bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all"
+          >
+            <div className="bg-blue-500 text-white w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Zap size={28} />
+            </div>
+            <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">قطعات برقی</h3>
+            <p className="text-gray-600 text-sm">موتور سروو، پی ال سی، اچ ام آی، اینورتر و کنترلر</p>
+          </Link>
+          <Link
+            href="/products?category=mechanical"
+            className="group bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-green-200 transition-all"
+          >
+            <div className="bg-green-500 text-white w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Settings size={28} />
+            </div>
+            <h3 className="font-bold text-lg mb-2 group-hover:text-green-600 transition-colors">قطعات مکانیکی</h3>
+            <p className="text-gray-600 text-sm">ریل و واگن، بالسکرو، گیربکس و کوپلینگ</p>
+          </Link>
         </div>
       </section>
 
@@ -216,16 +228,10 @@ export default function HomePage() {
             تیم متخصص ما آماده پاسخگویی به سوالات فنی و ارائه بهترین راه‌حل‌ها برای پروژه‌های شماست
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="tel:+982133532602"
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
-            >
+            <a href="tel:+982133532602" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors">
               تماس تلفنی
             </a>
-            <Link
-              href="/contact"
-              className="border-2 border-white text-white px-8 py-3 rounded-lg font-bold hover:bg-white/10 transition-colors"
-            >
+            <Link href="/contact" className="border-2 border-white text-white px-8 py-3 rounded-lg font-bold hover:bg-white/10 transition-colors">
               فرم تماس
             </Link>
           </div>

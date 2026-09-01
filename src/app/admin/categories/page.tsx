@@ -1,203 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Plus,
-  Edit2,
-  Trash2,
-  GripVertical,
-  ChevronDown,
-  ChevronLeft,
-  FolderTree,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Edit2, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 
 interface Category {
   id: string;
   name: string;
   slug: string;
-  productCount: number;
-  active: boolean;
-  children?: Category[];
+  order: number;
+  children: Category[];
+  _count: { products: number; children: number };
 }
 
-const mockCategories: Category[] = [
-  {
-    id: "1",
-    name: "قطعات برقی",
-    slug: "electrical",
-    productCount: 45,
-    active: true,
-    children: [
-      { id: "1-1", name: "PLC", slug: "plc", productCount: 12, active: true },
-      { id: "1-2", name: "HMI", slug: "hmi", productCount: 8, active: true },
-      { id: "1-3", name: "موتور سروو", slug: "servo-motor", productCount: 10, active: true },
-      { id: "1-4", name: "استپ موتور", slug: "step-motor", productCount: 6, active: true },
-      { id: "1-5", name: "اینورتر", slug: "inverter", productCount: 9, active: true },
-    ],
-  },
-  {
-    id: "2",
-    name: "قطعات مکانیکی",
-    slug: "mechanical",
-    productCount: 38,
-    active: true,
-    children: [
-      { id: "2-1", name: "ریل و واگن", slug: "lm-guide", productCount: 15, active: true },
-      { id: "2-2", name: "بالسکرو", slug: "ballscrew", productCount: 12, active: true },
-      { id: "2-3", name: "گیربکس", slug: "gearbox", productCount: 6, active: true },
-      { id: "2-4", name: "کوپلینگ", slug: "coupling", productCount: 5, active: true },
-    ],
-  },
-  {
-    id: "3",
-    name: "خدمات",
-    slug: "services",
-    productCount: 4,
-    active: true,
-    children: [
-      { id: "3-1", name: "تعمیرات", slug: "repairs", productCount: 1, active: true },
-      { id: "3-2", name: "قالب‌سازی", slug: "plastic-injection", productCount: 1, active: true },
-    ],
-  },
-];
-
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["1", "2"]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
-  const [newCategory, setNewCategory] = useState({ name: "", slug: "", parentId: "" });
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [parentId, setParentId] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [order, setOrder] = useState(0);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const fetchCategories = async () => {
+    const res = await fetch("/api/admin/categories");
+    setCategories(await res.json());
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchCategories(); }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const body = { name, description, order, parentId: parentId || null };
+    const url = editCategory ? `/api/admin/categories/${editCategory.id}` : "/api/admin/categories";
+    const method = editCategory ? "PUT" : "POST";
+    await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    setShowForm(false);
+    setEditCategory(null);
+    setName("");
+    setDescription("");
+    setOrder(0);
+    setParentId("");
+    fetchCategories();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("آیا مطمئن هستید؟")) return;
+    const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.error) alert(data.error);
+    fetchCategories();
+  };
 
   const toggleExpand = (id: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+    const next = new Set(expanded);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setExpanded(next);
   };
 
-  const handleAdd = () => {
-    if (newCategory.parentId) {
-      setCategories((prev) =>
-        prev.map((cat) => {
-          if (cat.id === newCategory.parentId) {
-            return {
-              ...cat,
-              children: [
-                ...(cat.children || []),
-                {
-                  id: Date.now().toString(),
-                  name: newCategory.name,
-                  slug: newCategory.slug,
-                  productCount: 0,
-                  active: true,
-                },
-              ],
-            };
-          }
-          return cat;
-        })
-      );
-    } else {
-      setCategories((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          name: newCategory.name,
-          slug: newCategory.slug,
-          productCount: 0,
-          active: true,
-          children: [],
-        },
-      ]);
-    }
-    setShowAddModal(false);
-    setNewCategory({ name: "", slug: "", parentId: "" });
-  };
-
-  const handleDelete = (id: string) => {
-    setCategories((prev) =>
-      prev
-        .filter((cat) => cat.id !== id)
-        .map((cat) => ({
-          ...cat,
-          children: cat.children?.filter((child) => child.id !== id),
-        }))
-    );
-    setShowDeleteModal(null);
-  };
-
-  const renderCategory = (category: Category, level: number = 0) => {
-    const isExpanded = expandedCategories.includes(category.id);
-    const hasChildren = category.children && category.children.length > 0;
-
-    return (
-      <div key={category.id}>
-        <div
-          className={`flex items-center gap-3 p-4 border-b border-gray-50 hover:bg-gray-50 ${
-            level > 0 ? "mr-8" : ""
-          }`}
+  const renderCategory = (cat: Category, depth = 0) => (
+    <div key={cat.id}>
+      <div
+        className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 border-b border-gray-50"
+        style={{ paddingRight: `${(depth * 24) + 16}px` }}
+      >
+        {cat.children && cat.children.length > 0 ? (
+          <button onClick={() => toggleExpand(cat.id)} className="text-gray-400">
+            {expanded.has(cat.id) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </button>
+        ) : (
+          <span className="w-4" />
+        )}
+        <span className="flex-1 font-medium text-sm">{cat.name}</span>
+        <span className="text-xs text-gray-500">{cat._count?.products ?? 0} محصول</span>
+        <button
+          onClick={() => {
+            setEditCategory(cat);
+            setName(cat.name);
+            setDescription((cat as any).description || "");
+            setOrder(cat.order);
+            setShowForm(true);
+          }}
+          className="p-1.5 hover:bg-blue-50 rounded text-blue-600"
         >
-          <GripVertical size={16} className="text-gray-400 cursor-move" />
-
-          {hasChildren ? (
-            <button
-              onClick={() => toggleExpand(category.id)}
-              className="p-1 hover:bg-gray-200 rounded"
-            >
-              {isExpanded ? (
-                <ChevronDown size={16} />
-              ) : (
-                <ChevronLeft size={16} />
-              )}
-            </button>
-          ) : (
-            <div className="w-6" />
-          )}
-
-          <FolderTree size={18} className={level > 0 ? "text-gray-400" : "text-blue-500"} />
-
-          <div className="flex-1">
-            <div className="font-medium">{category.name}</div>
-            <div className="text-xs text-gray-500">/{category.slug}</div>
-          </div>
-
-          <span className="text-sm text-gray-500">
-            {category.productCount} محصول
-          </span>
-
-          <span
-            className={`px-2 py-1 rounded text-xs ${
-              category.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-            }`}
-          >
-            {category.active ? "فعال" : "غیرفعال"}
-          </span>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => {
-                setEditingCategory(category);
-                setShowAddModal(true);
-              }}
-              className="p-2 hover:bg-blue-50 rounded-lg text-blue-600"
-            >
-              <Edit2 size={16} />
-            </button>
-            <button
-              onClick={() => setShowDeleteModal(category.id)}
-              className="p-2 hover:bg-red-50 rounded-lg text-red-600"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        </div>
-
-        {isExpanded &&
-          hasChildren &&
-          category.children!.map((child) => renderCategory(child, level + 1))}
+          <Edit2 size={14} />
+        </button>
+        <button onClick={() => handleDelete(cat.id)} className="p-1.5 hover:bg-red-50 rounded text-red-600">
+          <Trash2 size={14} />
+        </button>
       </div>
-    );
-  };
+      {expanded.has(cat.id) && cat.children && cat.children.map((child) => renderCategory(child, depth + 1))}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -205,120 +102,66 @@ export default function AdminCategoriesPage() {
         <h1 className="text-2xl font-bold">مدیریت دسته‌بندی‌ها</h1>
         <button
           onClick={() => {
-            setEditingCategory(null);
-            setNewCategory({ name: "", slug: "", parentId: "" });
-            setShowAddModal(true);
+            setEditCategory(null);
+            setName("");
+            setDescription("");
+            setOrder(0);
+            setParentId("");
+            setShowForm(true);
           }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
         >
           <Plus size={20} />
           افزودن دسته‌بندی
         </button>
       </div>
 
-      {/* Categories Tree */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 bg-gray-50">
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>نام دسته‌بندی</span>
-            <span>عملیات</span>
-          </div>
+      {showForm && (
+        <div className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+          <h3 className="font-bold">{editCategory ? "ویرایش دسته‌بندی" : "دسته‌بندی جدید"}</h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">نام *</label>
+                <input required value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">توضیحات</label>
+                <input value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">والد</label>
+                <select value={parentId} onChange={(e) => setParentId(e.target.value)} className="w-full px-3 py-2 border rounded-lg">
+                  <option value="">بدون والد (دسته اصلی)</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">اولویت</label>
+                <input type="number" value={order} onChange={(e) => setOrder(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">ذخیره</button>
+              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">انصراف</button>
+            </div>
+          </form>
         </div>
-        {categories.map((category) => renderCategory(category))}
+      )}
+
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        {loading ? (
+          <div className="text-center py-12 text-gray-400">در حال بارگذاری...</div>
+        ) : categories.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">دسته‌بندی‌ای وجود ندارد</div>
+        ) : (
+          categories.map((cat) => renderCategory(cat))
+        )}
       </div>
-
-      {/* Add/Edit Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowAddModal(false)} />
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 relative z-10">
-            <h3 className="text-lg font-bold mb-4">
-              {editingCategory ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی جدید"}
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">نام</label>
-                <input
-                  type="text"
-                  value={newCategory.name}
-                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="نام دسته‌بندی"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">نام انگلیسی (slug)</label>
-                <input
-                  type="text"
-                  value={newCategory.slug}
-                  onChange={(e) => setNewCategory({ ...newCategory, slug: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="category-slug"
-                  dir="ltr"
-                />
-              </div>
-              {!editingCategory && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی والد</label>
-                  <select
-                    value={newCategory.parentId}
-                    onChange={(e) => setNewCategory({ ...newCategory, parentId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">ندارد (دسته‌بندی اصلی)</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                انصراف
-              </button>
-              <button
-                onClick={handleAdd}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                {editingCategory ? "ذخیره تغییرات" : "افزودن"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteModal(null)} />
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 relative z-10">
-            <h3 className="text-lg font-bold mb-4">حذف دسته‌بندی</h3>
-            <p className="text-gray-600 mb-6">
-              آیا مطمئن هستید؟ تمام زیردسته‌ها و محصولات این دسته‌بندی نیز حذف خواهند شد.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteModal(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                انصراف
-              </button>
-              <button
-                onClick={() => handleDelete(showDeleteModal)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                حذف
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

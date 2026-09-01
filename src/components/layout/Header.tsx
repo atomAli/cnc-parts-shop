@@ -5,32 +5,30 @@ import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cart";
 import { ShoppingCart, User, Menu, X, Search, Phone, ChevronDown, Zap, Settings, Wrench } from "lucide-react";
 import { useState, useRef } from "react";
+import SearchBar from "@/components/layout/SearchBar";
 
 const electricalSubs = [
-  { name: "PLC", slug: "plc" },
-  { name: "HMI", slug: "hmi" },
-  { name: "موتور سروو", slug: "servo-motor" },
-  { name: "استپ موتور", slug: "step-motor" },
+  { name: "سروموتور و درایو", slug: "servo-motor" },
+  { name: "استپ موتور و درایو", slug: "step-motor" },
   { name: "اینورتر", slug: "inverter" },
   { name: "کنترلر", slug: "controller" },
-  { name: "موتور اسپیندل", slug: "spindle-motor" },
+  { name: "اسپیندل موتور", slug: "spindle-motor" },
   { name: "پمپ وکیوم", slug: "vacuum-pump" },
-  { name: "انکدر", slug: "encoder" },
-  { name: "کانکتور", slug: "connector" },
+  { name: "اسلیپ رینگ", slug: "slip-ring" },
   { name: "منبع تغذیه", slug: "power-supply" },
-  { name: "رله کارت", slug: "relay-card" },
+  { name: "لیزر فایبر", slug: "laser" },
+  { name: "جک برقی", slug: "electric-jack" },
 ];
 
 const mechanicalSubs = [
-  { name: "ریل و واگن", slug: "lm-guide" },
-  { name: "بالسکرو", slug: "ballscrew" },
-  { name: "بالبوشینگ", slug: "ballbushing" },
-  { name: "دنده شانه‌ای", slug: "gear" },
+  { name: "ریل و واگن خطی", slug: "linear-guide" },
+  { name: "بالسکرو و مهره", slug: "ball-screw" },
+  { name: "بلبرینگ و یاتاقان", slug: "bearing" },
   { name: "گیربکس", slug: "gearbox" },
   { name: "کوپلینگ", slug: "coupling" },
-  { name: "پروفیل", slug: "profile" },
-  { name: "یاتاقان بالسکرو", slug: "bearing-ballscrew" },
-  { name: "مهره بالسکرو", slug: "ballscrew-nut" },
+  { name: "محافظ کابل", slug: "cable-carrier" },
+  { name: "شفت و پروفیل", slug: "shaft" },
+  { name: "دنده شانه‌ای", slug: "gear-rack" },
 ];
 
 const services = [
@@ -73,7 +71,7 @@ export default function Header() {
             </a>
           </div>
           <div className="hidden md:block">
-            <span>فروش تخصصی قطعات CNC و اتوماسیون صنعتی</span>
+            <span>فروش تخصصی محصولات CNC و اتوماسیون صنعتی</span>
           </div>
         </div>
       </div>
@@ -87,23 +85,14 @@ export default function Header() {
               CNC
             </div>
             <div className="hidden sm:block">
-              <div className="font-bold text-lg">قطعات CNC</div>
+              <div className="font-bold text-lg">مارکت CNC</div>
               <div className="text-xs text-gray-500">فروشگاه تخصصی</div>
             </div>
           </Link>
 
           {/* Search bar - desktop */}
           <div className="hidden md:flex flex-1 max-w-xl mx-8">
-            <form className="w-full flex" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="text"
-                placeholder="جستجوی محصولات..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              />
-              <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-l-lg hover:bg-blue-700 transition-colors">
-                <Search size={20} />
-              </button>
-            </form>
+            <SearchBar />
           </div>
 
           {/* Actions */}
@@ -171,17 +160,7 @@ export default function Header() {
         {/* Mobile search */}
         {searchOpen && (
           <div className="md:hidden mt-4">
-            <form className="w-full flex" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="text"
-                placeholder="جستجوی محصولات..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                autoFocus
-              />
-              <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-l-lg hover:bg-blue-700 transition-colors">
-                <Search size={20} />
-              </button>
-            </form>
+            <SearchBar autoFocus />
           </div>
         )}
       </div>

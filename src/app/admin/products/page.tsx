@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -8,9 +8,12 @@ import {
   Edit2,
   Trash2,
   Eye,
-  MoreVertical,
   Package,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
+const toPersianNumber = (n: number) => n.toLocaleString("fa-IR");
 
 interface Product {
   id: string;
@@ -18,85 +21,130 @@ interface Product {
   slug: string;
   price: number;
   stock: number;
-  category: string;
-  brand: string;
   active: boolean;
   featured: boolean;
+  category: { name: string } | null;
+  brand: { name: string } | null;
+  images: { url: string }[];
 }
 
-const mockProducts: Product[] = [
-  { id: "1", name: "PLC دلتا DVP-SX2", slug: "plc-delta-dvp-sx2", price: 15000000, stock: 10, category: "PLC", brand: "Delta", active: true, featured: true },
-  { id: "2", name: "HMI دلتا DOP-107BV", slug: "hmi-delta-dop-107bv", price: 8500000, stock: 5, category: "HMI", brand: "Delta", active: true, featured: false },
-  { id: "3", name: "موتور سروو دلتا 1KW", slug: "servo-motor-delta-1kw", price: 25000000, stock: 8, category: "موتور سروو", brand: "Delta", active: true, featured: true },
-  { id: "4", name: "اینورتر دلتا VFD-M", slug: "inverter-delta-vfd-m", price: 12000000, stock: 15, category: "اینورتر", brand: "Delta", active: true, featured: false },
-  { id: "5", name: "ریل و واگن 20mm", slug: "lm-guide-20mm", price: 3500000, stock: 20, category: "ریل و واگن", brand: "Hiwin", active: true, featured: false },
-  { id: "6", name: "بالسکرو 1605", slug: "ballscrew-1605", price: 2800000, stock: 0, category: "بالسکرو", brand: "Hiwin", active: true, featured: false },
-];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  children?: Category[];
+}
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.includes(searchQuery) || p.brand.includes(searchQuery);
-    const matchesCategory = !selectedCategory || p.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("fa-IR").format(price);
+  const fetchProducts = async () => {
+    setLoading(true);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: "20",
+      ...(search && { search }),
+      ...(category && { category }),
+    });
+    const res = await fetch(`/api/admin/products?${params}`);
+    const data = await res.json();
+    setProducts(data.products);
+    setTotalPages(data.pagination.pages);
+    setTotal(data.pagination.total);
+    setLoading(false);
   };
 
-  const handleDelete = (id: string) => {
-    setProducts(products.filter((p) => p.id !== id));
-    setShowDeleteModal(null);
+  const fetchCategories = async () => {
+    const res = await fetch("/api/admin/categories");
+    const data = await res.json();
+    setCategories(data);
   };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [page, search, category]);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    await fetch(`/api/admin/products/${deleteId}`, { method: "DELETE" });
+    setDeleteId(null);
+    fetchProducts();
+  };
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("fa-IR").format(price);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">مدیریت محصولات</h1>
+        <div>
+          <h1 className="text-2xl font-bold">مدیریت محصولات</h1>
+          <p className="text-sm text-gray-500 mt-1">{toPersianNumber(total)} محصول</p>
+        </div>
         <Link
           href="/admin/products/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2"
         >
           <Plus size={20} />
           افزودن محصول
         </Link>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-wrap gap-4">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="جستجوی محصول..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="جستجوی نام یا SKU..."
               className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
             <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
         </div>
         <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setPage(1);
+          }}
           className="px-4 py-2 border border-gray-300 rounded-lg"
         >
           <option value="">همه دسته‌بندی‌ها</option>
-          <option value="PLC">PLC</option>
-          <option value="HMI">HMI</option>
-          <option value="موتور سروو">موتور سروو</option>
-          <option value="اینورتر">اینورتر</option>
-          <option value="ریل و واگن">ریل و واگن</option>
-          <option value="بالسکرو">بالسکرو</option>
+          {categories.map((c) =>
+            c.children && c.children.length > 0 ? (
+              <optgroup key={c.id} label={c.name}>
+                {c.children.map((child: any) => (
+                  <option key={child.id} value={child.slug}>
+                    {child.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : (
+              <option key={c.id} value={c.slug}>
+                {c.name}
+              </option>
+            )
+          )}
         </select>
       </div>
 
-      {/* Products Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -111,100 +159,121 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product) => (
-                <tr key={product.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Package size={20} className="text-gray-400" />
-                      </div>
-                      <div>
-                        <div className="font-medium">{product.name}</div>
-                        <div className="text-xs text-gray-500">{product.brand}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{product.category}</td>
-                  <td className="px-6 py-4 text-sm font-medium">{formatPrice(product.price)} تومان</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`text-sm font-medium ${
-                        product.stock > 0 ? "text-green-600" : "text-red-500"
-                      }`}
-                    >
-                      {product.stock > 0 ? product.stock : "ناموجود"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {product.active && (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
-                          فعال
-                        </span>
-                      )}
-                      {product.featured && (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">
-                          ویژه
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="p-2 hover:bg-blue-50 rounded-lg text-blue-600"
-                      >
-                        <Edit2 size={16} />
-                      </Link>
-                      <Link
-                        href={`/products/${product.slug}`}
-                        target="_blank"
-                        className="p-2 hover:bg-green-50 rounded-lg text-green-600"
-                      >
-                        <Eye size={16} />
-                      </Link>
-                      <button
-                        onClick={() => setShowDeleteModal(product.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg text-red-600"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                    در حال بارگذاری...
                   </td>
                 </tr>
-              ))}
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                    محصولی یافت نشد
+                  </td>
+                </tr>
+              ) : (
+                products.map((product) => (
+                  <tr key={product.id} className="border-b border-gray-50 hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          {product.images && product.images.length > 0 ? (
+                            <img src={product.images[0].url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Package size={18} className="text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{product.name}</div>
+                          <div className="text-xs text-gray-500">{product.brand?.name || "-"}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{product.category?.name || "-"}</td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      {product.price > 0 ? `${formatPrice(product.price)} تومان` : "تماس بگیرید"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-sm font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
+                        {product.stock > 0 ? product.stock : "ناموجود"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1">
+                        {product.active && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">فعال</span>
+                        )}
+                        {product.featured && (
+                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">ویژه</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1">
+                        <Link
+                          href={`/admin/products/${product.id}`}
+                          className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-600"
+                        >
+                          <Edit2 size={15} />
+                        </Link>
+                        <Link
+                          href={`/products/${product.slug}`}
+                          target="_blank"
+                          className="p-1.5 hover:bg-green-50 rounded-lg text-green-600"
+                        >
+                          <Eye size={15} />
+                        </Link>
+                        <button
+                          onClick={() => setDeleteId(product.id)}
+                          className="p-1.5 hover:bg-red-50 rounded-lg text-red-600"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            محصولی یافت نشد
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+            <span className="text-sm text-gray-500">
+              صفحه {toPersianNumber(page)} از {toPersianNumber(totalPages)}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
+                <ChevronRight size={16} />
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Delete Modal */}
-      {showDeleteModal && (
+      {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteModal(null)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 relative z-10">
             <h3 className="text-lg font-bold mb-4">حذف محصول</h3>
-            <p className="text-gray-600 mb-6">
-              آیا مطمئن هستید که می‌خواهید این محصول را حذف کنید؟ این عمل قابل بازگشت نیست.
-            </p>
+            <p className="text-gray-600 mb-6">آیا مطمئن هستید؟ این عمل قابل بازگشت نیست.</p>
             <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteModal(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
+              <button onClick={() => setDeleteId(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
                 انصراف
               </button>
-              <button
-                onClick={() => handleDelete(showDeleteModal)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
+              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                 حذف
               </button>
             </div>
