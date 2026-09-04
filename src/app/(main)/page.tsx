@@ -228,8 +228,12 @@ export default function HomePage() {
             تیم متخصص ما آماده پاسخگویی به سوالات فنی و ارائه بهترین راه‌حل‌ها برای پروژه‌های شماست
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <a href="tel:+982133532602" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors">
-              تماس تلفنی
+            <a
+              href="tel:+982133724136"
+              className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
+            >
+              <Phone size={18} />
+              <span dir="ltr">021-33724136</span>
             </a>
             <Link href="/contact" className="border-2 border-white text-white px-8 py-3 rounded-lg font-bold hover:bg-white/10 transition-colors">
               فرم تماس

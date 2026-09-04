@@ -62,9 +62,9 @@ export default function Header() {
       <div className="bg-blue-600 text-white text-sm">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <a href="tel:+982133532602" className="flex items-center gap-1 hover:text-blue-100">
+            <a href="tel:+982133724136" className="flex items-center gap-1 hover:text-blue-100">
               <Phone size={14} />
-              <span dir="ltr">021-33532602</span>
+              <span dir="ltr">021-33724136</span>
             </a>
           </div>
           <div className="hidden md:block">
@@ -290,7 +290,7 @@ export default function Header() {
                   تیم متخصص ما آماده راهنمایی شماست
                 </p>
                 <a
-                  href="tel:+982133532602"
+                  href="tel:+982133724136"
                   className="block bg-blue-600 text-white text-center py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
                   تماس تلفنی

@@ -121,10 +121,10 @@ export default function CartPage() {
                 <span className="font-medium">برای ثبت سفارش با ما تماس بگیرید</span>
               </div>
               <a
-                href="tel:+982133532602"
+                href="tel:+982133724136"
                 className="mt-2 block text-center bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors"
               >
-                021-33532602
+                021-33724136
               </a>
             </div>
 

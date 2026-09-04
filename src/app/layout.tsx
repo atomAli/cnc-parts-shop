@@ -9,8 +9,11 @@ const vazir = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-  title: "فروشگاه مارکت CNC | CNC Market",
-  description: "فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی",
+  title: {
+    default: "مارکت CNC | فروشگاه تخصصی قطعات CNC و اتوماسیون صنعتی",
+    template: "%s | مارکت CNC",
+  },
+  description: "فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی از برندهای معتبر جهانی",
 };
 
 export default function RootLayout({

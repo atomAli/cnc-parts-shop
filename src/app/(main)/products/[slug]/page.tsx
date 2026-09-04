@@ -265,7 +265,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         <h3 className="text-xl font-bold mb-2">سوالی دارید؟ با ما تماس بگیرید</h3>
         <p className="text-blue-100 mb-4">مشاوران ما آماده پاسخگویی به سوالات فنی شما هستند</p>
         <a
-          href="tel:+982133532602"
+          href="tel:+982133724136"
           className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
         >
           تماس تلفنی

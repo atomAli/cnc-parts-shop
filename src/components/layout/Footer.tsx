@@ -80,7 +80,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Phone size={16} />
-                <span dir="ltr">021-33532602</span>
+                <span dir="ltr">021-33724136</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={16} />
@@ -88,7 +88,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={16} className="mt-1 shrink-0" />
-                <span>تهران، خیابان سعدی جنوبی، کوچه ناظم الاطباء شمالی، پلاک ۱۶۷</span>
+                <span>تهران، خیابان سعدی جنوبی، کوچه ناظم الاطباء شمالی</span>
               </li>
             </ul>
           </div>
