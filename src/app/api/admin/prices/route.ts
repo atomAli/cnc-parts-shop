@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   const factor = mode === "increase" ? 1 + percent / 100 : 1 - percent / 100;
   let skipped = 0;
 
-  const updates = products.flatMap((p) => {
+  const updates = products.flatMap((p: { id: string; price: number; discountPrice: number | null }) => {
     if (p.price <= 0) {
       skipped++;
       return [];

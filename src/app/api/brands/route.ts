@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       const childIds = (await prisma.category.findMany({
         where: { parentId: parentCat.id },
         select: { id: true },
-      })).map((c) => c.id);
+      })).map((c: { id: string }) => c.id);
       categoryId = parentCat.id;
       // For parent category, we need brands from all children
       const brands = await prisma.brand.findMany({

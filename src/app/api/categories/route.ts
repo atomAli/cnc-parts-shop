@@ -16,12 +16,12 @@ export async function GET() {
     orderBy: { order: "asc" },
   });
 
-  const result = categories.map((cat) => ({
+  const result = categories.map((cat: { id: string; name: string; slug: string; image: string | null; children: Array<{ id: string; name: string; slug: string; image: string | null; _count: { products: number } }>; _count: { products: number } }) => ({
     id: cat.id,
     name: cat.name,
     slug: cat.slug,
     icon: cat.image || "📁",
-    children: cat.children.map((child) => ({
+    children: cat.children.map((child: { id: string; name: string; slug: string; image: string | null; _count: { products: number } }) => ({
       id: child.id,
       name: child.name,
       slug: child.slug,

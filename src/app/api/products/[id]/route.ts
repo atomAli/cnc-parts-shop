@@ -54,7 +54,7 @@ export async function GET(
     brand: product.brand
       ? { slug: product.brand.slug, name: product.brand.name }
       : { slug: "", name: "" },
-    images: product.images.map((img) => ({
+    images: product.images.map((img: { id: string; url: string; alt: string | null; isPrimary: boolean }) => ({
       id: img.id,
       url: img.url,
       alt: img.alt,
