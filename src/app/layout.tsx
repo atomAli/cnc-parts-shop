@@ -42,6 +42,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    google: "etY_5ydFPEGbEBqTBdzBf1pV2vuz0yx2TKQ8MV9lK8Y",
+  },
 };
 
 const organizationJsonLd = {
