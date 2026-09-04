@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import prisma from "@/lib/prisma";
+import { SITE_URL } from "@/lib/site";
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://cnc-market-shop.vercel.app";
+const siteUrl = SITE_URL;
 
 interface Props {
   params: Promise<{ slug: string }>;

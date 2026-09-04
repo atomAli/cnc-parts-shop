@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import { SITE_URL } from "@/lib/site";
 
 const vazir = Vazirmatn({
   variable: "--font-vazir",
   subsets: ["arabic"],
 });
 
-const siteUrl = process.env.NEXTAUTH_URL || "https://cnc-market-shop.vercel.app";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
