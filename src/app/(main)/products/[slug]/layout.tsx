@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(slug);
   if (!product) return {};
 
-  const image = product.images.find((i) => i.isPrimary) || product.images[0];
+  const image = product.images.find((i: { isPrimary: boolean }) => i.isPrimary) || product.images[0];
   const description =
     (product.description || "").slice(0, 160) ||
     `${product.name} - سفارش و مشاوره در مارکت CNC`;
@@ -59,7 +59,7 @@ export default async function ProductLayout({ params, children }: Props) {
           "@type": "Product",
           name: product.name,
           description: product.description || undefined,
-          image: product.images.filter((i) => i.url).map((i) => i.url),
+          image: product.images.filter((i: { url: string }) => i.url).map((i: { url: string }) => i.url),
           sku: product.sku || undefined,
           brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
           category: product.category.name,

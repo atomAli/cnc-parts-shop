@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
   } else if (category) {
     const parentCat = await prisma.category.findUnique({ where: { slug: category } });
     if (parentCat) {
-      const childIds = (await prisma.category.findMany({ where: { parentId: parentCat.id } })).map((c) => c.id);
+      const childIds = (await prisma.category.findMany({ where: { parentId: parentCat.id } })).map((c: { id: string }) => c.id);
       where.categoryId = { in: [parentCat.id, ...childIds] };
     }
   }
