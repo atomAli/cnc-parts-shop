@@ -78,13 +78,11 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-xl">
-              CNC
-            </div>
-            <div className="hidden sm:block">
-              <div className="font-bold text-lg">مارکت CNC</div>
-              <div className="text-xs text-gray-500">فروشگاه تخصصی</div>
-            </div>
+            <img
+              src="/logo.png"
+              alt="مارکت CNC"
+              className="h-10 w-auto sm:h-12 transition-transform hover:scale-105"
+            />
           </Link>
 
           {/* Search bar - desktop */}

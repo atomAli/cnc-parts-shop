@@ -18,13 +18,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-xl">
-                CNC
-              </div>
-              <div>
-                <div className="font-bold text-white">مارکت CNC</div>
-                <div className="text-xs text-gray-400">فروشگاه تخصصی</div>
-              </div>
+              <img src="/logo.png" alt="مارکت CNC" className="h-9 w-auto" />
             </div>
             <p className="text-sm leading-relaxed">
               فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی

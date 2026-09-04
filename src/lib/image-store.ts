@@ -31,6 +31,19 @@ export async function storeImage(
     return { url };
   }
 
+  const oidcToken = process.env.VERCEL_OIDC_TOKEN;
+  if (oidcToken) {
+    const { put } = await import("@vercel/blob");
+    const filename = `${uuid()}.${ext}`;
+    const { url } = await put(filename, buffer, {
+      access: "public",
+      contentType,
+      oidcToken,
+      storeId: process.env.BLOB_STORE_ID,
+    });
+    return { url };
+  }
+
   const filename = `${uuid()}.${ext}`;
   const uploadDir = join(process.cwd(), "public", "uploads");
   await mkdir(uploadDir, { recursive: true });
