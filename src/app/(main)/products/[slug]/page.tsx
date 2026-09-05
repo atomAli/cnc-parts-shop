@@ -33,7 +33,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [branchCount, setBranchCount] = useState(1);
-  const [branchLength, setBranchLength] = useState(400);
+  const [branchLengthInput, setBranchLengthInput] = useState("400");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -47,7 +47,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         const imgs = data?.images?.filter((i: { url?: string }) => i.url) || [];
         const primary = imgs.findIndex((i: { isPrimary: boolean }) => i.isPrimary);
         setActiveImage(primary >= 0 ? primary : 0);
-        setBranchLength(getProductMaxLength(data));
+        setBranchLengthInput(String(getProductMaxLength(data)));
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -58,6 +58,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const isMeterProduct = !!product && isRailOrScrew(product);
   const baseLength = product ? getProductMaxLength(product) : 400;
+  const parsedLen = parseInt(branchLengthInput, 10);
+  const branchLength = isNaN(parsedLen) ? 10 : Math.min(Math.max(parsedLen, 10), baseLength);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -235,10 +237,20 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     </div>
                     <div>
                       <label className="block text-xs text-gray-600 mb-1">متراژ هر شاخه (سانتی‌متر)</label>
-                      <div className="flex items-center rounded-xl border border-gray-200 bg-white">
-                        <button onClick={() => setBranchLength(Math.max(10, branchLength - 10))} className="p-2.5 hover:bg-gray-100 rounded-r-xl transition-colors"><Minus size={16} /></button>
-                        <span className="px-4 py-2.5 font-bold min-w-[50px] text-center">{branchLength}</span>
-                        <button onClick={() => setBranchLength(Math.min(baseLength, branchLength + 10))} className="p-2.5 hover:bg-gray-100 rounded-l-xl transition-colors"><Plus size={16} /></button>
+                      <div className="flex items-center rounded-xl border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-blue-500">
+                        <button onClick={() => setBranchLengthInput(String(Math.max(10, branchLength - 10)))} className="p-2.5 hover:bg-gray-100 rounded-r-xl transition-colors"><Minus size={16} /></button>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          dir="ltr"
+                          min={10}
+                          max={baseLength}
+                          value={branchLengthInput}
+                          onChange={(e) => setBranchLengthInput(e.target.value.replace(/[^\d]/g, ""))}
+                          onBlur={() => setBranchLengthInput(String(branchLength))}
+                          className="px-2 py-2.5 font-bold text-center w-full min-w-[50px] outline-none bg-transparent"
+                        />
+                        <button onClick={() => setBranchLengthInput(String(Math.min(baseLength, branchLength + 10)))} className="p-2.5 hover:bg-gray-100 rounded-l-xl transition-colors"><Plus size={16} /></button>
                       </div>
                     </div>
                   </div>
