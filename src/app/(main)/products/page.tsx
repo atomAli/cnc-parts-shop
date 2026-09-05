@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, Filter, Grid, List, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/cart";
+import { isMeterProduct } from "@/lib/meter-product";
 
 interface Product {
   id: string;
@@ -372,7 +373,7 @@ function ProductsContent() {
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-400 text-sm">تصویر محصول</div>
                 )}
-                {product.subcategory === "linear-guide" || product.subcategory === "ball-screw" ? (
+                {isMeterProduct(product) ? (
                   <span className="absolute top-3 left-3 rounded-full bg-amber-500 px-3 py-1 text-[11px] font-bold text-white shadow">
                     متری
                   </span>
@@ -391,7 +392,7 @@ function ProductsContent() {
                   )}
                 </div>
                 <div className="mt-3 pt-3 border-t border-gray-100">
-                  {product.subcategory === "linear-guide" || product.subcategory === "ball-screw" ? (
+                  {isMeterProduct(product) ? (
                     <Link
                       href={`/products/${product.slug}`}
                       className="btn-primary w-full justify-center"

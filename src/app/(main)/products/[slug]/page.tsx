@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { ShoppingCart, Shield, ArrowRight, Plus, Minus, Phone, ExternalLink, Pencil, Lock } from "lucide-react";
 import { useCartStore } from "@/store/cart";
+import { isMeterProduct as isMeterUtil, isMiniatureMeter as isMiniatureUtil, getMeterBaseLength } from "@/lib/meter-product";
 
 interface ProductDetail {
   id: string;
@@ -54,9 +55,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fa-IR").format(price) + " تومان";
 
-  const isMeterProduct = product?.subcategory === "linear-guide" || product?.subcategory === "ball-screw";
-  const isMiniature = product?.name?.includes("مینیاتوری") || product?.name?.includes("Miniature");
-  const baseLength = isMiniature ? 100 : 400;
+  const isMeterProduct = !!product && isMeterUtil(product);
+  const isMiniature = !!product && isMiniatureUtil(product);
+  const baseLength = product ? getMeterBaseLength(product) : 400;
 
   const handleAddToCart = () => {
     if (!product) return;
