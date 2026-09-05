@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   BadgeDollarSign,
+  FileText,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -28,6 +29,7 @@ const menuItems = [
   { href: "/admin/categories", label: "دسته‌بندی‌ها", icon: FolderTree },
   { href: "/admin/brands", label: "برندها", icon: Award },
   { href: "/admin/orders", label: "سفارشات", icon: ShoppingCart },
+  { href: "/admin/pre-invoices", label: "پیش فاکتورها", icon: FileText },
   { href: "/admin/users", label: "کاربران", icon: Users },
   { href: "/admin/banners", label: "بنرها", icon: Image },
 ];
