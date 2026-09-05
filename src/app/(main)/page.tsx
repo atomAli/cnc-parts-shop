@@ -202,7 +202,7 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Link
-            href="/products?category=electrical"
+            href="/products?category=inverter"
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-600/30"
           >
             <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-xl" />
@@ -217,7 +217,7 @@ export default function HomePage() {
             </span>
           </Link>
           <Link
-            href="/products?category=mechanical"
+            href="/products?category=linear-guide"
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-amber-700 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/30"
           >
             <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-xl" />

@@ -64,12 +64,12 @@ export default function Footer() {
             <h3 className="font-bold text-white mb-4">دسته‌بندی‌ها</h3>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/products?category=electrical" className="hover:text-amber-400 transition-colors">
+                <Link href="/products?category=inverter" className="hover:text-amber-400 transition-colors">
                   قطعات برقی
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=mechanical" className="hover:text-amber-400 transition-colors">
+                <Link href="/products?category=linear-guide" className="hover:text-amber-400 transition-colors">
                   قطعات مکانیکی
                 </Link>
               </li>

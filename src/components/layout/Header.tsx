@@ -9,27 +9,27 @@ import SearchBar from "@/components/layout/SearchBar";
 import Logo from "@/components/Logo";
 
 const electricalSubs = [
-  { name: "سروموتور و درایو", slug: "servo-motor" },
-  { name: "اینورتر", slug: "اینورتر-دلتا-delta" },
-  { name: "استپ موتور و درایو", slug: "hqm-step-motor-step-drive" },
-  { name: "کنترلر", slug: "controller-data-cable" },
-  { name: "اسپیندل موتور", slug: "hqm-spindle-motor" },
-  { name: "پمپ وکیوم", slug: "oil-vacuum-pump" },
-  { name: "اسلیپ رینگ", slug: "slip-ring-rotary-connector" },
-  { name: "منبع تغذیه", slug: "powerdc" },
-  { name: "لیزر فایبر", slug: "laser" },
-  { name: "جک برقی", slug: "linkan-electrical-jack" },
+  { name: "اینورتر و درایو", slug: "inverter" },
+  { name: "سروو موتور", slug: "servo-motors" },
+  { name: "استپ موتور و درایو", slug: "stepper-motors" },
+  { name: "اسپیندل و قطعات", slug: "spindle" },
+  { name: "کنترلر CNC", slug: "controllers" },
+  { name: "PLC و HMI", slug: "plc-hmi" },
+  { name: "منبع تغذیه و تجهیزات برق", slug: "power-supplies" },
+  { name: "اسلیپ رینگ", slug: "slip-rings" },
+  { name: "پمپ", slug: "pumps" },
+  { name: "لیزر", slug: "laser-group" },
 ];
 
 const mechanicalSubs = [
-  { name: "ریل و واگن خطی", slug: "rail-wagon" },
-  { name: "بالسکرو و مهره", slug: "ball-screw-nut-support" },
-  { name: "بلبرینگ و یاتاقان", slug: "LinearBallbearing" },
-  { name: "گیربکس", slug: "planetary-spiral-gearbox" },
-  { name: "کوپلینگ", slug: "coupling" },
-  { name: "محافظ کابل", slug: "cable-carrier" },
-  { name: "شفت و پروفیل", slug: "shaft" },
-  { name: "دنده شانه‌ای", slug: "gear-rack-pinion" },
+  { name: "ریل و واگن خطی", slug: "linear-guide" },
+  { name: "بال اسکرو", slug: "ball-screw" },
+  { name: "بلبرینگ و یاتاقان", slug: "ball-bearings" },
+  { name: "گیربکس", slug: "gearboxes" },
+  { name: "کوپلینگ", slug: "couplings" },
+  { name: "دنده شانه‌ای", slug: "gear-racks" },
+  { name: "محافظ کابل", slug: "cable-carriers" },
+  { name: "شفت و پروفیل", slug: "shafts" },
 ];
 
 const services = [
@@ -202,7 +202,7 @@ export default function Header() {
               {/* Electrical */}
               <div>
                 <Link
-                  href="/products?category=electrical"
+                  href="/products?category=inverter"
                   className="flex items-center gap-2 mb-4 text-blue-600 hover:text-blue-700 font-bold"
                 >
                   <div className="grid place-items-center w-9 h-9 rounded-xl bg-blue-100">
@@ -214,7 +214,7 @@ export default function Header() {
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=electrical&sub=${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-3 py-1.5 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
@@ -228,7 +228,7 @@ export default function Header() {
               {/* Mechanical */}
               <div>
                 <Link
-                  href="/products?category=mechanical"
+                  href="/products?category=linear-guide"
                   className="flex items-center gap-2 mb-4 text-amber-600 hover:text-amber-700 font-bold"
                 >
                   <div className="grid place-items-center w-9 h-9 rounded-xl bg-amber-100">
@@ -240,7 +240,7 @@ export default function Header() {
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=mechanical&sub=${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-3 py-1.5 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
@@ -334,7 +334,7 @@ export default function Header() {
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=electrical&sub=${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-4 py-2 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -358,7 +358,7 @@ export default function Header() {
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=mechanical&sub=${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-4 py-2 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >
