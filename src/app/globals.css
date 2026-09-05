@@ -80,6 +80,14 @@
     @apply border border-blue-100 bg-blue-50 text-blue-700;
   }
 
+  .chip-sub {
+    @apply inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-stone-600 shadow-sm transition-all duration-200 hover:border-blue-300 hover:text-blue-600 hover:shadow active:scale-[0.97];
+  }
+
+  .chip-sub-active {
+    @apply border-blue-200 bg-blue-50 text-blue-700 shadow-md shadow-blue-600/10;
+  }
+
   .input {
     @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-stone-800 outline-none placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500;
   }

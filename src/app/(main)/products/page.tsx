@@ -273,7 +273,7 @@ function ProductsContent() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => navigate({ sub: "" })}
-              className={`chip-sub ${!sub ? "chip-soft" : "border border-gray-200 bg-white text-stone-600 hover:border-blue-300 hover:text-blue-600"}`}
+              className={`chip-sub ${!sub ? "chip-sub-active" : ""}`}
             >
               همه {activeCat.name}
             </button>
@@ -281,7 +281,7 @@ function ProductsContent() {
               <button
                 key={child.id}
                 onClick={() => handleSubcategoryClick(child.slug)}
-                className={`chip-sub ${sub === child.slug ? "chip-soft" : "border border-gray-200 bg-white text-stone-600 hover:border-blue-300 hover:text-blue-600"}`}
+                className={`chip-sub ${sub === child.slug ? "chip-sub-active" : ""}`}
               >
                 {child.name}
               </button>
