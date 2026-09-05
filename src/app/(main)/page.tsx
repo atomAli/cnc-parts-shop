@@ -73,17 +73,12 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 export default function HomePage() {
-  const [electricalProducts, setElectricalProducts] = useState<Product[]>([]);
-  const [mechanicalProducts, setMechanicalProducts] = useState<Product[]>([]);
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("/api/products?limit=6")
+    fetch("/api/products?limit=6&sort=updated")
       .then((r) => r.json())
-      .then((data) => {
-        const all = data.products || [];
-        setElectricalProducts(all.filter((p: Product) => p.category?.parentSlug === "electrical" || p.category?.slug === "electrical").slice(0, 6));
-        setMechanicalProducts(all.filter((p: Product) => p.category?.parentSlug === "mechanical" || p.category?.slug === "mechanical").slice(0, 6));
-      })
+      .then((data) => setRecentProducts(data.products || []))
       .catch(() => {});
   }, []);
 
@@ -173,52 +168,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Electrical Products */}
-      {electricalProducts.length > 0 && (
+      {/* Recently Updated Products */}
+      {recentProducts.length > 0 && (
         <section className="container-page py-12">
           <div className="flex items-end justify-between mb-8">
             <div>
               <span className="eyebrow mb-3">
-                <Zap size={15} className="text-blue-600" />
-                قطعات برقی
+                <Sparkles size={15} className="text-blue-600" />
+                جدیدترین محصولات
               </span>
-              <h2 className="section-title mt-3">تجهیزات برقی و اتوماسیون</h2>
+              <h2 className="section-title mt-3">آخرین محصولات به‌روزرسانی شده</h2>
             </div>
-            <Link href="/products?category=electrical" className="btn-ghost text-sm">
+            <Link href="/products" className="btn-ghost text-sm">
               مشاهده همه
               <ChevronLeft size={16} />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {electricalProducts.map((product) => (
+            {recentProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
-        </section>
-      )}
-
-      {/* Mechanical Products */}
-      {mechanicalProducts.length > 0 && (
-        <section className="bg-white/70 border-y border-gray-100 py-14">
-          <div className="container-page">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <span className="eyebrow mb-3">
-                  <Settings size={15} className="text-amber-600" />
-                  قطعات مکانیکی
-                </span>
-                <h2 className="section-title mt-3">قطعات مکانیکی و انتقال قدرت</h2>
-              </div>
-              <Link href="/products?category=mechanical" className="btn-ghost text-sm">
-                مشاهده همه
-                <ChevronLeft size={16} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mechanicalProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
           </div>
         </section>
       )}

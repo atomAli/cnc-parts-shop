@@ -68,6 +68,8 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "12");
 
+  const sort = searchParams.get("sort") || "newest";
+
   const subSlug = subcategory || sub;
   const skip = (page - 1) * limit;
 
@@ -114,7 +116,7 @@ export async function GET(request: NextRequest) {
       },
       skip,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: sort === "updated" ? { updatedAt: "desc" } : { createdAt: "desc" },
     }),
     prisma.product.count({ where }),
   ]);
