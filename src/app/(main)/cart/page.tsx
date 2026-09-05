@@ -99,17 +99,30 @@ export default function CartPage() {
                 <Link href={`/products/${item.slug}`} className="font-bold hover:text-blue-600 transition-colors">
                   {item.name}
                 </Link>
-                <div className="text-blue-600 font-bold mt-1">{formatPrice(item.price)}</div>
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center border border-gray-300 rounded-lg">
-                    <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="p-2 hover:bg-gray-100">
-                      <Minus size={16} />
-                    </button>
-                    <span className="px-4 py-2 font-medium">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-2 hover:bg-gray-100">
-                      <Plus size={16} />
-                    </button>
+                {item.isMeter ? (
+                  <div className="mt-1 space-y-0.5">
+                    <div className="text-sm text-gray-600">{item.branchCount} شاخه × {item.branchLength} متر</div>
+                    <div className="text-blue-600 font-bold">{formatPrice(item.price)} <span className="text-xs text-gray-500 font-normal">/متر</span></div>
                   </div>
+                ) : (
+                  <div className="text-blue-600 font-bold mt-1">{formatPrice(item.price)}</div>
+                )}
+                <div className="flex items-center justify-between mt-3">
+                  {item.isMeter ? (
+                    <div className="text-sm text-gray-500">
+                      جمع: <span className="font-bold text-blue-600">{formatPrice(item.price * (item.branchCount || 1) * (item.branchLength || 1))}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center border border-gray-300 rounded-lg">
+                      <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="p-2 hover:bg-gray-100">
+                        <Minus size={16} />
+                      </button>
+                      <span className="px-4 py-2 font-medium">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-2 hover:bg-gray-100">
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-center gap-4">
                     <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
                     <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 p-1">

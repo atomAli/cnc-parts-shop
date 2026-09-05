@@ -31,6 +31,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+  const [branchCount, setBranchCount] = useState(1);
+  const [branchLength, setBranchLength] = useState(1);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -52,16 +54,35 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fa-IR").format(price) + " تومان";
 
+  const isMeterProduct = product?.subcategory === "linear-guide" || product?.subcategory === "ball-screw";
+  const isMiniature = product?.name?.includes("مینیاتوری") || product?.name?.includes("Miniature");
+  const maxBranchLength = isMiniature ? 1 : 4;
+
   const handleAddToCart = () => {
     if (!product) return;
-    for (let i = 0; i < quantity; i++) {
-      addItem({
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        price: product.price || 0,
-        image: product.images?.[0]?.url,
-      });
+    if (isMeterProduct) {
+      for (let i = 0; i < quantity; i++) {
+        addItem({
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: product.price || 0,
+          image: product.images?.[0]?.url,
+          isMeter: true,
+          branchCount,
+          branchLength,
+        });
+      }
+    } else {
+      for (let i = 0; i < quantity; i++) {
+        addItem({
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: product.price || 0,
+          image: product.images?.[0]?.url,
+        });
+      }
     }
   };
 
@@ -194,31 +215,67 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {/* Quantity & Add to Cart */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center rounded-full border border-gray-200 bg-gray-50">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-3 rounded-r-full hover:bg-gray-100 transition-colors"
-                >
-                  <Minus size={18} />
-                </button>
-                <span className="px-6 py-3 font-bold min-w-[60px] text-center">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="p-3 rounded-l-full hover:bg-gray-100 transition-colors"
-                >
-                  <Plus size={18} />
+            {isMeterProduct ? (
+              <div className="mb-6 space-y-4">
+                <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4">
+                  <div className="text-sm font-bold text-amber-800 mb-3">محصول متری — تعداد شاخه و متراژ را وارد کنید</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">تعداد شاخه</label>
+                      <div className="flex items-center rounded-xl border border-gray-200 bg-white">
+                        <button onClick={() => setBranchCount(Math.max(1, branchCount - 1))} className="p-2.5 hover:bg-gray-100 rounded-r-xl transition-colors"><Minus size={16} /></button>
+                        <span className="px-4 py-2.5 font-bold min-w-[40px] text-center">{branchCount}</span>
+                        <button onClick={() => setBranchCount(branchCount + 1)} className="p-2.5 hover:bg-gray-100 rounded-l-xl transition-colors"><Plus size={16} /></button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">متراژ هر شاخه (متر)</label>
+                      <div className="flex items-center rounded-xl border border-gray-200 bg-white">
+                        <button onClick={() => setBranchLength(Math.max(0.5, branchLength - 0.5))} className="p-2.5 hover:bg-gray-100 rounded-r-xl transition-colors"><Minus size={16} /></button>
+                        <span className="px-4 py-2.5 font-bold min-w-[50px] text-center">{branchLength}</span>
+                        <button onClick={() => setBranchLength(Math.min(maxBranchLength, branchLength + 0.5))} className="p-2.5 hover:bg-gray-100 rounded-l-xl transition-colors"><Plus size={16} /></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">حداکثر طول هر شاخه: {isMiniature ? "۱" : "۴"} متر {isMiniature && "(مینیاتوری)"}</div>
+                  {product.price && (
+                    <div className="mt-3 pt-3 border-t border-amber-200">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">قیمت کل:</span>
+                        <span className="font-bold text-blue-600">{formatPrice(product.price * branchCount * branchLength)}</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {branchCount} شاخه × {branchLength} متر × {formatPrice(product.price)} /متر
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center rounded-full border border-gray-200 bg-gray-50">
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 rounded-r-full hover:bg-gray-100 transition-colors"><Minus size={18} /></button>
+                    <span className="px-6 py-3 font-bold min-w-[60px] text-center">{quantity}</span>
+                    <button onClick={() => setQuantity(quantity + 1)} className="p-3 rounded-l-full hover:bg-gray-100 transition-colors"><Plus size={18} /></button>
+                  </div>
+                  <button onClick={handleAddToCart} className="btn-primary flex-1">
+                    <ShoppingCart size={20} />
+                    افزودن به سبد خرید
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center rounded-full border border-gray-200 bg-gray-50">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 rounded-r-full hover:bg-gray-100 transition-colors"><Minus size={18} /></button>
+                  <span className="px-6 py-3 font-bold min-w-[60px] text-center">{quantity}</span>
+                  <button onClick={() => setQuantity(quantity + 1)} className="p-3 rounded-l-full hover:bg-gray-100 transition-colors"><Plus size={18} /></button>
+                </div>
+                <button onClick={handleAddToCart} className="btn-primary flex-1">
+                  <ShoppingCart size={20} />
+                  افزودن به سبد خرید
                 </button>
               </div>
-
-              <button
-                onClick={handleAddToCart}
-                className="btn-primary flex-1"
-              >
-                <ShoppingCart size={20} />
-                افزودن به سبد خرید
-              </button>
-            </div>
+            )}
 
             {/* Features */}
             <div className="grid grid-cols-2 gap-4 mb-6">

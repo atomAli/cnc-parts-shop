@@ -386,15 +386,25 @@ function ProductsContent() {
                   )}
                 </div>
                 <div className="mt-3 pt-3 border-t border-gray-100">
-                  <button
-                    onClick={() =>
-                      addItem({ id: product.id, name: product.name, slug: product.slug, price: product.price || 0, image: product.images?.[0]?.url })
-                    }
-                    className="btn-primary w-full"
-                  >
-                    <ShoppingCart size={16} />
-                    افزودن به سبد خرید
-                  </button>
+                  {product.subcategory === "linear-guide" || product.subcategory === "ball-screw" ? (
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="btn-primary w-full justify-center"
+                    >
+                      <ShoppingCart size={16} />
+                      انتخاب متراژ
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        addItem({ id: product.id, name: product.name, slug: product.slug, price: product.price || 0, image: product.images?.[0]?.url })
+                      }
+                      className="btn-primary w-full"
+                    >
+                      <ShoppingCart size={16} />
+                      افزودن به سبد خرید
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
