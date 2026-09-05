@@ -60,6 +60,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         name: product.name,
         slug: product.slug,
         price: product.price || 0,
+        image: product.images?.[0]?.url,
       });
     }
   };

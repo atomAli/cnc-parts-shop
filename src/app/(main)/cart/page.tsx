@@ -41,8 +41,12 @@ export default function CartPage() {
               key={item.id}
               className="card p-4 flex gap-4"
             >
-              <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-gray-400 text-xs">تصویر</span>
+              <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                ) : (
+                  <span className="text-gray-400 text-xs">تصویر</span>
+                )}
               </div>
 
               <div className="flex-1">

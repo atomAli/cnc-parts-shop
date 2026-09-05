@@ -388,7 +388,7 @@ function ProductsContent() {
                 <div className="mt-3 pt-3 border-t border-gray-100">
                   <button
                     onClick={() =>
-                      addItem({ id: product.id, name: product.name, slug: product.slug, price: product.price || 0 })
+                      addItem({ id: product.id, name: product.name, slug: product.slug, price: product.price || 0, image: product.images?.[0]?.url })
                     }
                     className="btn-primary w-full"
                   >
