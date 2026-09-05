@@ -148,14 +148,14 @@ export default function RepairsPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="tel:+982133724136"
-            className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
+            className="btn-white px-6 py-3"
           >
             <Phone size={18} />
             تماس تلفنی: ۰۲۱-۳۳۷۲۴۱۳۶
           </a>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 bg-blue-700 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-blue-700 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-800 transition-colors"
           >
             فرم تماس
             <ArrowLeft size={18} />

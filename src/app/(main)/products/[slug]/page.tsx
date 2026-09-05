@@ -208,7 +208,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
               <button
                 onClick={handleAddToCart}
-                className="btn-primary flex-1 py-3.5 text-base"
+                className="btn-primary flex-1"
               >
                 <ShoppingCart size={20} />
                 افزودن به سبد خرید

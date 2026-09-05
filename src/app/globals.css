@@ -45,7 +45,7 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full text-sm font-bold transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold leading-none transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap;
   }
 
   .btn-primary {

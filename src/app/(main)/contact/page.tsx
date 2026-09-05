@@ -215,7 +215,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="btn-primary px-8 py-3 disabled:opacity-50"
+                    className="btn-primary disabled:opacity-50"
                   >
                     <Send size={18} />
                     {loading ? "در حال ارسال..." : "ارسال پیام"}

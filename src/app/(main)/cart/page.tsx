@@ -124,7 +124,7 @@ export default function CartPage() {
               </div>
               <a
                 href="tel:+982133724136"
-                className="mt-2 block text-center bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+                className="mt-2 block text-center btn-primary py-2.5"
               >
                 021-33724136
               </a>

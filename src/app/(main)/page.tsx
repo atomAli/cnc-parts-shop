@@ -114,11 +114,11 @@ export default function HomePage() {
                 معتبر جهانی — با ضمانت اصالت و قیمت منصفانه.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link href="/products" className="btn-primary px-8 py-3.5 text-base">
+                <Link href="/products" className="btn-primary text-base">
                   مشاهده محصولات
                   <ArrowLeft size={18} />
                 </Link>
-                <Link href="/contact" className="btn-ghost px-8 py-3.5 text-base">
+                <Link href="/contact" className="btn-ghost text-base">
                   <Phone size={18} />
                   تماس با ما
                 </Link>
@@ -284,11 +284,11 @@ export default function HomePage() {
               تیم متخصص ما آماده پاسخگویی به سوالات فنی و ارائه بهترین راه‌حل‌ها برای پروژه‌های شماست
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="tel:+982133724136" className="btn-white px-8 py-3.5 text-base">
+              <a href="tel:+982133724136" className="btn-white text-base">
                 <Phone size={18} />
                 <span dir="ltr">021-33724136</span>
               </a>
-              <Link href="/contact" className="btn-outline px-8 py-3.5 text-base border-white text-white hover:bg-white/10">
+              <Link href="/contact" className="btn-outline border-white text-white hover:bg-white/10">
                 فرم تماس
               </Link>
             </div>
