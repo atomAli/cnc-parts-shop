@@ -76,7 +76,7 @@ export default function HomePage() {
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("/api/products?limit=6&sort=updated")
+    fetch("/api/products?limit=6")
       .then((r) => r.json())
       .then((data) => setRecentProducts(data.products || []))
       .catch(() => {});
@@ -177,7 +177,7 @@ export default function HomePage() {
                 <Sparkles size={15} className="text-blue-600" />
                 جدیدترین محصولات
               </span>
-              <h2 className="section-title mt-3">آخرین محصولات به‌روزرسانی شده</h2>
+              <h2 className="section-title mt-3">جدیدترین محصولات</h2>
             </div>
             <Link href="/products" className="btn-ghost text-sm">
               مشاهده همه
