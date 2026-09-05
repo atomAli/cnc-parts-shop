@@ -153,12 +153,12 @@ function ProductsContent() {
   const activeSub = activeCat?.children?.find((c) => c.slug === sub);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="container-page py-8">
       {/* Breadcrumb */}
-      <div className="text-sm text-gray-500 mb-6">
+      <div className="text-sm text-stone-500 mb-6">
         <Link href="/" className="hover:text-blue-600">خانه</Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">محصولات</span>
+        <span className="text-stone-900 font-medium">محصولات</span>
         {activeCat && (
           <>
             <span className="mx-2">/</span>
@@ -174,48 +174,48 @@ function ProductsContent() {
         {currentBrandName && (
           <>
             <span className="mx-2">/</span>
-            <span className="text-gray-900">{currentBrandName}</span>
+            <span className="text-stone-900 font-medium">{currentBrandName}</span>
           </>
         )}
       </div>
 
       {/* Search + Sort */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="card mb-6 p-4 flex flex-wrap items-center justify-between gap-4">
         <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="جستجوی محصول..."
-            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
           />
           <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2">
             <Search size={18} className="text-gray-400 hover:text-blue-600" />
           </button>
         </form>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">{total} محصول</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-stone-500">{total} محصول</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
+            className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="newest">جدیدترین</option>
             <option value="price-asc">ارزان‌ترین</option>
             <option value="price-desc">گران‌ترین</option>
             <option value="name">نام</option>
           </select>
-          <div className="hidden sm:flex items-center gap-1 border border-gray-300 rounded-lg p-1">
+          <div className="hidden sm:flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 p-1">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded ${viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-500"}`}
+              className={`p-1.5 rounded-full ${viewMode === "grid" ? "bg-blue-600 text-white shadow" : "text-gray-500 hover:text-blue-600"}`}
             >
               <Grid size={18} />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded ${viewMode === "list" ? "bg-blue-100 text-blue-600" : "text-gray-500"}`}
+              className={`p-1.5 rounded-full ${viewMode === "list" ? "bg-blue-600 text-white shadow" : "text-gray-500 hover:text-blue-600"}`}
             >
               <List size={18} />
             </button>
@@ -225,16 +225,14 @@ function ProductsContent() {
 
       {/* Category chips */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">۱</span>
-          <span className="text-sm font-medium text-gray-700">دسته‌بندی</span>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xs font-black shadow">۱</span>
+          <span className="text-sm font-bold text-stone-700">دسته‌بندی</span>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={handleClearFilter}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              !cat ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className={!cat ? "chip chip-active" : "chip chip-muted"}
           >
             همه
           </button>
@@ -242,15 +240,13 @@ function ProductsContent() {
             <div key={c.id} className="relative group">
               <button
                 onClick={() => handleCategoryClick(c.slug)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  cat === c.slug ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={cat === c.slug ? "chip chip-active" : "chip chip-muted"}
               >
                 {c.name}
               </button>
               {/* Subcategory dropdown */}
               {c.children && c.children.length > 0 && (
-                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-2 hidden group-hover:block z-50 min-w-[200px]">
+                <div className="absolute top-full right-0 mt-1 hidden group-hover:block z-50 min-w-[200px] rounded-2xl border border-gray-100 bg-white p-2 shadow-[var(--shadow-card)]">
                   {c.children.map((child) => (
                     <button
                       key={child.id}
@@ -258,7 +254,7 @@ function ProductsContent() {
                       className={`block w-full text-right px-3 py-2 rounded-lg text-sm ${
                         sub === child.slug
                           ? "bg-blue-50 text-blue-600 font-medium"
-                          : "hover:bg-gray-50 text-gray-700"
+                          : "hover:bg-gray-50 text-stone-700"
                       }`}
                     >
                       {child.name}
@@ -277,9 +273,7 @@ function ProductsContent() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => navigate({ sub: "" })}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                !sub ? "bg-blue-100 text-blue-700" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`chip-sub ${!sub ? "chip-soft" : "border border-gray-200 bg-white text-stone-600 hover:border-blue-300 hover:text-blue-600"}`}
             >
               همه {activeCat.name}
             </button>
@@ -287,9 +281,7 @@ function ProductsContent() {
               <button
                 key={child.id}
                 onClick={() => handleSubcategoryClick(child.slug)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  sub === child.slug ? "bg-blue-100 text-blue-700" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`chip-sub ${sub === child.slug ? "chip-soft" : "border border-gray-200 bg-white text-stone-600 hover:border-blue-300 hover:text-blue-600"}`}
               >
                 {child.name}
               </button>
@@ -301,16 +293,14 @@ function ProductsContent() {
       {/* Brand chips */}
       {showBrands && (
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">۲</span>
-            <span className="text-sm font-medium text-gray-700">برند</span>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-black shadow">۲</span>
+            <span className="text-sm font-bold text-stone-700">برند</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => navigate({ brand: "" })}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                !brand ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={!brand ? "chip chip-active" : "chip chip-muted"}
             >
               همه برندها
             </button>
@@ -318,9 +308,7 @@ function ProductsContent() {
               <button
                 key={b.id}
                 onClick={() => handleBrandClick(b.slug)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  brand === b.slug ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={brand === b.slug ? "chip chip-active" : "chip chip-muted"}
               >
                 {b.name}
                 {b._count && <span className="mr-1 text-xs opacity-70">({b._count.products})</span>}
@@ -332,15 +320,15 @@ function ProductsContent() {
 
       {/* Products */}
       {loading ? (
-        <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
+        <div className="card p-12 text-center">
           <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
-          <p className="text-gray-500 mt-4">در حال بارگذاری...</p>
+          <p className="text-stone-500 mt-4">در حال بارگذاری...</p>
         </div>
       ) : sortedProducts.length === 0 ? (
-        <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
+        <div className="card p-12 text-center">
           {q ? (
             <>
-              <p className="text-gray-700 text-lg font-medium">
+              <p className="text-stone-800 text-lg font-bold">
                 نتیجه‌ای برای «<span dir="auto">{q}</span>» پیدا نشد
               </p>
               <p className="text-gray-400 text-sm mt-2">
@@ -348,11 +336,11 @@ function ProductsContent() {
               </p>
             </>
           ) : (
-            <p className="text-gray-500 text-lg">محصولی یافت نشد</p>
+            <p className="text-stone-500 text-lg">محصولی یافت نشد</p>
           )}
           <button
             onClick={handleClearFilter}
-            className="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="btn-primary mt-5 px-6 py-2.5"
           >
             مشاهده همه محصولات
           </button>
@@ -368,41 +356,41 @@ function ProductsContent() {
           {sortedProducts.map((product) => (
             <div
               key={product.id}
-              className={`group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow ${
+              className={`group card overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] ${
                 viewMode === "list" ? "flex" : ""
               }`}
             >
-              <Link href={`/products/${product.slug}`} className={`block bg-gray-50 relative overflow-hidden ${
+              <Link href={`/products/${product.slug}`} className={`block bg-gradient-to-b from-gray-50 to-blue-50/60 relative overflow-hidden ${
                 viewMode === "list" ? "w-48 shrink-0" : "h-48"
               }`}>
                 {product.images?.[0]?.url ? (
                   <img
                     src={product.images[0].url}
                     alt={product.name}
-                    className="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-110"
+                    className="w-full h-full object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-110"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-400 text-sm">تصویر محصول</div>
                 )}
               </Link>
-              <div className="p-4 flex-1">
-                <div className="text-xs text-gray-500 mb-1">{getBrandName(product.brand)}</div>
-                <Link href={`/products/${product.slug}`} className="font-bold hover:text-blue-600 transition-colors line-clamp-2">
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="text-xs text-stone-500 font-medium mb-1">{getBrandName(product.brand)}</div>
+                <Link href={`/products/${product.slug}`} className="font-bold text-stone-800 hover:text-blue-600 transition-colors line-clamp-2">
                   {product.name}
                 </Link>
                 <div className="mt-2">
                   {product.price ? (
-                    <span className="text-lg font-bold text-blue-600">{formatPrice(product.price)}</span>
+                    <span className="text-lg font-black text-blue-600">{formatPrice(product.price)}</span>
                   ) : (
-                    <span className="text-sm text-gray-500">تماس بگیرید</span>
+                    <span className="text-sm text-stone-500 font-medium">تماس بگیرید</span>
                   )}
                 </div>
-                <div className="mt-3">
+                <div className="mt-3 pt-3 border-t border-gray-100">
                   <button
                     onClick={() =>
                       addItem({ id: product.id, name: product.name, slug: product.slug, price: product.price || 0 })
                     }
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                    className="btn-primary w-full py-2.5"
                   >
                     <ShoppingCart size={16} />
                     افزودن به سبد خرید
@@ -420,10 +408,10 @@ function ProductsContent() {
 export default function ProductsPage() {
   return (
     <Suspense fallback={
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
+      <div className="container-page py-8">
+        <div className="card p-12 text-center">
           <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
-          <p className="text-gray-500 mt-4">در حال بارگذاری...</p>
+          <p className="text-stone-500 mt-4">در حال بارگذاری...</p>
         </div>
       </div>
     }>

@@ -85,7 +85,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="container-page py-8">
       {/* Admin actions */}
       {isAdmin && product.id && (
         <div className="flex flex-wrap items-center gap-3 mb-6 p-3 bg-gray-900 rounded-xl text-sm">
@@ -120,21 +120,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       )}
 
       {/* Breadcrumb */}
-      <div className="text-sm text-gray-500 mb-6">
+      <div className="text-sm text-stone-500 mb-6">
         <Link href="/" className="hover:text-blue-600">خانه</Link>
         <span className="mx-2">/</span>
         <Link href="/products" className="hover:text-blue-600">محصولات</Link>
         <span className="mx-2">/</span>
         <Link href={`/products?category=${product.category.slug}`} className="hover:text-blue-600">{product.category.name}</Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">{product.name}</span>
+        <span className="text-stone-900 font-medium">{product.name}</span>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 md:p-8">
           {/* Image */}
           <div className="group">
-            <div className="bg-gray-50 rounded-xl h-96 flex items-center justify-center overflow-hidden">
+            <div className="bg-gradient-to-b from-gray-50 to-blue-50/60 rounded-2xl h-96 flex items-center justify-center overflow-hidden">
               {product.images?.[activeImage]?.url ? (
                 <Image
                   src={product.images[activeImage].url}
@@ -172,35 +172,35 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
           {/* Details */}
           <div>
-            <div className="text-sm text-gray-500 mb-2">{product.brand.name}</div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.name}</h1>
+            <div className="text-sm text-stone-500 font-medium mb-2">{product.brand.name}</div>
+            <h1 className="text-2xl md:text-3xl font-black mb-4 text-stone-900">{product.name}</h1>
 
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <div className="rounded-2xl bg-gradient-to-l from-blue-50 to-amber-50/60 border border-blue-100/60 p-5 mb-6">
               {product.price ? (
-                <span className="text-3xl font-bold text-blue-600">
+                <span className="text-3xl font-black text-blue-600">
                   {formatPrice(product.price)}
                 </span>
               ) : (
                 <div>
-                  <span className="text-lg text-gray-500">قیمت: </span>
-                  <span className="text-lg font-bold text-blue-600">تماس بگیرید</span>
+                  <span className="text-lg text-stone-500">قیمت: </span>
+                  <span className="text-lg font-black text-blue-600">تماس بگیرید</span>
                 </div>
               )}
             </div>
 
             {/* Quantity & Add to Cart */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center border border-gray-300 rounded-lg">
+              <div className="flex items-center rounded-full border border-gray-200 bg-gray-50">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-3 hover:bg-gray-100"
+                  className="p-3 rounded-r-full hover:bg-gray-100 transition-colors"
                 >
                   <Minus size={18} />
                 </button>
-                <span className="px-6 py-3 font-medium min-w-[60px] text-center">{quantity}</span>
+                <span className="px-6 py-3 font-bold min-w-[60px] text-center">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="p-3 hover:bg-gray-100"
+                  className="p-3 rounded-l-full hover:bg-gray-100 transition-colors"
                 >
                   <Plus size={18} />
                 </button>
@@ -208,7 +208,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                className="btn-primary flex-1 py-3.5 text-base"
               >
                 <ShoppingCart size={20} />
                 افزودن به سبد خرید
@@ -261,16 +261,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       </div>
 
       {/* Contact CTA */}
-      <div className="mt-8 bg-blue-600 text-white rounded-xl p-6 md:p-8 text-center">
-        <h3 className="text-xl font-bold mb-2">سوالی دارید؟ با ما تماس بگیرید</h3>
-        <p className="text-blue-100 mb-4">مشاوران ما آماده پاسخگویی به سوالات فنی شما هستند</p>
-        <a
-          href="tel:+982133724136"
-          className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
-        >
-          تماس تلفنی
-          <ArrowRight size={18} />
-        </a>
+      <div className="mt-8 relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 px-6 py-8 md:p-10 text-center text-white">
+        <div className="pointer-events-none absolute -top-16 -left-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative">
+          <h3 className="text-xl font-black mb-2">سوالی دارید؟ با ما تماس بگیرید</h3>
+          <p className="text-blue-100 mb-5">شیک خرید کنید؛ مشاوران ما آماده پاسخگویی به سوالات فنی شما هستند</p>
+          <a
+            href="tel:+982133724136"
+            className="btn-white px-6 py-3"
+          >
+            تماس تلفنی
+            <ArrowRight size={18} />
+          </a>
+        </div>
       </div>
     </div>
   );

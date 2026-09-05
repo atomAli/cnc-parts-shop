@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const image = product.images.find((i) => i.isPrimary) || product.images[0];
   const description =
     (product.description || "").slice(0, 160) ||
-    `${product.name} - سفارش و مشاوره در مارکت CNC`;
+    `${product.name} - سفارش و مشاوره در فروشگاه شیک`;
 
   return {
     title: product.name,
@@ -69,7 +69,7 @@ export default async function ProductLayout({ params, children }: Props) {
             priceCurrency: "IRR",
             price: product.price ? Math.round(product.price).toString() : undefined,
             availability: "https://schema.org/InStock",
-            seller: { "@type": "Organization", name: "مارکت CNC" },
+            seller: { "@type": "Organization", name: "شیک" },
           },
         },
         null,

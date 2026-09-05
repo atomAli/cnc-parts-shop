@@ -29,6 +29,7 @@ export default function AdminSettingsPage() {
 
   const fields = [
     { key: "site_name", label: "نام سایت" },
+    { key: "site_slogan", label: "شعار سایت" },
     { key: "site_phone", label: "تلفن" },
     { key: "site_email", label: "ایمیل" },
     { key: "site_address", label: "آدرس" },

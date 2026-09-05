@@ -13,13 +13,15 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <ShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">سبد خرید شما خالی است</h1>
-        <p className="text-gray-500 mb-6">محصولات مورد نظر خود را به سبد خرید اضافه کنید</p>
+      <div className="container-page py-16 text-center">
+        <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-gray-100 text-gray-300">
+          <ShoppingCart size={40} />
+        </div>
+        <h1 className="text-2xl font-black mb-2">سبد خرید شما خالی است</h1>
+        <p className="text-stone-500 mb-7">محصولات مورد نظر خود را به سبد خرید اضافه کنید</p>
         <Link
           href="/products"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+          className="btn-primary px-7 py-3"
         >
           مشاهده محصولات
         </Link>
@@ -28,8 +30,8 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">سبد خرید</h1>
+    <div className="container-page py-8">
+      <h1 className="text-2xl font-black mb-8">سبد خرید</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
@@ -37,7 +39,7 @@ export default function CartPage() {
           {items.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex gap-4"
+              className="card p-4 flex gap-4"
             >
               <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
                 <span className="text-gray-400 text-xs">تصویر</span>
@@ -97,8 +99,8 @@ export default function CartPage() {
 
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 sticky top-24">
-            <h2 className="font-bold text-lg mb-4">خلاصه سفارش</h2>
+          <div className="card p-6 sticky top-24">
+            <h2 className="font-black text-lg mb-4">خلاصه سفارش</h2>
 
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">

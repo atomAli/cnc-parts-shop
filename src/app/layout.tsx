@@ -15,11 +15,11 @@ const siteUrl = SITE_URL;
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "مارکت CNC | فروشگاه تخصصی قطعات CNC و اتوماسیون صنعتی",
-    template: "%s | مارکت CNC",
+    default: "شیک | شیک خرید کنید — فروشگاه تخصصی قطعات CNC و اتوماسیون صنعتی",
+    template: "%s | شیک",
   },
   description:
-    "فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی از برندهای معتبر جهانی",
+    "شیک خرید کنید | فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی از برندهای معتبر جهانی",
   alternates: {
     canonical: "/",
   },
@@ -27,17 +27,17 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fa_IR",
     url: siteUrl,
-    siteName: "مارکت CNC",
-    title: "مارکت CNC | فروشگاه تخصصی قطعات CNC و اتوماسیون صنعتی",
+    siteName: "شیک",
+    title: "شیک | شیک خرید کنید — فروشگاه تخصصی قطعات CNC و اتوماسیون صنعتی",
     description:
-      "فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی",
-    images: [{ url: `${siteUrl}/logo.png`, width: 763, height: 327, alt: "مارکت CNC" }],
+      "شیک خرید کنید | فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی",
+    images: [{ url: `${siteUrl}/logo.png`, width: 763, height: 327, alt: "شیک" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "مارکت CNC | فروشگاه تخصصی قطعات CNC و اتوماسیون صنعتی",
+    title: "شیک | شیک خرید کنید",
     description:
-      "فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی",
+      "شیک خرید کنید | فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی",
     images: [`${siteUrl}/logo.png`],
   },
   robots: {
@@ -52,10 +52,11 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "مارکت CNC",
-  alternateName: "CNC Market",
+  name: "شیک",
+  alternateName: "Shik",
   url: siteUrl,
   logo: `${siteUrl}/logo.png`,
+  slogan: "شیک خرید کنید",
   contactPoint: {
     "@type": "ContactPoint",
     telephone: "+982133724136",

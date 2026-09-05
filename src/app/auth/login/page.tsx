@@ -38,68 +38,75 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">ورود به حساب کاربری</h1>
-          <p className="mt-2 text-gray-600">فروشگاه مارکت CNC</p>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50 py-12 px-4">
+      <div className="pointer-events-none absolute -top-20 -left-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 -right-16 h-72 w-72 rounded-full bg-amber-200/40 blur-3xl" />
+      <div className="relative max-w-md w-full">
+        <div className="card p-8 sm:p-10">
+          <div className="text-center mb-8">
+            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-2xl font-black text-white shadow-lg shadow-blue-600/30">
+              ش
+            </div>
+            <h1 className="text-2xl font-black text-stone-900">ورود به حساب کاربری</h1>
+            <p className="mt-2 text-stone-500">فروشگاه شیک | شیک خرید کنید</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="phone" className="block text-sm font-bold text-stone-700 mb-1.5">
+                  شماره تلفن
+                </label>
+                <input
+                  id="phone"
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="input"
+                  placeholder="09120000000"
+                  dir="ltr"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-bold text-stone-700 mb-1.5">
+                  رمز عبور
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input"
+                  placeholder="••••••••"
+                  dir="ltr"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full py-3.5"
+            >
+              {loading ? "در حال ورود..." : "ورود"}
+            </button>
+
+            <div className="text-center">
+              <Link href="/auth/register" className="text-blue-600 font-medium hover:underline">
+                حساب کاربری ندارید؟ ثبت نام کنید
+              </Link>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                شماره تلفن
-              </label>
-              <input
-                id="phone"
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="09120000000"
-                dir="ltr"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                رمز عبور
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="••••••••"
-                dir="ltr"
-                required
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {loading ? "در حال ورود..." : "ورود"}
-          </button>
-
-          <div className="text-center">
-            <Link href="/auth/register" className="text-blue-600 hover:underline">
-              حساب کاربری ندارید؟ ثبت نام کنید
-            </Link>
-          </div>
-        </form>
       </div>
     </div>
   );

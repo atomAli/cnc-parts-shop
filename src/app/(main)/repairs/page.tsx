@@ -71,26 +71,26 @@ export default function RepairsPage() {
       </div>
 
       {/* Intro */}
-      <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-gray-100 mb-12">
+      <div className="card p-8 md:p-12 mb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div>
-            <h2 className="text-2xl font-bold mb-4">تعمیرات تخصصی CNC با ضمانت</h2>
-            <div className="space-y-4 text-gray-600 leading-relaxed">
+            <h2 className="text-2xl font-black mb-4">تعمیرات تخصصی CNC با ضمانت</h2>
+            <div className="space-y-4 text-stone-600 leading-relaxed">
               <p>
-                تیم فنی CNC Market با سال‌ها تجربه در زمینه تعمیر و نگهداری ماشین‌آلات CNC، آماده ارائه
+                تیم فنی شیک با سال‌ها تجربه در زمینه تعمیر و نگهداری ماشین‌آلات CNC، آماده ارائه
                 خدمات تعمیرات تخصصی الکترونیکی، الکتریکی و مکانیکی برای انواع دستگاه‌های صنعتی است.
               </p>
               <p>
                 دستگاه شما را با دقت عیب‌یابی، هزینه و زمان تعمیر را شفاف اعلام کرده و پس از تأیید شما،
                 تعمیر را با قطعات اصلی و ضمانت انجام می‌دهیم تا ماشین‌آلات شما در کوتاه‌ترین زمان به چرخه
-                تولید بازگردد.
+                تولید بازگردد. شیک خرید کنید.
               </p>
               <p>
                 برای دریافت مشاوره فنی رایگان و برآورد هزینه، همین حالا با کارشناسان ما تماس بگیرید.
               </p>
             </div>
           </div>
-          <div className="bg-gray-100 rounded-xl h-64 flex items-center justify-center">
+          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-amber-50 h-64 flex items-center justify-center">
             <Wrench size={64} className="text-blue-600" />
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function RepairsPage() {
       {/* Services grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {repairServices.map((s, i) => (
-          <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div key={i} className="card p-6 transition-all duration-300 hover:-translate-y-1">
             <s.icon size={32} className="text-blue-600 mb-4" />
             <h3 className="font-bold text-lg mb-2">{s.title}</h3>
             <p className="text-gray-600 text-sm leading-relaxed">{s.description}</p>
@@ -108,7 +108,7 @@ export default function RepairsPage() {
       </div>
 
       {/* Process */}
-      <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-gray-100 mb-12">
+      <div className="card p-8 md:p-12 mb-12">
         <h2 className="text-2xl font-bold text-center mb-10">مراحل دریافت خدمات تعمیرات</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((s, i) => (
@@ -131,7 +131,7 @@ export default function RepairsPage() {
           { icon: ShieldCheck, label: "ضمانت تعمیر", value: "اطمینان کامل" },
           { icon: Clock, label: "زمان تعمیر سریع", value: "کمتر از انتظار" },
         ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-xl p-6 text-center shadow-sm border border-gray-100">
+          <div key={i} className="card p-6 text-center">
             <stat.icon size={32} className="mx-auto text-blue-600 mb-3" />
             <div className="text-2xl font-bold">{stat.value}</div>
             <div className="text-gray-600 text-sm">{stat.label}</div>
@@ -140,7 +140,7 @@ export default function RepairsPage() {
       </div>
 
       {/* Consultation CTA */}
-      <div className="bg-blue-600 rounded-2xl p-8 md:p-12 text-center text-white">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 p-8 md:p-12 text-center text-white">
         <h3 className="text-2xl font-bold mb-3">مشاوره فنی و برآورد هزینه رایگان</h3>
         <p className="text-blue-100 mb-6">
           کارشناسان ما آماده پاسخگویی به سوالات فنی شما درباره تعمیر و نگهداری ماشین‌آلات CNC هستند

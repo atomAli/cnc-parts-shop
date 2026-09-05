@@ -172,7 +172,8 @@ async function main() {
 
   // Create settings
   const settingsData = [
-    { key: "site_name", value: "فروشگاه قطعات CNC" },
+    { key: "site_name", value: "فروشگاه شیک" },
+    { key: "site_slogan", value: "شیک خرید کنید" },
     { key: "site_phone", value: "021-33724136" },
     { key: "site_email", value: "info@cncmarket.ir" },
     { key: "site_address", value: "تهران، خیابان سعدی جنوبی، کوچه ناظم الاطباء شمالی" },

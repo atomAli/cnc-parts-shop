@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cart";
-import { ShoppingCart, User, Menu, X, Search, Phone, ChevronDown, Zap, Settings, Wrench } from "lucide-react";
+import { ShoppingCart, User, Menu, X, Search, Phone, ChevronDown, Zap, Settings, Wrench, Sparkles } from "lucide-react";
 import { useState, useRef } from "react";
 import SearchBar from "@/components/layout/SearchBar";
+import Logo from "@/components/Logo";
 
 const electricalSubs = [
   { name: "سروموتور و درایو", slug: "servo-motor" },
@@ -57,52 +58,45 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
       {/* Top bar */}
-      <div className="bg-blue-600 text-white text-sm">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <a href="tel:+982133724136" className="flex items-center gap-1 hover:text-blue-100">
-              <Phone size={14} />
-              <span dir="ltr">021-33724136</span>
-            </a>
-          </div>
-          <div className="hidden md:block">
-            <span>فروش تخصصی محصولات CNC و اتوماسیون صنعتی</span>
+      <div className="bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 text-white text-sm">
+        <div className="container-page py-2 flex items-center justify-between">
+          <a href="tel:+982133724136" className="flex items-center gap-1.5 hover:text-blue-100 transition-colors">
+            <Phone size={14} />
+            <span dir="ltr">021-33724136</span>
+          </a>
+          <div className="hidden md:flex items-center gap-1.5">
+            <Sparkles size={14} className="text-amber-300" />
+            <span>شیک خرید کنید | قطعات CNC و اتوماسیون صنعتی</span>
           </div>
         </div>
       </div>
 
       {/* Main header */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <img
-              src="/logo.png"
-              alt="مارکت CNC"
-              className="h-10 w-auto sm:h-12 transition-transform hover:scale-105"
-            />
-          </Link>
+      <div className="container-page py-4">
+        <div className="flex items-center justify-between gap-4">
+          <Logo />
 
           {/* Search bar - desktop */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-8">
+          <div className="hidden md:flex flex-1 max-w-xl mx-6">
             <SearchBar />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <button
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="md:hidden p-2 hover:bg-blue-50 rounded-full transition-colors text-stone-600"
               onClick={() => setSearchOpen(!searchOpen)}
+              aria-label="جستجو"
             >
-              <Search size={24} />
+              <Search size={22} />
             </button>
 
-            <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg">
-              <ShoppingCart size={24} />
+            <Link href="/cart" className="relative p-2 hover:bg-blue-50 rounded-full transition-colors text-stone-600" aria-label="سبد خرید">
+              <ShoppingCart size={22} />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                <span className="absolute -top-0.5 -left-0.5 bg-blue-600 text-white text-[11px] w-5 h-5 flex items-center justify-center rounded-full ring-2 ring-white">
                   {itemCount}
                 </span>
               )}
@@ -112,22 +106,22 @@ export default function Header() {
               <>
                 <Link
                   href="/profile"
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-stone-700 hover:border-blue-300 hover:text-blue-600 transition-colors"
                 >
-                  <User size={20} />
-                  <span className="text-sm">{session.user?.name || "پروفایل"}</span>
+                  <User size={18} />
+                  <span className="text-sm font-medium">{session.user?.name || "پروفایل"}</span>
                 </Link>
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    className="hidden sm:inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                    className="hidden sm:inline-block px-4 py-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 text-sm transition-colors"
                   >
                     پنل مدیریت
                   </Link>
                 )}
                 <button
                   onClick={() => signOut()}
-                  className="hidden sm:inline-block px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                  className="hidden sm:inline-block px-4 py-2 text-red-500 hover:bg-red-50 rounded-full text-sm transition-colors"
                 >
                   خروج
                 </button>
@@ -135,19 +129,19 @@ export default function Header() {
             ) : (
               <Link
                 href="/auth/login"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="btn-primary px-5 py-2.5"
               >
-                <User size={20} />
-                <span className="hidden sm:inline text-sm">ورود</span>
+                <User size={18} />
+                <span className="hidden sm:inline">ورود</span>
               </Link>
             )}
 
             <button
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="md:hidden p-2 hover:bg-blue-50 rounded-full transition-colors text-stone-600"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="منو"
             >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
@@ -161,11 +155,11 @@ export default function Header() {
       </div>
 
       {/* Navigation - desktop with mega menu */}
-      <nav className="hidden md:block border-t border-gray-200 relative">
-        <div className="max-w-7xl mx-auto px-4">
+      <nav className="hidden md:block relative border-t border-gray-100">
+        <div className="container-page">
           <ul className="flex items-center gap-1">
             <li>
-              <Link href="/" className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium">
+              <Link href="/" className="flex items-center gap-1.5 px-4 py-3 text-stone-700 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors font-medium">
                 خانه
               </Link>
             </li>
@@ -176,19 +170,19 @@ export default function Header() {
             >
               <Link
                 href="/products"
-                className="flex items-center gap-1 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium"
+                className="flex items-center gap-1 px-4 py-3 text-stone-700 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors font-medium"
               >
                 محصولات
                 <ChevronDown size={16} className={`transition-transform duration-200 ${megaMenuOpen ? "rotate-180" : ""}`} />
               </Link>
             </li>
             <li>
-              <Link href="/about" className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium">
+              <Link href="/about" className="block px-4 py-3 text-stone-700 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors font-medium">
                 درباره ما
               </Link>
             </li>
             <li>
-              <Link href="/contact" className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium">
+              <Link href="/contact" className="block px-4 py-3 text-stone-700 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors font-medium">
                 تماس با ما
               </Link>
             </li>
@@ -197,13 +191,13 @@ export default function Header() {
 
         {/* Mega Menu Dropdown */}
         <div
-          className={`absolute top-full right-0 left-0 bg-white border-t border-gray-100 shadow-lg transition-all duration-200 ${
+          className={`absolute top-full right-0 left-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 shadow-[var(--shadow-card)] transition-all duration-200 ${
             megaMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
           }`}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="container-page py-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               {/* Electrical */}
               <div>
@@ -211,17 +205,17 @@ export default function Header() {
                   href="/products?category=electrical"
                   className="flex items-center gap-2 mb-4 text-blue-600 hover:text-blue-700 font-bold"
                 >
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <Zap size={20} className="text-blue-600" />
+                  <div className="grid place-items-center w-9 h-9 rounded-xl bg-blue-100">
+                    <Zap size={18} className="text-blue-600" />
                   </div>
                   قطعات برقی
                 </Link>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
                         href={`/products?category=electrical&sub=${sub.slug}`}
-                        className="block px-3 py-1.5 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="block px-3 py-1.5 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
                         {sub.name}
@@ -235,19 +229,19 @@ export default function Header() {
               <div>
                 <Link
                   href="/products?category=mechanical"
-                  className="flex items-center gap-2 mb-4 text-green-600 hover:text-green-700 font-bold"
+                  className="flex items-center gap-2 mb-4 text-amber-600 hover:text-amber-700 font-bold"
                 >
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Settings size={20} className="text-green-600" />
+                  <div className="grid place-items-center w-9 h-9 rounded-xl bg-amber-100">
+                    <Settings size={18} className="text-amber-600" />
                   </div>
                   قطعات مکانیکی
                 </Link>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
                         href={`/products?category=mechanical&sub=${sub.slug}`}
-                        className="block px-3 py-1.5 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        className="block px-3 py-1.5 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
                         {sub.name}
@@ -261,19 +255,19 @@ export default function Header() {
               <div>
                 <Link
                   href="/repairs"
-                  className="flex items-center gap-2 mb-4 text-purple-600 hover:text-purple-700 font-bold"
+                  className="flex items-center gap-2 mb-4 text-emerald-600 hover:text-emerald-700 font-bold"
                 >
-                  <div className="bg-purple-100 p-2 rounded-lg">
-                    <Wrench size={20} className="text-purple-600" />
+                  <div className="grid place-items-center w-9 h-9 rounded-xl bg-emerald-100">
+                    <Wrench size={18} className="text-emerald-600" />
                   </div>
                   خدمات
                 </Link>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {services.map((sub) => (
                     <li key={sub.slug}>
                       <Link
                         href={sub.href}
-                        className="block px-3 py-1.5 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        className="block px-3 py-1.5 text-sm text-stone-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
                         {sub.name}
@@ -284,20 +278,21 @@ export default function Header() {
               </div>
 
               {/* CTA */}
-              <div className="bg-gray-50 rounded-xl p-6">
-                <h3 className="font-bold text-lg mb-2">نیاز به مشاوره دارید؟</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  تیم متخصص ما آماده راهنمایی شماست
+              <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-amber-50 p-6">
+                <h3 className="font-black text-lg mb-1.5 text-stone-900">نیاز به مشاوره دارید؟</h3>
+                <p className="text-sm text-stone-600 mb-5">
+                  شیک خرید کنید؛ تیم متخصص ما آماده راهنمایی شماست
                 </p>
                 <a
                   href="tel:+982133724136"
-                  className="block bg-blue-600 text-white text-center py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  className="btn-primary w-full py-2.5"
                 >
+                  <Phone size={16} />
                   تماس تلفنی
                 </a>
                 <Link
                   href="/contact"
-                  className="block mt-2 text-center text-blue-600 text-sm hover:underline"
+                  className="block mt-2 text-center text-blue-600 text-sm font-medium hover:underline"
                   onClick={() => setMegaMenuOpen(false)}
                 >
                   فرم تماس
@@ -310,26 +305,26 @@ export default function Header() {
 
       {/* Mobile menu */}
       <div
-        className={`md:hidden border-t border-gray-200 bg-white overflow-hidden transition-all duration-300 ${
-          mobileMenuOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+        className={`md:hidden border-t border-gray-100 bg-white overflow-hidden transition-all duration-300 ${
+          mobileMenuOpen ? "max-h-[900px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <nav className="px-4 py-2">
           <ul className="space-y-1">
             <li>
-              <Link href="/" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/" className="block px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                 خانه
               </Link>
             </li>
             <li>
-              <Link href="/products" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/products" className="block px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                 همه محصولات
               </Link>
             </li>
             <li>
               <button
                 onClick={() => setMobileSubmenu(mobileSubmenu === "electrical" ? null : "electrical")}
-                className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium"
               >
                 قطعات برقی
                 <ChevronDown size={16} className={`transition-transform ${mobileSubmenu === "electrical" ? "rotate-180" : ""}`} />
@@ -340,7 +335,7 @@ export default function Header() {
                     <li key={sub.slug}>
                       <Link
                         href={`/products?category=electrical&sub=${sub.slug}`}
-                        className="block px-4 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="block px-4 py-2 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {sub.name}
@@ -353,7 +348,7 @@ export default function Header() {
             <li>
               <button
                 onClick={() => setMobileSubmenu(mobileSubmenu === "mechanical" ? null : "mechanical")}
-                className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium"
               >
                 قطعات مکانیکی
                 <ChevronDown size={16} className={`transition-transform ${mobileSubmenu === "mechanical" ? "rotate-180" : ""}`} />
@@ -364,7 +359,7 @@ export default function Header() {
                     <li key={sub.slug}>
                       <Link
                         href={`/products?category=mechanical&sub=${sub.slug}`}
-                        className="block px-4 py-2 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                        className="block px-4 py-2 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {sub.name}
@@ -375,31 +370,31 @@ export default function Header() {
               </div>
             </li>
             <li>
-              <Link href="/about" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/about" className="block px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                 درباره ما
               </Link>
             </li>
             <li>
-              <Link href="/contact" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/contact" className="block px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
                 تماس با ما
               </Link>
             </li>
             {isLoggedIn && (
               <>
                 <li className="border-t border-gray-100 pt-1 mt-1">
-                  <Link href="/profile" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/profile" className="block px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
                     پروفایل
                   </Link>
                 </li>
                 {isAdmin && (
                   <li>
-                    <Link href="/admin" className="block px-4 py-3 text-green-600 hover:bg-green-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                    <Link href="/admin" className="block px-4 py-3 text-emerald-600 hover:bg-emerald-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
                       پنل مدیریت
                     </Link>
                   </li>
                 )}
                 <li>
-                  <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="block w-full text-right px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg">
+                  <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="block w-full text-right px-4 py-3 text-red-500 hover:bg-red-50 rounded-lg">
                     خروج
                   </button>
                 </li>

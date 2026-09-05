@@ -22,20 +22,26 @@ export default function ContactPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 py-14 md:py-20 text-center relative z-10">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">تماس با ما</h1>
-          <p className="text-blue-100 max-w-2xl mx-auto text-lg">
+      <section className="relative overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50">
+        <div className="pointer-events-none absolute -top-20 -left-20 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 -right-16 h-64 w-64 rounded-full bg-amber-200/40 blur-3xl" />
+        <div className="container-page relative py-14 md:py-20 text-center">
+          <span className="eyebrow mb-6">
+            <MessageSquareText size={15} />
+            شیک خرید کنید
+          </span>
+          <h1 className="text-3xl md:text-5xl font-black mb-4 mt-4 text-stone-900">تماس با ما</h1>
+          <p className="text-stone-600 max-w-2xl mx-auto text-lg">
             برای مشاوره فنی، استعلام قیمت و همکاری، کارشناسان ما پاسخگوی شما هستند
           </p>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="container-page py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Info */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="card p-6">
               <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <MessageSquareText size={20} className="text-blue-600" />
                 اطلاعات تماس
@@ -92,7 +98,7 @@ export default function ContactPage() {
             </div>
 
             {/* Services quick links */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="card p-6">
               <h2 className="font-bold text-lg mb-4">سرویس‌های پشتیبانی</h2>
               <ul className="space-y-3 text-sm">
                 <li>
@@ -209,7 +215,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="btn-primary px-8 py-3 disabled:opacity-50"
                   >
                     <Send size={18} />
                     {loading ? "در حال ارسال..." : "ارسال پیام"}
@@ -233,7 +239,7 @@ export default function ContactPage() {
               </p>
               <div className="rounded-xl overflow-hidden border border-gray-200">
                 <iframe
-                  title="موقعیت مارکت CNC روی نقشه"
+                  title="موقعیت فروشگاه شیک روی نقشه"
                   src="https://maps.google.com/maps?q=%D8%AA%D9%87%D8%B1%D8%A7%D9%86%D8%8C%20%D8%AE%DB%8C%D8%A7%D8%A8%D8%A7%D9%86%20%D8%B3%D8%B9%D8%AF%DB%8C%20%D8%AC%D9%86%D9%88%D8%A8%DB%8C&t=&z=15&ie=UTF8&iwloc=&output=embed"
                   width="100%"
                   height="360"
