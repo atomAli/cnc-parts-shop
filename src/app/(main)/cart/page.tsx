@@ -21,7 +21,7 @@ export default function CartPage() {
         <p className="text-stone-500 mb-7">محصولات مورد نظر خود را به سبد خرید اضافه کنید</p>
         <Link
           href="/products"
-          className="btn-primary px-7 py-3"
+          className="btn-primary"
         >
           مشاهده محصولات
         </Link>
@@ -124,7 +124,7 @@ export default function CartPage() {
               </div>
               <a
                 href="tel:+982133724136"
-                className="mt-2 block text-center btn-primary py-2.5"
+                className="mt-2 block text-center btn-primary"
               >
                 021-33724136
               </a>

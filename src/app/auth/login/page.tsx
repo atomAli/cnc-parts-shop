@@ -95,7 +95,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-3.5"
+              className="btn-primary w-full"
             >
               {loading ? "در حال ورود..." : "ورود"}
             </button>

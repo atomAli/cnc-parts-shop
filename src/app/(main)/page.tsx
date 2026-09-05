@@ -184,7 +184,7 @@ export default function HomePage() {
               </span>
               <h2 className="section-title mt-3">تجهیزات برقی و اتوماسیون</h2>
             </div>
-            <Link href="/products?category=electrical" className="btn-ghost px-5 py-2.5 text-sm">
+            <Link href="/products?category=electrical" className="btn-ghost text-sm">
               مشاهده همه
               <ChevronLeft size={16} />
             </Link>
@@ -209,7 +209,7 @@ export default function HomePage() {
                 </span>
                 <h2 className="section-title mt-3">قطعات مکانیکی و انتقال قدرت</h2>
               </div>
-              <Link href="/products?category=mechanical" className="btn-ghost px-5 py-2.5 text-sm">
+              <Link href="/products?category=mechanical" className="btn-ghost text-sm">
                 مشاهده همه
                 <ChevronLeft size={16} />
               </Link>

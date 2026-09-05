@@ -129,7 +129,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/auth/login"
-                className="btn-primary px-5 py-2.5"
+                className="btn-primary"
               >
                 <User size={18} />
                 <span className="hidden sm:inline">ورود</span>
@@ -285,7 +285,7 @@ export default function Header() {
                 </p>
                 <a
                   href="tel:+982133724136"
-                  className="btn-primary w-full py-2.5"
+                  className="btn-primary w-full"
                 >
                   <Phone size={16} />
                   تماس تلفنی

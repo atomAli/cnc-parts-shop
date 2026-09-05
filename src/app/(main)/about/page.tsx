@@ -79,11 +79,11 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/products" className="btn-primary px-7 py-3">
+              <Link href="/products" className="btn-primary">
                 مشاهده محصولات
                 <ChevronLeft size={18} />
               </Link>
-              <Link href="/contact" className="btn-ghost px-7 py-3">
+              <Link href="/contact" className="btn-ghost">
                 <Phone size={18} />
                 تماس با ما
               </Link>
@@ -181,11 +181,11 @@ export default function AboutPage() {
               تیم ما آماده است تا در انتخاب قطعات و تجهیزات پروژه شما مشاوره فنی رایگان ارائه دهد
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="tel:+982133724136" className="btn-white px-7 py-3">
+              <a href="tel:+982133724136" className="btn-white">
                 <Phone size={18} />
                 <span dir="ltr">021-33724136</span>
               </a>
-              <Link href="/contact" className="btn-outline border-white text-white hover:bg-white/10 px-7 py-3">
+              <Link href="/contact" className="btn-outline border-white text-white hover:bg-white/10">
                 فرم تماس
               </Link>
             </div>

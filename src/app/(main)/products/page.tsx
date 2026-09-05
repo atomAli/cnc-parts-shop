@@ -340,7 +340,7 @@ function ProductsContent() {
           )}
           <button
             onClick={handleClearFilter}
-            className="btn-primary mt-5 px-6 py-2.5"
+            className="btn-primary mt-5"
           >
             مشاهده همه محصولات
           </button>
@@ -390,7 +390,7 @@ function ProductsContent() {
                     onClick={() =>
                       addItem({ id: product.id, name: product.name, slug: product.slug, price: product.price || 0 })
                     }
-                    className="btn-primary w-full py-2.5"
+                    className="btn-primary w-full"
                   >
                     <ShoppingCart size={16} />
                     افزودن به سبد خرید

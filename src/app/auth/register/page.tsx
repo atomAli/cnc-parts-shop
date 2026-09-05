@@ -136,7 +136,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-3.5"
+              className="btn-primary w-full"
             >
               {loading ? "در حال ثبت نام..." : "ثبت نام"}
             </button>
