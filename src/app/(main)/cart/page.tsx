@@ -105,7 +105,9 @@ export default function CartPage() {
                 </Link>
                 {item.isMeter ? (
                   <div className="mt-1 space-y-0.5">
-                    <div className="text-sm text-gray-600">{item.branchCount} شاخه × {item.branchLength} سانتی‌متر</div>
+                    <div className="text-sm text-gray-600">
+                      تعداد {(item.quantity || 1).toLocaleString("fa-IR")} × ({item.branchCount} شاخه × {item.branchLength} سانتی‌متر)
+                    </div>
                     <div className="text-blue-600 font-bold">{formatPrice(item.price)} <span className="text-xs text-gray-500 font-normal">/{item.baseLength || 400} سانتی‌متر</span></div>
                   </div>
                 ) : (
@@ -114,7 +116,7 @@ export default function CartPage() {
                 <div className="flex items-center justify-between mt-3">
                   {item.isMeter ? (
                     <div className="text-sm text-gray-500">
-                      جمع: <span className="font-bold text-blue-600">{formatPrice(item.price * (item.branchCount || 1) * ((item.branchLength || 400) / (item.baseLength || 400)))}</span>
+                      جمع: <span className="font-bold text-blue-600">{formatPrice(item.price * (item.quantity || 1) * (item.branchCount || 1) * ((item.branchLength || 400) / (item.baseLength || 400)))}</span>
                     </div>
                   ) : (
                     <div className="flex items-center border border-gray-300 rounded-lg">
@@ -128,7 +130,7 @@ export default function CartPage() {
                     </div>
                   )}
                   <div className="flex items-center gap-4">
-                    <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
+                    <span className="font-bold">{item.isMeter ? formatPrice(item.price * (item.quantity || 1) * (item.branchCount || 1) * ((item.branchLength || 400) / (item.baseLength || 400))) : formatPrice(item.price * item.quantity)}</span>
                     <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 p-1">
                       <Trash2 size={18} />
                     </button>

@@ -62,19 +62,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const handleAddToCart = () => {
     if (!product) return;
     if (isMeterProduct) {
-      for (let i = 0; i < quantity; i++) {
-        addItem({
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          price: product.price || 0,
-          image: product.images?.[0]?.url,
-          isMeter: true,
-          branchCount,
-          branchLength,
-          baseLength,
-        });
-      }
+      addItem({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price || 0,
+        image: product.images?.[0]?.url,
+        isMeter: true,
+        branchCount,
+        branchLength,
+        baseLength,
+      });
     } else {
       for (let i = 0; i < quantity; i++) {
         addItem({
@@ -259,11 +257,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center rounded-full border border-gray-200 bg-gray-50">
-                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 rounded-r-full hover:bg-gray-100 transition-colors"><Minus size={18} /></button>
-                    <span className="px-6 py-3 font-bold min-w-[60px] text-center">{quantity}</span>
-                    <button onClick={() => setQuantity(quantity + 1)} className="p-3 rounded-l-full hover:bg-gray-100 transition-colors"><Plus size={18} /></button>
-                  </div>
                   <button onClick={handleAddToCart} className="btn-primary flex-1">
                     <ShoppingCart size={20} />
                     افزودن به سبد خرید
