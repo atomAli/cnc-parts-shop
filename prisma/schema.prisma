@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   orders        Order[]
   cartItems     CartItem[]
+  preInvoices   PreInvoice[]
 
   @@map("users")
 }
@@ -167,4 +168,19 @@ model Settings {
   updatedAt   DateTime @updatedAt
 
   @@map("settings")
+}
+
+model PreInvoice {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  customerName String
+  customerPhone String
+  items       Json
+  totalPrice  Float
+  status      String   @default("PENDING")
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@map("pre_invoices")
 }
