@@ -57,12 +57,14 @@ export default function PriceManagerPage() {
   useEffect(() => {
     fetchCategories();
     fetchBrands();
+    loadProducts("");
   }, []);
 
   const loadProducts = async (catId: string) => {
     setLoadingProducts(true);
     setResult(null);
-    const res = await fetch(`/api/admin/prices?categoryId=${encodeURIComponent(catId)}`);
+    const url = catId ? `/api/admin/prices?categoryId=${encodeURIComponent(catId)}` : "/api/admin/prices";
+    const res = await fetch(url);
     const data = await res.json();
     setProducts(data.products || []);
     setSelected(new Set());
@@ -71,14 +73,15 @@ export default function PriceManagerPage() {
     setLoadingProducts(false);
   };
 
+  useEffect(() => {
+    fetchCategories();
+    fetchBrands();
+    loadProducts("");
+  }, []);
+
   const handleCategoryChange = (value: string) => {
     setCategoryId(value);
-    if (value) loadProducts(value);
-    else {
-      setProducts([]);
-      setSelected(new Set());
-      setBrandId("");
-    }
+    loadProducts(value);
   };
 
   const byBrand = brandId ? products.filter((p) => p.brandId === brandId) : products;
@@ -204,8 +207,8 @@ export default function PriceManagerPage() {
             <select
               value={brandId}
               onChange={(e) => setBrandId(e.target.value)}
-              disabled={!categoryId}
-              className="w-full md:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+              disabled={false}
+              className="w-full md:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">همه برندها</option>
               {brands.map((b) => (
@@ -217,18 +220,16 @@ export default function PriceManagerPage() {
           </div>
         </div>
 
-        {categoryId && (
           <p className="text-sm text-gray-500 mt-3">
             {loadingProducts
               ? "در حال بارگذاری..."
-              : `${filtered.length} کالا از ${products.length} کالای این دسته${
-                  brandId ? " (فیلتر برند)" : ""
-                }`}
+              : categoryId
+                ? `${filtered.length} کالا از ${products.length} کالای این دسته${brandId ? " (فیلتر برند)" : ""}`
+                : `${filtered.length} کالا${brandId ? " (فیلتر برند)" : ""}`}
           </p>
-        )}
       </div>
 
-      {categoryId && !loadingProducts && (
+      {!loadingProducts && (
         <>
           {/* Products list */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
