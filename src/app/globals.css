@@ -49,19 +49,19 @@
   }
 
   .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/25 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold leading-none transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/25 active:scale-[0.98];
   }
 
   .btn-white {
-    @apply bg-white text-blue-600 hover:bg-blue-50 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold leading-none transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap bg-white text-blue-600 hover:bg-blue-50 active:scale-[0.98];
   }
 
   .btn-outline {
-    @apply border-2 border-blue-600 text-blue-700 hover:bg-blue-50 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold leading-none transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap border-2 border-blue-600 text-blue-700 hover:bg-blue-50 active:scale-[0.98];
   }
 
   .btn-ghost {
-    @apply border-2 border-stone-200 bg-white text-stone-700 hover:border-blue-300 hover:text-blue-600 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold leading-none transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap border-2 border-stone-200 bg-white text-stone-700 hover:border-blue-300 hover:text-blue-600 active:scale-[0.98];
   }
 
   .chip {
