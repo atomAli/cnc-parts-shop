@@ -372,6 +372,11 @@ function ProductsContent() {
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-400 text-sm">تصویر محصول</div>
                 )}
+                {product.subcategory === "linear-guide" || product.subcategory === "ball-screw" ? (
+                  <span className="absolute top-3 left-3 rounded-full bg-amber-500 px-3 py-1 text-[11px] font-bold text-white shadow">
+                    متری
+                  </span>
+                ) : null}
               </Link>
               <div className="p-5 flex-1 flex flex-col">
                 <div className="text-xs text-stone-500 font-medium mb-1">{getBrandName(product.brand)}</div>

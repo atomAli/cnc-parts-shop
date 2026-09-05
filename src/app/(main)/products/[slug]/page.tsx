@@ -200,7 +200,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           {/* Details */}
           <div>
             <div className="text-sm text-stone-500 font-medium mb-2">{product.brand.name}</div>
-            <h1 className="text-2xl md:text-3xl font-black mb-4 text-stone-900">{product.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap mb-4">
+              <h1 className="text-2xl md:text-3xl font-black text-stone-900">{product.name}</h1>
+              {isMeterProduct && (
+                <span className="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">متری</span>
+              )}
+            </div>
 
             <div className="rounded-2xl bg-gradient-to-l from-blue-50 to-amber-50/60 border border-blue-100/60 p-5 mb-6">
               {product.price ? (
