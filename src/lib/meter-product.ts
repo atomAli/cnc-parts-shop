@@ -1,16 +1,13 @@
-interface MeterProductInput {
+interface ProductInput {
   name: string;
   subcategory?: string | null;
 }
 
-export function isMeterProduct(product: MeterProductInput): boolean {
+export function isRailOrScrew(product: ProductInput): boolean {
   const name = (product.name || "").trim();
   const sub = product.subcategory || "";
 
   if (sub !== "linear-guide" && sub !== "ball-screw") return false;
-
-  const hasFixedLength = /\bL\d{2,}\b/i.test(name) || /\d+\s*(cm|mm)\b/i.test(name);
-  if (hasFixedLength) return false;
 
   if (sub === "linear-guide") {
     return name.includes("ریل");
@@ -24,10 +21,16 @@ export function isMeterProduct(product: MeterProductInput): boolean {
   return false;
 }
 
-export function isMiniatureMeter(product: MeterProductInput): boolean {
-  return /مینیاتوری|Miniature|MGNR|MGWR|\bMGN|\bMGW/i.test(product.name || "");
-}
+export function getProductMaxLength(product: ProductInput): number {
+  const name = (product.name || "").trim();
 
-export function getMeterBaseLength(product: MeterProductInput): number {
-  return isMiniatureMeter(product) ? 100 : 400;
+  const cmMatch = name.match(/[-_](\d+)\s*(?:CM|cm)\b/);
+  if (cmMatch) return parseInt(cmMatch[1], 10);
+
+  const lMatch = name.match(/[-_]L(\d{2,})\b/i);
+  if (lMatch) return parseInt(lMatch[1], 10);
+
+  if (/مینیاتوری|Miniature|MGNR|MGWR|\bMGN\b|\bMGW\b/i.test(name)) return 100;
+
+  return 400;
 }

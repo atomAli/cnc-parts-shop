@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { ShoppingCart, Shield, ArrowRight, Plus, Minus, Phone, ExternalLink, Pencil, Lock } from "lucide-react";
 import { useCartStore } from "@/store/cart";
-import { isMeterProduct as isMeterUtil, isMiniatureMeter as isMiniatureUtil, getMeterBaseLength } from "@/lib/meter-product";
+import { isRailOrScrew, getProductMaxLength } from "@/lib/meter-product";
 
 interface ProductDetail {
   id: string;
@@ -33,7 +33,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [branchCount, setBranchCount] = useState(1);
-  const [branchLength, setBranchLength] = useState(1);
+  const [branchLength, setBranchLength] = useState(400);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -47,6 +47,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         const imgs = data?.images?.filter((i: { url?: string }) => i.url) || [];
         const primary = imgs.findIndex((i: { isPrimary: boolean }) => i.isPrimary);
         setActiveImage(primary >= 0 ? primary : 0);
+        setBranchLength(getProductMaxLength(data));
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -55,9 +56,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fa-IR").format(price) + " تومان";
 
-  const isMeterProduct = !!product && isMeterUtil(product);
-  const isMiniature = !!product && isMiniatureUtil(product);
-  const baseLength = product ? getMeterBaseLength(product) : 400;
+  const isMeterProduct = !!product && isRailOrScrew(product);
+  const baseLength = product ? getProductMaxLength(product) : 400;
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -244,7 +244,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-gray-500">حداکثر طول هر شاخه: {baseLength} سانتی‌متر {isMiniature && "(مینیاتوری)"}</div>
+                  <div className="mt-2 text-xs text-gray-500">حداکثر طول هر شاخه: {baseLength} سانتی‌متر</div>
                   {product.price && (
                     <div className="mt-3 pt-3 border-t border-amber-200">
                       <div className="flex justify-between text-sm">
