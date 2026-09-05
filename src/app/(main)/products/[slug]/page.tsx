@@ -56,7 +56,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const isMeterProduct = product?.subcategory === "linear-guide" || product?.subcategory === "ball-screw";
   const isMiniature = product?.name?.includes("مینیاتوری") || product?.name?.includes("Miniature");
-  const maxBranchLength = isMiniature ? 1 : 4;
+  const baseLength = isMiniature ? 100 : 400;
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -71,6 +71,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           isMeter: true,
           branchCount,
           branchLength,
+          baseLength,
         });
       }
     } else {
@@ -218,7 +219,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             {isMeterProduct ? (
               <div className="mb-6 space-y-4">
                 <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4">
-                  <div className="text-sm font-bold text-amber-800 mb-3">محصول متری — تعداد شاخه و متراژ را وارد کنید</div>
+                  <div className="text-sm font-bold text-amber-800 mb-3">محصول متری — تعداد شاخه و متراژ شاخه را وارد کنید</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-gray-600 mb-1">تعداد شاخه</label>
@@ -229,23 +230,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">متراژ هر شاخه (متر)</label>
+                      <label className="block text-xs text-gray-600 mb-1">متراژ هر شاخه (سانتی‌متر)</label>
                       <div className="flex items-center rounded-xl border border-gray-200 bg-white">
-                        <button onClick={() => setBranchLength(Math.max(0.5, branchLength - 0.5))} className="p-2.5 hover:bg-gray-100 rounded-r-xl transition-colors"><Minus size={16} /></button>
+                        <button onClick={() => setBranchLength(Math.max(10, branchLength - 10))} className="p-2.5 hover:bg-gray-100 rounded-r-xl transition-colors"><Minus size={16} /></button>
                         <span className="px-4 py-2.5 font-bold min-w-[50px] text-center">{branchLength}</span>
-                        <button onClick={() => setBranchLength(Math.min(maxBranchLength, branchLength + 0.5))} className="p-2.5 hover:bg-gray-100 rounded-l-xl transition-colors"><Plus size={16} /></button>
+                        <button onClick={() => setBranchLength(Math.min(baseLength, branchLength + 10))} className="p-2.5 hover:bg-gray-100 rounded-l-xl transition-colors"><Plus size={16} /></button>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-gray-500">حداکثر طول هر شاخه: {isMiniature ? "۱" : "۴"} متر {isMiniature && "(مینیاتوری)"}</div>
+                  <div className="mt-2 text-xs text-gray-500">حداکثر طول هر شاخه: {baseLength} سانتی‌متر {isMiniature && "(مینیاتوری)"}</div>
                   {product.price && (
                     <div className="mt-3 pt-3 border-t border-amber-200">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">قیمت کل:</span>
-                        <span className="font-bold text-blue-600">{formatPrice(product.price * branchCount * branchLength)}</span>
+                        <span className="font-bold text-blue-600">{formatPrice(product.price * branchCount * (branchLength / baseLength))}</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {branchCount} شاخه × {branchLength} متر × {formatPrice(product.price)} /متر
+                        {branchCount} شاخه × {branchLength} سانتی‌متر × {formatPrice(product.price)} /{baseLength} سانتی‌متر
                       </div>
                     </div>
                   )}

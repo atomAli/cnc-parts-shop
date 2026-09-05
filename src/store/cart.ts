@@ -13,6 +13,7 @@ export interface CartProduct {
   isMeter?: boolean;
   branchCount?: number;
   branchLength?: number;
+  baseLength?: number;
 }
 
 interface CartStore {
@@ -20,7 +21,6 @@ interface CartStore {
   addItem: (product: Omit<CartProduct, "quantity">) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
-  updateMeterItem: (productId: string, branchCount: number, branchLength: number) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
@@ -61,21 +61,14 @@ export const useCartStore = create<CartStore>()(
         }));
       },
 
-      updateMeterItem: (productId, branchCount, branchLength) => {
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.id === productId ? { ...item, branchCount, branchLength } : item
-          ),
-        }));
-      },
-
       clearCart: () => set({ items: [] }),
 
       getTotal: () => {
         const { items } = get();
         return items.reduce((total, item) => {
           if (item.isMeter && item.branchCount && item.branchLength) {
-            return total + item.price * item.branchCount * item.branchLength;
+            const base = item.baseLength || 400;
+            return total + item.price * item.branchCount * (item.branchLength / base);
           }
           return total + item.price * item.quantity;
         }, 0);

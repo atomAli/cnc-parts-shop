@@ -36,6 +36,10 @@ export default function CartPage() {
             slug: i.slug,
             price: i.price,
             quantity: i.quantity,
+            isMeter: i.isMeter,
+            branchCount: i.branchCount,
+            branchLength: i.branchLength,
+            baseLength: i.baseLength,
           })),
           totalPrice: getTotal(),
         }),
@@ -101,8 +105,8 @@ export default function CartPage() {
                 </Link>
                 {item.isMeter ? (
                   <div className="mt-1 space-y-0.5">
-                    <div className="text-sm text-gray-600">{item.branchCount} شاخه × {item.branchLength} متر</div>
-                    <div className="text-blue-600 font-bold">{formatPrice(item.price)} <span className="text-xs text-gray-500 font-normal">/متر</span></div>
+                    <div className="text-sm text-gray-600">{item.branchCount} شاخه × {item.branchLength} سانتی‌متر</div>
+                    <div className="text-blue-600 font-bold">{formatPrice(item.price)} <span className="text-xs text-gray-500 font-normal">/{item.baseLength || 400} سانتی‌متر</span></div>
                   </div>
                 ) : (
                   <div className="text-blue-600 font-bold mt-1">{formatPrice(item.price)}</div>
@@ -110,7 +114,7 @@ export default function CartPage() {
                 <div className="flex items-center justify-between mt-3">
                   {item.isMeter ? (
                     <div className="text-sm text-gray-500">
-                      جمع: <span className="font-bold text-blue-600">{formatPrice(item.price * (item.branchCount || 1) * (item.branchLength || 1))}</span>
+                      جمع: <span className="font-bold text-blue-600">{formatPrice(item.price * (item.branchCount || 1) * ((item.branchLength || 400) / (item.baseLength || 400)))}</span>
                     </div>
                   ) : (
                     <div className="flex items-center border border-gray-300 rounded-lg">
