@@ -211,7 +211,7 @@ export default function AboutPage() {
             </div>
             <div>
               <div className="text-sm text-stone-500">ایمیل</div>
-              <div className="font-black text-stone-800">info@cncmarket.ir</div>
+              <div className="font-black text-stone-800">info@shik.app</div>
             </div>
           </div>
           <div className="card flex items-center gap-3 p-5">

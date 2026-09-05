@@ -95,7 +95,7 @@ export default function Footer() {
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-blue-400">
                   <Mail size={15} />
                 </span>
-                <span>info@cncmarket.ir</span>
+                <span>info@shik.app</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-blue-400">

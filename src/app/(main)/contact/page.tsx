@@ -61,7 +61,7 @@ export default function ContactPage() {
                 </a>
 
                 <a
-                  href="mailto:info@cncmarket.ir"
+                  href="mailto:info@shik.app"
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-colors"
                 >
                   <div className="bg-blue-100 text-blue-600 p-2.5 rounded-lg">
@@ -69,7 +69,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">ایمیل</div>
-                    <div className="font-bold">info@cncmarket.ir</div>
+                    <div className="font-bold">info@shik.app</div>
                   </div>
                 </a>
 

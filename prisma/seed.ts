@@ -19,7 +19,7 @@ async function main() {
     create: {
       name: "مدیر سیستم",
       phone: "09120000000",
-      email: "admin@cncmarket.ir",
+      email: "admin@shik.app",
       password: adminPassword,
       role: "ADMIN",
     },
@@ -175,7 +175,7 @@ async function main() {
     { key: "site_name", value: "فروشگاه شیک" },
     { key: "site_slogan", value: "شیک خرید کنید" },
     { key: "site_phone", value: "021-33724136" },
-    { key: "site_email", value: "info@cncmarket.ir" },
+    { key: "site_email", value: "info@shik.app" },
     { key: "site_address", value: "تهران، خیابان سعدی جنوبی، کوچه ناظم الاطباء شمالی" },
   ];
   for (const setting of settingsData) {
