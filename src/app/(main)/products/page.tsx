@@ -225,50 +225,6 @@ function ProductsContent() {
         </div>
       </div>
 
-      {/* Category chips */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xs font-black shadow">۱</span>
-          <span className="text-sm font-bold text-stone-700">دسته‌بندی</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={handleClearFilter}
-            className={!cat ? "chip chip-active" : "chip chip-muted"}
-          >
-            همه
-          </button>
-          {categories.map((c) => (
-            <div key={c.id} className="relative group">
-              <button
-                onClick={() => handleCategoryClick(c.slug)}
-                className={cat === c.slug ? "chip chip-active" : "chip chip-muted"}
-              >
-                {c.name}
-              </button>
-              {/* Subcategory dropdown */}
-              {c.children && c.children.length > 0 && (
-                <div className="absolute top-full right-0 mt-1 hidden group-hover:block z-50 min-w-[200px] rounded-2xl border border-gray-100 bg-white p-2 shadow-[var(--shadow-card)]">
-                  {c.children.map((child) => (
-                    <button
-                      key={child.id}
-                      onClick={() => handleSubcategoryClick(child.slug)}
-                      className={`block w-full text-right px-3 py-2 rounded-lg text-sm ${
-                        sub === child.slug
-                          ? "bg-blue-50 text-blue-600 font-medium"
-                          : "hover:bg-gray-50 text-stone-700"
-                      }`}
-                    >
-                      {child.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Active subcategory chips */}
       {activeCat && activeCat.children && activeCat.children.length > 0 && (
         <div className="mb-4">
@@ -296,7 +252,7 @@ function ProductsContent() {
       {showBrands && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-black shadow">۲</span>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-black shadow">۱</span>
             <span className="text-sm font-bold text-stone-700">برند</span>
           </div>
           <div className="flex flex-wrap gap-2">
