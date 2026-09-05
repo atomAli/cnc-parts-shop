@@ -47,6 +47,7 @@ export async function GET(
     discountPrice: product.discountPrice,
     stock: product.stock,
     sourceUrl: product.sourceUrl,
+    subcategory: product.subcategory,
     specs,
     category: product.category
       ? { slug: product.category.slug, name: product.category.name }
