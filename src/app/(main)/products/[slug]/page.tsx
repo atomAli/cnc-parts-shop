@@ -33,6 +33,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
+  useEffect(() => {
     fetch(`/api/products/${slug}`)
       .then((r) => r.json())
       .then((data) => {
