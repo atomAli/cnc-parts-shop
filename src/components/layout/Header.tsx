@@ -10,26 +10,26 @@ import Logo from "@/components/Logo";
 
 const electricalSubs = [
   { name: "سروموتور و درایو", slug: "servo-motor" },
-  { name: "استپ موتور و درایو", slug: "step-motor" },
-  { name: "اینورتر", slug: "inverter" },
-  { name: "کنترلر", slug: "controller" },
-  { name: "اسپیندل موتور", slug: "spindle-motor" },
-  { name: "پمپ وکیوم", slug: "vacuum-pump" },
-  { name: "اسلیپ رینگ", slug: "slip-ring" },
-  { name: "منبع تغذیه", slug: "power-supply" },
+  { name: "اینورتر", slug: "اینورتر-دلتا-delta" },
+  { name: "استپ موتور و درایو", slug: "hqm-step-motor-step-drive" },
+  { name: "کنترلر", slug: "controller-data-cable" },
+  { name: "اسپیندل موتور", slug: "hqm-spindle-motor" },
+  { name: "پمپ وکیوم", slug: "oil-vacuum-pump" },
+  { name: "اسلیپ رینگ", slug: "slip-ring-rotary-connector" },
+  { name: "منبع تغذیه", slug: "powerdc" },
   { name: "لیزر فایبر", slug: "laser" },
-  { name: "جک برقی", slug: "electric-jack" },
+  { name: "جک برقی", slug: "linkan-electrical-jack" },
 ];
 
 const mechanicalSubs = [
-  { name: "ریل و واگن خطی", slug: "linear-guide" },
-  { name: "بالسکرو و مهره", slug: "ball-screw" },
-  { name: "بلبرینگ و یاتاقان", slug: "bearing" },
-  { name: "گیربکس", slug: "gearbox" },
+  { name: "ریل و واگن خطی", slug: "rail-wagon" },
+  { name: "بالسکرو و مهره", slug: "ball-screw-nut-support" },
+  { name: "بلبرینگ و یاتاقان", slug: "LinearBallbearing" },
+  { name: "گیربکس", slug: "planetary-spiral-gearbox" },
   { name: "کوپلینگ", slug: "coupling" },
   { name: "محافظ کابل", slug: "cable-carrier" },
   { name: "شفت و پروفیل", slug: "shaft" },
-  { name: "دنده شانه‌ای", slug: "gear-rack" },
+  { name: "دنده شانه‌ای", slug: "gear-rack-pinion" },
 ];
 
 const services = [

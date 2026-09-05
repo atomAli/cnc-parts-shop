@@ -11,13 +11,26 @@ export function isRailOrScrew(product: ProductInput): boolean {
   const name = (product.name || "").trim();
   const sub = product.subcategory || "";
 
-  if (sub !== "linear-guide" && sub !== "ball-screw") return false;
+  const railSlugs = [
+    "linear-guide",
+    "rail-wagon",
+    "hqm-rail",
+    "hiwin-rail",
+    "hqm-wagon",
+    "hiwin-wagon",
+  ];
+  const screwSlugs = [
+    "ball-screw",
+    "ballscrew",
+    "ball-screw-nut-support",
+    "nut-support",
+  ];
 
-  if (sub === "linear-guide") {
+  if (railSlugs.includes(sub)) {
     return name.includes("ریل");
   }
 
-  if (sub === "ball-screw") {
+  if (screwSlugs.includes(sub)) {
     if (name.includes("مهره") || name.includes("ساپورت")) return false;
     return name.startsWith("بالسکرو") || name.startsWith("پیچ بال اسکرو");
   }
