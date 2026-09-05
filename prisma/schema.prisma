@@ -68,6 +68,7 @@ model Product {
   discountPrice   Float?
   stock           Int            @default(0)
   sku             String?
+  isMeter         Boolean?
   sourceUrl       String?
   featured        Boolean        @default(false)
   active          Boolean        @default(true)

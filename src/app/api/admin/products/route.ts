@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 
+function parseIsMeter(value: unknown): boolean | null {
+  if (value === null || value === undefined || value === "") return null;
+  return value === true || value === "true";
+}
+
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return unauthorized();
@@ -67,6 +72,7 @@ export async function POST(req: NextRequest) {
       discountPrice: body.discountPrice || null,
       stock: body.stock || 0,
       sku: body.sku || "",
+      isMeter: parseIsMeter(body.isMeter),
       categoryId: body.categoryId,
       brandId: body.brandId || null,
       specifications: body.specifications ? JSON.stringify(body.specifications) : null,

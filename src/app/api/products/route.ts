@@ -12,6 +12,7 @@ interface ProductRow {
   price: number | null;
   discountPrice: number | null;
   stock: number;
+  isMeter?: boolean | null;
   category?: {
     id: string;
     slug: string;
@@ -38,6 +39,7 @@ function mapProduct(p: ProductRow) {
     price: p.price,
     discountPrice: p.discountPrice,
     subcategory: p.category?.slug || "",
+    isMeter: p.isMeter ?? null,
     category: {
       id: p.category?.id || "",
       slug: p.category?.slug || "",

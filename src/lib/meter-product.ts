@@ -1,9 +1,13 @@
 interface ProductInput {
   name: string;
   subcategory?: string | null;
+  isMeter?: boolean | null;
 }
 
 export function isRailOrScrew(product: ProductInput): boolean {
+  if (product.isMeter === true) return true;
+  if (product.isMeter === false) return false;
+
   const name = (product.name || "").trim();
   const sub = product.subcategory || "";
 

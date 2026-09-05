@@ -48,6 +48,7 @@ export async function GET(
     stock: product.stock,
     sourceUrl: product.sourceUrl,
     subcategory: product.category?.slug || "",
+    isMeter: product.isMeter,
     specs,
     category: product.category
       ? { slug: product.category.slug, name: product.category.name }

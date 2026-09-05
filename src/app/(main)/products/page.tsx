@@ -15,6 +15,7 @@ interface Product {
   brand: string | { name: string };
   category: { name: string; slug: string; parentSlug?: string; parentName?: string };
   subcategory?: string;
+  isMeter?: boolean | null;
   images: { url: string; isPrimary: boolean }[];
   stock: number;
 }

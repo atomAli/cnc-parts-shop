@@ -30,6 +30,7 @@ interface ProductForm {
   featured: boolean;
   specifications: string;
   sourceUrl: string;
+  isMeter: string;
 }
 
 export default function ProductEditPage({ productId }: { productId?: string }) {
@@ -52,6 +53,7 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
     featured: false,
     specifications: "",
     sourceUrl: "",
+    isMeter: "",
   });
   const [images, setImages] = useState<{ id?: string; url: string; alt: string; isPrimary: boolean }[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -82,6 +84,7 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
             featured: product.featured ?? false,
             specifications: product.specifications || "",
             sourceUrl: product.sourceUrl || "",
+            isMeter: product.isMeter === true ? "true" : product.isMeter === false ? "false" : "",
           });
           if (product.images) {
             setImages(product.images);
@@ -322,6 +325,22 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
             </select>
           </div>
         </div>
+
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">محصول متری</label>
+            <select
+              value={form.isMeter}
+              onChange={(e) => setForm({ ...form, isMeter: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">خودکار (ریل و بال‌اسکرو)</option>
+              <option value="true">بله (متری)</option>
+              <option value="false">خیر (تکی)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              در حالت خودکار، ریل‌ها و بال‌اسکروها بر اساس نام و دسته‌بندی شناسایی می‌شوند.
+            </p>
+          </div>
 
         <div className="flex items-center gap-6">
           <label className="flex items-center gap-2">

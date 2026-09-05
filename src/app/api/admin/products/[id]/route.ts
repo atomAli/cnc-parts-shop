@@ -41,6 +41,9 @@ export async function PUT(
       discountPrice: body.discountPrice,
       stock: body.stock,
       sku: body.sku,
+      isMeter: body.isMeter === null || body.isMeter === undefined || body.isMeter === ""
+        ? null
+        : body.isMeter === true || body.isMeter === "true",
       categoryId: body.categoryId,
       brandId: body.brandId,
       specifications: body.specifications ? JSON.stringify(body.specifications) : undefined,

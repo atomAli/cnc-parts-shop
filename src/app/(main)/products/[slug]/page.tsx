@@ -17,6 +17,7 @@ interface ProductDetail {
   price: number | null;
   sourceUrl?: string;
   subcategory?: string;
+  isMeter?: boolean | null;
   specs?: Record<string, string>;
   category: { slug: string; name: string };
   brand: { slug: string; name: string };
