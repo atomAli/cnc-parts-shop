@@ -177,7 +177,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 <span className="text-gray-400">تصویر محصول</span>
               )}
             </div>
-            {product.images.length > 1 && (
+            {isAdmin && product.images.length > 1 && (
               <div className="flex gap-2 mt-3">
                 {product.images.map((img, index) => (
                   <button

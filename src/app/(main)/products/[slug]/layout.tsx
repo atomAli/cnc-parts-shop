@@ -52,6 +52,10 @@ export default async function ProductLayout({ params, children }: Props) {
   const { slug } = await params;
   const product = await getProduct(slug);
 
+  const ldImage = product
+    ? (product.images.find((i) => i.isPrimary) || product.images[0])?.url
+    : undefined;
+
   const ld = product
     ? JSON.stringify(
         {
@@ -59,7 +63,7 @@ export default async function ProductLayout({ params, children }: Props) {
           "@type": "Product",
           name: product.name,
           description: product.description || undefined,
-          image: product.images.filter((i) => i.url).map((i) => i.url),
+          image: ldImage ? [ldImage] : undefined,
           sku: product.sku || undefined,
           brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
           category: product.category.name,

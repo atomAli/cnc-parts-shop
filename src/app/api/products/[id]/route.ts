@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(
   request: NextRequest,
@@ -38,6 +39,16 @@ export async function GET(
     } catch {}
   }
 
+  const isAdmin = !!(await requireAdmin());
+  const imgs = product.images.map((img) => ({
+    id: img.id,
+    url: img.url,
+    alt: img.alt,
+    isPrimary: img.isPrimary,
+  }));
+  const primary = imgs.find((i) => i.isPrimary) ?? imgs[0];
+  const visible = isAdmin ? imgs : primary ? [primary] : [];
+
   return NextResponse.json({
     id: product.id,
     name: product.name,
@@ -56,11 +67,6 @@ export async function GET(
     brand: product.brand
       ? { slug: product.brand.slug, name: product.brand.name }
       : { slug: "", name: "" },
-    images: product.images.map((img) => ({
-      id: img.id,
-      url: img.url,
-      alt: img.alt,
-      isPrimary: img.isPrimary,
-    })),
+    images: visible,
   });
 }
