@@ -1,0 +1,12 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        { "type": "host", "value": "cnc-market-shop.vercel.app" }
+      ],
+      "destination": "https://shik.app/:path*",
+      "statusCode": 301
+    }
+  ]
+}
