@@ -260,10 +260,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     <div className="mt-3 pt-3 border-t border-amber-200">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">قیمت کل:</span>
-                        <span className="font-bold text-blue-600">{formatPrice(product.price * branchCount * (branchLength / baseLength))}</span>
+                        <span className="font-bold text-blue-600">{formatPrice(product.price * branchCount * (branchLength / 100))}</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {branchCount} شاخه × {branchLength} سانتی‌متر × {formatPrice(product.price)} /{baseLength} سانتی‌متر
+                        {branchCount} شاخه × {branchLength} سانتی‌متر × {formatPrice(product.price)} تومان <span className="text-amber-600">/ متر</span>
                       </div>
                     </div>
                   )}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
+import { recordPriceChange } from "@/lib/price-history";
 
 function collectCategoryIds(categories: { id: string; parentId: string | null }[], categoryId: string): string[] {
   const ids: string[] = [];
@@ -94,6 +95,16 @@ export async function POST(req: NextRequest) {
 
   if (updates.length > 0) {
     await prisma.$transaction(updates);
+  }
+
+  for (const p of products) {
+    if (p.price <= 0) continue;
+    const newPrice = Math.max(0, Math.round(p.price * factor));
+    const newDiscount =
+      p.discountPrice != null && p.discountPrice > 0
+        ? Math.max(0, Math.round(p.discountPrice * factor))
+        : p.discountPrice;
+    await recordPriceChange({ productId: p.id, price: newPrice, discountPrice: newDiscount });
   }
 
   return NextResponse.json({ updated: updates.length, skipped });

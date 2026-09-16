@@ -3,7 +3,8 @@ const DEFAULT_FROM = "فروشگاه شیک <info@shik.app>";
 
 export interface PreInvoiceItem {
   name: string;
-  price: number;
+  price?: number;
+  unitPrice?: number;
   quantity: number;
   isMeter?: boolean;
   branchCount?: number;
@@ -32,17 +33,18 @@ function formatPrice(price: number): string {
 function renderItems(items: PreInvoiceItem[]): string {
   return items
     .map((item) => {
+      const price = item.price ?? item.unitPrice ?? 0;
       let line = `<strong>${item.name.replace(/</g, "&lt;")}</strong>`;
       if (item.isMeter && item.branchCount && item.branchLength) {
-        line += `<div style="font-size:12px;color:#666;margin-top:2px">تعداد ${item.quantity || 1} × (${item.branchCount} شاخه × ${item.branchLength} سانتی‌متر) × ${formatPrice(item.price)} /${item.baseLength || 400} سانتی‌متر</div>`;
+        line += `<div style="font-size:12px;color:#666;margin-top:2px">تعداد ${item.quantity || 1} × (${item.branchCount} شاخه × ${item.branchLength} سانتی‌متر) × ${price} تومان / متر</div>`;
         const total =
           (item.quantity || 1) *
           item.branchCount *
-          (item.branchLength / (item.baseLength || 400)) *
-          item.price;
+          (item.branchLength / 100) *
+          price;
         line += `<div style="font-size:13px;color:#111;margin-top:2px">جمع: ${formatPrice(total)}</div>`;
       } else {
-        line += `<div style="font-size:12px;color:#666;margin-top:2px">تعداد: ${faNum(item.quantity)} × ${formatPrice(item.price)} = ${formatPrice(item.price * item.quantity)}</div>`;
+        line += `<div style="font-size:12px;color:#666;margin-top:2px">تعداد: ${faNum(item.quantity)} × ${formatPrice(price)} = ${formatPrice(price * item.quantity)}</div>`;
       }
       return `<div style="border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fafafa">${line}</div>`;
     })

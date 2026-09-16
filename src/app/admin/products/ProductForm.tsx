@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, ArrowRight, Upload, X, ExternalLink } from "lucide-react";
+import PriceHistoryChart from "@/components/admin/PriceHistoryChart";
 import Link from "next/link";
 
 interface Category {
@@ -432,6 +433,10 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
           </button>
         </div>
       </form>
+
+      {productId && (
+        <PriceHistoryChart productId={productId} />
+      )}
     </div>
   );
 }

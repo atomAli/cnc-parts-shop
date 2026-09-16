@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
+import { recordPriceChange } from "@/lib/price-history";
 
 export async function GET(
   req: NextRequest,
@@ -51,6 +52,12 @@ export async function PUT(
       featured: body.featured,
       sourceUrl: body.sourceUrl || null,
     },
+  });
+
+  await recordPriceChange({
+    productId: id,
+    price: body.price,
+    discountPrice: body.discountPrice ?? null,
   });
 
   if (body.images && Array.isArray(body.images)) {

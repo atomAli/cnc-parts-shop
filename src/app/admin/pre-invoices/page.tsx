@@ -6,8 +6,13 @@ import { RefreshCw, ChevronDown, Phone, User } from "lucide-react";
 interface PreInvoiceItem {
   name: string;
   slug: string;
-  price: number;
+  price?: number;
+  unitPrice?: number;
   quantity: number;
+  isMeter?: boolean;
+  branchCount?: number;
+  branchLength?: number;
+  baseLength?: number;
 }
 
 interface PreInvoice {
@@ -39,7 +44,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function formatPrice(price: number) {
-  return new Intl.NumberFormat("fa-IR").format(price) + " تومان";
+  return new Intl.NumberFormat("fa-IR").format(Math.round(price)) + " تومان";
+}
+
+function faNum(n: number | string) {
+  return String(n).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[+d]);
 }
 
 export default function AdminPreInvoicesPage() {
@@ -74,8 +83,8 @@ export default function AdminPreInvoicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">پیش فاکتورها</h1>
-          <p className="text-sm text-gray-500 mt-1">مشاهده و مدیریت پیش فاکتورهای ثبت شده</p>
+          <h1 className="text-2xl font-bold">مدیریت فاکتورها</h1>
+          <p className="text-sm text-gray-500 mt-1">مشاهده و مدیریت فاکتورهای ثبت شده</p>
         </div>
         <button onClick={fetchInvoices} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -99,6 +108,14 @@ export default function AdminPreInvoicesPage() {
         {!loading && invoices.length === 0 && <div className="text-center py-8 text-gray-400">پیش فاکتوری یافت نشد</div>}
         {invoices.map((inv) => {
           const isExpanded = expanded === inv.id;
+          const invTotal = Number.isFinite(inv.totalPrice)
+            ? inv.totalPrice
+            : inv.items.reduce((sum: number, item: PreInvoiceItem) => {
+                const p = item.price ?? item.unitPrice ?? 0;
+                return sum + (item.isMeter && item.branchLength
+                  ? p * (item.branchCount || 1) * (item.branchLength / 100)
+                  : p * item.quantity);
+              }, 0);
           return (
             <div key={inv.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 flex flex-wrap items-center gap-4 cursor-pointer hover:bg-gray-50" onClick={() => setExpanded(isExpanded ? null : inv.id)}>
@@ -113,7 +130,7 @@ export default function AdminPreInvoicesPage() {
                 </div>
 
                 <div className="text-sm text-gray-500">{new Date(inv.createdAt).toLocaleDateString("fa-IR")}</div>
-                <div className="text-sm font-bold text-blue-600">{formatPrice(inv.totalPrice)}</div>
+                <div className="text-sm font-bold text-blue-600">{formatPrice(invTotal)}</div>
                 <div className="text-sm text-gray-500">{inv.items.length} کالا</div>
                 <span className={"px-3 py-1 rounded-full text-xs font-bold " + (STATUS_COLORS[inv.status] || STATUS_COLORS.PENDING)}>
                   {STATUS_LABELS[inv.status] || STATUS_LABELS.PENDING}
@@ -133,16 +150,30 @@ export default function AdminPreInvoicesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {inv.items.map((item, i) => (
-                        <tr key={i} className="border-t border-gray-50">
-                          <td className="py-2">
-                            <a href={"/products/" + item.slug} className="text-blue-600 hover:underline">{item.name}</a>
-                          </td>
-                          <td className="py-2">{formatPrice(item.price)}</td>
-                          <td className="py-2">{item.quantity}</td>
-                          <td className="py-2 font-bold">{formatPrice(item.price * item.quantity)}</td>
-                        </tr>
-                      ))}
+                      {inv.items.map((item, i) => {
+                        const p = item.price ?? item.unitPrice ?? 0;
+                        const isMeter = item.isMeter === true || item.branchLength != null;
+                        const itemTotal = isMeter
+                          ? p * (item.branchCount || 1) * ((item.branchLength || 0) / 100)
+                          : p * item.quantity;
+                        return (
+                          <tr key={i} className="border-t border-gray-50">
+                            <td className="py-2">
+                              <a href={"/products/" + item.slug} className="text-blue-600 hover:underline">{item.name}</a>
+                              {isMeter && <span className="mr-1 text-[10px] text-amber-600">متری</span>}
+                            </td>
+                            <td className="py-2">
+                              {formatPrice(p)} <span className="text-[10px] text-gray-400">{isMeter ? "تومان / متر" : ""}</span>
+                            </td>
+                            <td className="py-2 text-xs">
+                              {isMeter
+                                ? `${faNum(item.branchLength ?? 0)} سانتی‌متر × ${faNum(item.branchCount || 1)} شاخه`
+                                : item.quantity}
+                            </td>
+                            <td className="py-2 font-bold">{formatPrice(itemTotal)}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
 

@@ -67,8 +67,7 @@ export const useCartStore = create<CartStore>()(
         const { items } = get();
         return items.reduce((total, item) => {
           if (item.isMeter && item.branchCount && item.branchLength) {
-            const base = item.baseLength || 400;
-            return total + item.price * item.quantity * item.branchCount * (item.branchLength / base);
+            return total + item.price * item.quantity * item.branchCount * (item.branchLength / 100);
           }
           return total + item.price * item.quantity;
         }, 0);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
+import { searchVariants } from "@/lib/search-variants";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
@@ -14,10 +15,17 @@ export async function GET(req: NextRequest) {
 
   const where: any = {};
   if (search) {
+    const v = searchVariants(search);
     where.OR = [
-      { name: { contains: search } },
-      { phone: { contains: search } },
-      { email: { contains: search } },
+      { name: { contains: v.q, mode: "insensitive" } },
+      { phone: { contains: v.q, mode: "insensitive" } },
+      { email: { contains: v.q, mode: "insensitive" } },
+      { name: { contains: v.ascii, mode: "insensitive" } },
+      { phone: { contains: v.ascii, mode: "insensitive" } },
+      { email: { contains: v.ascii, mode: "insensitive" } },
+      { name: { contains: v.fa, mode: "insensitive" } },
+      { phone: { contains: v.fa, mode: "insensitive" } },
+      { email: { contains: v.fa, mode: "insensitive" } },
     ];
   }
 
