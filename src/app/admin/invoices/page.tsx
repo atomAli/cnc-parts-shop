@@ -365,7 +365,9 @@ export default function AdminInvoicesPage() {
           const base = l.baseLength || 400;
           const bl = Math.min(Math.max(parseInt(l.branchLength) || 10, 10), base);
           return {
-            productId: l.productId,
+            productId: l.productId || undefined,
+            slug: l.slug,
+            name: l.name,
             unitPrice: Number(l.unitPrice) || 0,
             branchCount: l.quantity,
             branchLength: bl,
@@ -374,7 +376,9 @@ export default function AdminInvoicesPage() {
           };
         }
         return {
-          productId: l.productId,
+          productId: l.productId || undefined,
+          slug: l.slug,
+          name: l.name,
           unitPrice: Number(l.unitPrice) || 0,
           quantity: l.quantity,
           discountPercent: discount || undefined,

@@ -1,7 +1,9 @@
 import prisma from "@/lib/prisma";
 
 export interface InvoiceLineInput {
-  productId: string;
+  productId?: string;
+  slug?: string;
+  name?: string;
   unitPrice?: number;
   quantity?: number;
   length?: number | string | null;
@@ -31,24 +33,36 @@ export async function computeInvoice(items: InvoiceLineInput[]) {
     return { error: "حداقل یک کالا انتخاب کنید" };
   }
 
-  const ids = items.map((i) => i.productId).filter(Boolean);
-  const products = await prisma.product.findMany({ where: { id: { in: ids } } });
-  const productMap = new Map(products.map((p) => [p.id, p]));
+  const ids = items.map((i) => i.productId).filter(Boolean) as string[];
+  const slugItems = items.filter((i) => !i.productId && i.slug).map((i) => String(i.slug));
+
+  const [products, productsBySlug] = await Promise.all([
+    prisma.product.findMany({ where: { id: { in: ids } } }),
+    slugItems.length
+      ? prisma.product.findMany({ where: { slug: { in: slugItems } } })
+      : Promise.resolve([]),
+  ]);
+
+  const productById = new Map(products.map((p) => [p.id, p]));
+  const productBySlug = new Map(productsBySlug.map((p) => [p.slug, p]));
 
   const storedItems: StoredItem[] = [];
   let totalPrice = 0;
 
   for (const it of items) {
-    const prod = productMap.get(it.productId);
-    if (!prod) continue;
+    const prod = it.productId ? productById.get(it.productId) : productBySlug.get(String(it.slug));
+
+    const name = prod?.name || it.name || "";
+    const slug = prod?.slug || it.slug || "";
+    const productId = prod?.id || it.productId || "";
 
     const unitPrice = Number(it.unitPrice);
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-      return { error: `قیمت ${prod.name} نامعتبر است` };
+      return { error: `قیمت ${name || "کالا"} نامعتبر است` };
     }
 
     const quantity = Math.max(1, it.quantity != null ? Math.floor(it.quantity) : 1);
-    const isMeter = it.branchLength != null && it.branchLength !== "";
+    const isMeter = prod?.isMeter === true || (it.branchLength != null && it.branchLength !== "");
     const discount = Math.min(Math.max(Number(it.discountPercent) || 0, 0), 100);
 
     let lineTotal: number;
@@ -57,13 +71,13 @@ export async function computeInvoice(items: InvoiceLineInput[]) {
       const branchLength = Number(it.branchLength);
       const baseLength = Number(it.baseLength) || 400;
       if (!Number.isFinite(branchLength) || branchLength <= 0) {
-        return { error: `متراژ ${prod.name} نامعتبر است` };
+        return { error: `متراژ ${name || "کالا"} نامعتبر است` };
       }
       lineTotal = unitPrice * branchCount * (branchLength / 100);
       storedItems.push({
-        productId: prod.id,
-        name: prod.name,
-        slug: prod.slug,
+        productId,
+        name,
+        slug,
         unitPrice,
         price: unitPrice,
         quantity: branchCount,
@@ -76,9 +90,9 @@ export async function computeInvoice(items: InvoiceLineInput[]) {
     } else {
       lineTotal = unitPrice * quantity;
       storedItems.push({
-        productId: prod.id,
-        name: prod.name,
-        slug: prod.slug,
+        productId,
+        name,
+        slug,
         unitPrice,
         price: unitPrice,
         quantity,
