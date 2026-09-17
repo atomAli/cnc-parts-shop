@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { normalizeFa } from "@/lib/search";
 import { getSearchCandidates, rankProducts } from "@/lib/search-catalog";
+import { localImages } from "@/lib/local-images";
 
 interface ProductRow {
   id: string;
@@ -31,6 +32,7 @@ interface ProductRow {
 }
 
 function mapProduct(p: ProductRow) {
+  const local = localImages(p.slug, true);
   return {
     id: p.id,
     name: p.name,
@@ -50,10 +52,10 @@ function mapProduct(p: ProductRow) {
     brand: p.brand
       ? { id: p.brand.id, slug: p.brand.slug, name: p.brand.name }
       : { id: "", slug: "", name: "" },
-    images: (p.images || []).map((img) => ({
-      id: img.id,
+    images: (local ?? (p.images || [])).map((img) => ({
+      id: img.id || "",
       url: img.url,
-      alt: img.alt,
+      alt: img.alt ?? "",
       isPrimary: img.isPrimary,
     })),
     stock: p.stock,

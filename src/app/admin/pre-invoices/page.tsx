@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, ChevronDown, Phone, User } from "lucide-react";
+import Link from "next/link";
+import { RefreshCw, ChevronDown, Phone, User, Printer, Edit3 } from "lucide-react";
 
 interface PreInvoiceItem {
   name: string;
@@ -13,12 +14,14 @@ interface PreInvoiceItem {
   branchCount?: number;
   branchLength?: number;
   baseLength?: number;
+  discountPercent?: number;
 }
 
 interface PreInvoice {
   id: string;
   customerName: string;
   customerPhone: string;
+  invoiceNumber?: number;
   items: PreInvoiceItem[];
   totalPrice: number;
   status: string;
@@ -27,7 +30,7 @@ interface PreInvoice {
   user?: { name: string | null; phone: string | null } | null;
 }
 
-const STATUS_OPTIONS = ["PENDING", "PROCESSING", "CONTACTED", "DONE"];
+const STATUS_OPTIONS = ["PENDING", "CONTACTED", "DONE"];
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "در انتظار بررسی",
@@ -112,9 +115,11 @@ export default function AdminPreInvoicesPage() {
             ? inv.totalPrice
             : inv.items.reduce((sum: number, item: PreInvoiceItem) => {
                 const p = item.price ?? item.unitPrice ?? 0;
-                return sum + (item.isMeter && item.branchLength
+                const d = Math.min(Math.max(Number(item.discountPercent) || 0, 0), 100);
+                const line = item.isMeter && item.branchLength
                   ? p * (item.branchCount || 1) * (item.branchLength / 100)
-                  : p * item.quantity);
+                  : p * item.quantity;
+                return sum + Math.round(line * (100 - d) / 100);
               }, 0);
           return (
             <div key={inv.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -130,8 +135,27 @@ export default function AdminPreInvoicesPage() {
                 </div>
 
                 <div className="text-sm text-gray-500">{new Date(inv.createdAt).toLocaleDateString("fa-IR")}</div>
+                <div className="text-sm text-gray-600">شماره فاکتور: {faNum(inv.invoiceNumber ?? 0)}</div>
                 <div className="text-sm font-bold text-blue-600">{formatPrice(invTotal)}</div>
                 <div className="text-sm text-gray-500">{inv.items.length} کالا</div>
+                <Link
+                  href={`/admin/invoices/${inv.id}/print`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  title="چاپ / PDF"
+                >
+                  <Printer size={14} />
+                  PDF
+                </Link>
+                <Link
+                  href={`/admin/invoices?edit=${inv.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-blue-300 text-blue-600 hover:bg-blue-50"
+                  title="اصلاح فاکتور"
+                >
+                  <Edit3 size={14} />
+                  اصلاح
+                </Link>
                 <span className={"px-3 py-1 rounded-full text-xs font-bold " + (STATUS_COLORS[inv.status] || STATUS_COLORS.PENDING)}>
                   {STATUS_LABELS[inv.status] || STATUS_LABELS.PENDING}
                 </span>
@@ -146,6 +170,7 @@ export default function AdminPreInvoicesPage() {
                         <th className="text-right py-1">نام کالا</th>
                         <th className="text-right py-1">قیمت واحد</th>
                         <th className="text-right py-1">تعداد</th>
+                        <th className="text-right py-1">تخفیف</th>
                         <th className="text-right py-1">جمع</th>
                       </tr>
                     </thead>
@@ -153,9 +178,11 @@ export default function AdminPreInvoicesPage() {
                       {inv.items.map((item, i) => {
                         const p = item.price ?? item.unitPrice ?? 0;
                         const isMeter = item.isMeter === true || item.branchLength != null;
-                        const itemTotal = isMeter
+                        const d = Math.min(Math.max(Number(item.discountPercent) || 0, 0), 100);
+                        const line = isMeter
                           ? p * (item.branchCount || 1) * ((item.branchLength || 0) / 100)
                           : p * item.quantity;
+                        const itemTotal = Math.round(line * (100 - d) / 100);
                         return (
                           <tr key={i} className="border-t border-gray-50">
                             <td className="py-2">
@@ -169,6 +196,9 @@ export default function AdminPreInvoicesPage() {
                               {isMeter
                                 ? `${faNum(item.branchLength ?? 0)} سانتی‌متر × ${faNum(item.branchCount || 1)} شاخه`
                                 : item.quantity}
+                            </td>
+                            <td className="py-2 text-xs font-bold text-red-500">
+                              {d > 0 ? `${faNum(d)}٪ تخفیف` : "—"}
                             </td>
                             <td className="py-2 font-bold">{formatPrice(itemTotal)}</td>
                           </tr>

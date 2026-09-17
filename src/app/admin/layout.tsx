@@ -70,7 +70,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-gray-900 text-white">
+      <aside className="hidden lg:flex lg:flex-col w-64 bg-gray-900 text-white print:hidden">
         <div className="p-4 border-b border-gray-800">
           <Link href="/admin" className="flex items-center gap-2">
             <div className="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-xl">
@@ -121,7 +121,7 @@ export default function AdminLayout({
             className="absolute inset-0 bg-black/50"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute right-0 top-0 h-full w-64 bg-gray-900 text-white">
+          <aside className="absolute right-0 top-0 h-full w-64 bg-gray-900 text-white print:hidden">
             <div className="p-4 flex items-center justify-between border-b border-gray-800">
               <Link href="/admin" className="flex items-center gap-2">
                 <div className="bg-blue-600 text-white px-2 py-1 rounded-lg font-bold">
@@ -171,7 +171,7 @@ export default function AdminLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="bg-white shadow-sm h-16 flex items-center justify-between px-4 lg:px-6">
+        <header className="bg-white shadow-sm h-16 flex items-center justify-between px-4 lg:px-6 print:hidden">
           <button
             className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
             onClick={() => setSidebarOpen(true)}
@@ -194,7 +194,7 @@ export default function AdminLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 lg:p-6 overflow-auto print:p-0 print:overflow-visible">{children}</main>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Trash2, User, Receipt, ChevronDown, Check } from "lucide-react";
+import { Search, Trash2, User, Receipt, ChevronDown, Check, Printer } from "lucide-react";
 import { isRailOrScrew, getProductMaxLength } from "@/lib/meter-product";
 
 interface Product {
@@ -34,6 +35,7 @@ interface InvoiceItem {
   branchCount?: number;
   branchLength?: number;
   baseLength?: number;
+  discountPercent?: number;
 }
 
 interface CategoryOpt {
@@ -49,6 +51,7 @@ interface BrandOpt {
 
 interface InvoiceRecord {
   id: string;
+  invoiceNumber?: number;
   customerName: string;
   customerPhone: string;
   items: InvoiceItem[];
@@ -67,6 +70,7 @@ interface LineItem {
   unitPrice: string;
   quantity: number;
   branchLength: string;
+  discount: string;
 }
 
 const faNum = (n: number) => new Intl.NumberFormat("fa-IR").format(n);
@@ -82,6 +86,7 @@ export default function AdminInvoicesPage() {
   const [history, setHistory] = useState<InvoiceRecord[] | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [expandedHistory, setExpandedHistory] = useState<string | null>(null);
+  const [invoiceCount, setInvoiceCount] = useState<number | null>(null);
 
   const [productSearch, setProductSearch] = useState("");
   const [productResults, setProductResults] = useState<Product[]>([]);
@@ -95,14 +100,22 @@ export default function AdminInvoicesPage() {
   const [lines, setLines] = useState<LineItem[]>([]);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [markDone, setMarkDone] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingNumber, setEditingNumber] = useState<number | null>(null);
 
   const lastPrices = useMemo(() => {
-    const map: Record<string, { unitPrice: number; quantity: number; date: string }> = {};
+    const map: Record<string, { unitPrice: number; quantity: number; date: string; discount?: number }> = {};
     if (!history) return map;
     for (const inv of history) {
       for (const it of inv.items ?? []) {
         if (it.productId && !(it.productId in map)) {
-          map[it.productId] = { unitPrice: it.unitPrice ?? it.price ?? 0, quantity: it.quantity, date: inv.createdAt };
+          map[it.productId] = {
+            unitPrice: it.unitPrice ?? it.price ?? 0,
+            quantity: it.quantity,
+            date: inv.createdAt,
+            discount: it.discountPercent,
+          };
         }
       }
     }
@@ -131,6 +144,39 @@ export default function AdminInvoicesPage() {
       .then(([cats, brs]) => {
         setMainCategories(Array.isArray(cats) ? cats.map((c: CategoryOpt) => ({ id: c.id, name: c.name, slug: c.slug })) : []);
         setBrands(Array.isArray(brs) ? brs.map((b: BrandOpt) => ({ id: b.id, name: b.name })) : []);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/invoices/count")
+      .then((r) => r.json())
+      .then((d: { count?: number }) => setInvoiceCount(d.count ?? null))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const editId = new URLSearchParams(window.location.search).get("edit");
+    if (!editId) return;
+    fetch(`/api/admin/invoices/${editId}`)
+      .then((r) => r.json())
+      .then(async (inv) => {
+        if (!inv || inv.id !== editId) return;
+        const record: InvoiceRecord = {
+          id: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          customerName: inv.customerName,
+          customerPhone: inv.customerPhone,
+          items: inv.items,
+          totalPrice: inv.totalPrice,
+          createdAt: inv.createdAt,
+          user: inv.user,
+        };
+        await loadInvoiceIntoBuilder(record);
+        setEditingId(inv.id);
+        setEditingNumber(inv.invoiceNumber ?? null);
+        setNotes(inv.notes || "");
+        setMarkDone(inv.status === "DONE");
       })
       .catch(() => {});
   }, []);
@@ -206,6 +252,7 @@ export default function AdminInvoicesPage() {
         unitPrice: defaultPrice,
         quantity: 1,
         branchLength: String(base),
+        discount: last && last.discount ? String(last.discount) : "",
       },
     ]);
     setProductSearch("");
@@ -252,10 +299,9 @@ export default function AdminInvoicesPage() {
 
   const lineTotal = (l: LineItem) => {
     const unit = Number(l.unitPrice) || 0;
-    if (l.isMeter) {
-      return unit * l.quantity * (meterLen(l) / 100);
-    }
-    return unit * l.quantity;
+    const base = l.isMeter ? unit * l.quantity * (meterLen(l) / 100) : unit * l.quantity;
+    const discount = Math.min(Math.max(Number(l.discount) || 0, 0), 100);
+    return Math.round(base * (100 - discount) / 100);
   };
 
   const totalPrice = lines.reduce((sum, l) => sum + lineTotal(l), 0);
@@ -286,6 +332,7 @@ export default function AdminInvoicesPage() {
           unitPrice: String(it.unitPrice ?? it.price ?? ""),
           quantity: isMeter ? it.branchCount || 1 : it.quantity || 1,
           branchLength: isMeter ? String(it.branchLength != null ? it.branchLength : baseLen || 400) : "",
+          discount: it.discountPercent ? String(it.discountPercent) : "",
         };
       }),
     );
@@ -311,7 +358,9 @@ export default function AdminInvoicesPage() {
       customerPhone,
       userId,
       notes: notes.trim() || null,
+      status: markDone ? "DONE" : "PENDING",
       items: lines.map((l) => {
+        const discount = Math.min(Math.max(Number(l.discount) || 0, 0), 100);
         if (l.isMeter) {
           const base = l.baseLength || 400;
           const bl = Math.min(Math.max(parseInt(l.branchLength) || 10, 10), base);
@@ -321,18 +370,21 @@ export default function AdminInvoicesPage() {
             branchCount: l.quantity,
             branchLength: bl,
             baseLength: base,
+            discountPercent: discount || undefined,
           };
         }
         return {
           productId: l.productId,
           unitPrice: Number(l.unitPrice) || 0,
           quantity: l.quantity,
+          discountPercent: discount || undefined,
         };
       }),
     };
     try {
-      const res = await fetch("/api/admin/invoices", {
-        method: "POST",
+      const isEditing = editingId !== null;
+      const res = await fetch(isEditing ? `/api/admin/invoices/${editingId}` : "/api/admin/invoices", {
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
@@ -343,20 +395,50 @@ export default function AdminInvoicesPage() {
         return;
       }
       setLines([]);
-      alert("فاکتور ثبت شد");
+      setNotes("");
+      if (isEditing) {
+        setEditingId(null);
+        setEditingNumber(null);
+        window.history.replaceState(null, "", "/admin/invoices");
+        alert("فاکتور اصلاح شد");
+      } else {
+        setInvoiceCount((c) => (c ?? 0) + 1);
+        alert("فاکتور ثبت شد");
+      }
     } catch {
       alert("خطا در ثبت فاکتور");
     }
     setSaving(false);
   };
 
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingNumber(null);
+    setLines([]);
+    setNotes("");
+    setMarkDone(false);
+    window.history.replaceState(null, "", "/admin/invoices");
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">ثبت فاکتور</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          صدور فاکتور با قیمت سفارشی مخصوص مشتری؛ بدون تغییر قیمت‌های سایت
-        </p>
+      <div className="flex items-center gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">{editingId ? "اصلاح فاکتور" : "ثبت فاکتور"}</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {editingId ? "در حال ویرایش فاکتور موجود؛ با ذخیره، اصلاحات اعمال می‌شود." : "صدور فاکتور با قیمت سفارشی مخصوص مشتری؛ بدون تغییر قیمت‌های سایت"}
+          </p>
+        </div>
+        {editingNumber !== null && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium px-4 py-2 rounded-lg">
+            در حال اصلاح شماره فاکتور: {faNum(editingNumber)}
+          </div>
+        )}
+        {invoiceCount !== null && editingId === null && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-4 py-2 rounded-lg">
+            تعداد فاکتورهای صادرشده تاکنون: {faNum(invoiceCount)}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
@@ -422,11 +504,18 @@ export default function AdminInvoicesPage() {
 
           <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
             <button
-              onClick={() => loadHistory(userId, customerPhone)}
+              onClick={() => {
+                if (history !== null) {
+                  setHistory(null);
+                  setExpandedHistory(null);
+                  return;
+                }
+                loadHistory(userId, customerPhone);
+              }}
               className="px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1"
             >
               <Receipt size={14} />
-              نمایش سابقه مشتری
+              {history !== null ? "بستن سابقه مشتری" : "نمایش سابقه مشتری"}
             </button>
             {historyLoading && <span>در حال بارگذاری سابقه...</span>}
           </div>
@@ -447,19 +536,31 @@ export default function AdminInvoicesPage() {
                   >
                     <div className="flex items-center gap-3">
                       <ChevronDown size={16} className={"text-gray-400 transition-transform " + (expandedHistory === inv.id ? "rotate-180" : "")} />
+                      <span className="text-xs text-gray-500">{inv.invoiceNumber ? "شماره " + faNum(inv.invoiceNumber) : ""}</span>
                       <span className="text-sm font-bold">{faNum(inv.totalPrice)} تومان</span>
                       <span className="text-xs text-gray-500">{new Date(inv.createdAt).toLocaleDateString("fa-IR")}</span>
                       <span className="text-xs text-gray-400">{inv.items.length} کالا</span>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        loadInvoiceIntoBuilder(inv);
-                      }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100"
-                    >
-                      استفاده از این فاکتور
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/invoices/${inv.id}/print`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50"
+                        title="چاپ / PDF"
+                      >
+                        <Printer size={14} className="inline-block ml-1" />
+                        PDF
+                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          loadInvoiceIntoBuilder(inv);
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100"
+                      >
+                        استفاده از این فاکتور
+                      </button>
+                    </div>
                   </div>
                   {expandedHistory === inv.id && (
                     <div className="border-t border-gray-100 p-3">
@@ -468,9 +569,11 @@ export default function AdminInvoicesPage() {
                           {(inv.items || []).map((it, i) => {
                             const p = it.unitPrice ?? it.price ?? 0;
                             const isMeter = it.isMeter === true || it.branchLength != null;
-                            const itemTotal = isMeter
+                            const base = isMeter
                               ? p * (it.branchCount || 1) * ((it.branchLength ?? 0) / 100)
                               : p * it.quantity;
+                            const discount = Math.min(Math.max(Number(it.discountPercent) || 0, 0), 100);
+                            const itemTotal = Math.round(base * (100 - discount) / 100);
                             return (
                               <tr key={i}>
                                 <td className="py-1.5">
@@ -483,6 +586,9 @@ export default function AdminInvoicesPage() {
                                     : `${faNum(it.quantity)} عدد`}
                                 </td>
                                 <td className="py-1.5 text-xs">{faNum(p)} تومان / {isMeter ? "متر" : "واحد"}</td>
+                                <td className="py-1.5 text-xs font-bold">
+                                  {discount > 0 && <span className="text-red-500 ml-1">{faNum(discount)}٪ تخفیف</span>}
+                                </td>
                                 <td className="py-1.5 font-bold">{faNum(itemTotal)} تومان</td>
                               </tr>
                             );
@@ -571,6 +677,7 @@ export default function AdminInvoicesPage() {
                     <th className="px-3 py-2">تعداد شاخه / تعداد</th>
                     <th className="px-3 py-2">متراژ هر شاخه (سانتی‌متر)</th>
                     <th className="px-3 py-2">قیمت واحد (تومان)</th>
+                    <th className="px-3 py-2">تخفیف ٪</th>
                     <th className="px-3 py-2">جمع</th>
                     <th className="px-3 py-2"></th>
                   </tr>
@@ -644,11 +751,30 @@ export default function AdminInvoicesPage() {
                             className="w-32 px-2 py-1 border border-gray-300 rounded-lg text-center"
                           />
                         </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={l.discount}
+                            onChange={(e) => updateLine(i, { discount: e.target.value.replace(/[^\d]/g, "") })}
+                            onBlur={() => {
+                              const v = Math.min(Math.max(parseInt(l.discount) || 0, 0), 100);
+                              updateLine(i, { discount: String(v) });
+                            }}
+                            className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center"
+                          />
+                        </td>
                         <td className="px-3 py-2 font-bold whitespace-nowrap">
                           {faNum(lineTotal(l))} تومان
                           {l.isMeter && (
                             <div className="text-[10px] text-gray-400 font-normal">
                               {faNum(l.quantity)} شاخه × {faNum(meterLen(l))} سانتی‌متر × هر متر {faNum(Number(l.unitPrice) || 0)} تومان
+                            </div>
+                          )}
+                          {(Number(l.discount) || 0) > 0 && (
+                            <div className="text-[10px] text-red-500 font-normal">
+                              {faNum(Number(l.discount) || 0)}٪ تخفیف
                             </div>
                           )}
                         </td>
@@ -678,12 +804,30 @@ export default function AdminInvoicesPage() {
             />
           </div>
 
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={markDone}
+              onChange={(e) => setMarkDone(e.target.checked)}
+              className="w-4 h-4 accent-blue-600"
+            />
+            ثبت به عنوان فاکتور تکمیل‌شده (اگر تیک به‌صورت «در انتظار بررسی» ثبت می‌شود)
+          </label>
+
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="text-sm text-gray-600">مبلغ کل:</div>
             <div className="text-xl font-bold text-blue-600">{faNum(totalPrice)} تومان</div>
           </div>
 
           <div className="flex justify-end gap-3">
+            {editingId && (
+              <button
+                onClick={cancelEdit}
+                className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                لغو ویرایش
+              </button>
+            )}
             <button
               onClick={() => {
                 setLines([]);
@@ -699,7 +843,7 @@ export default function AdminInvoicesPage() {
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
             >
               <Check size={18} />
-              {saving ? "در حال ثبت..." : "ثبت فاکتور"}
+              {saving ? "در حال ذخیره..." : editingId ? "ذخیره اصلاحات" : "ثبت فاکتور"}
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import type { PreInvoice } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sendPreInvoiceEmail } from "@/lib/email";
@@ -41,16 +42,29 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id || null;
 
-  const preInvoice = await prisma.preInvoice.create({
-    data: {
-      userId,
-      customerName,
-      customerPhone,
-      items,
-      totalPrice: totalPrice || 0,
-      notes: notes || null,
-    },
-  });
+  let preInvoice: PreInvoice | null = null;
+  for (let attempt = 0; attempt < 10 && !preInvoice; attempt++) {
+    const invoiceNumber = 1000000 + Math.floor(Math.random() * 9000000);
+    try {
+      preInvoice = await prisma.preInvoice.create({
+        data: {
+          userId,
+          customerName,
+          customerPhone,
+          items,
+          totalPrice: totalPrice || 0,
+          invoiceNumber,
+          notes: notes || null,
+        },
+      });
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code !== "P2002") throw e;
+    }
+  }
+  if (!preInvoice) {
+    return NextResponse.json({ error: "خطا در ایجاد شماره فاکتور؛ دوباره تلاش کنید" }, { status: 500 });
+  }
 
   const setting = await prisma.settings
     .findUnique({ where: { key: "site_email" } })

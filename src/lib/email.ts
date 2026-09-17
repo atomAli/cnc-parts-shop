@@ -10,6 +10,7 @@ export interface PreInvoiceItem {
   branchCount?: number;
   branchLength?: number;
   baseLength?: number;
+  discountPercent?: number;
 }
 
 export interface PreInvoiceMailData {
@@ -34,17 +35,15 @@ function renderItems(items: PreInvoiceItem[]): string {
   return items
     .map((item) => {
       const price = item.price ?? item.unitPrice ?? 0;
+      const discount = Math.min(Math.max(Number(item.discountPercent) || 0, 0), 100);
       let line = `<strong>${item.name.replace(/</g, "&lt;")}</strong>`;
       if (item.isMeter && item.branchCount && item.branchLength) {
         line += `<div style="font-size:12px;color:#666;margin-top:2px">تعداد ${item.quantity || 1} × (${item.branchCount} شاخه × ${item.branchLength} سانتی‌متر) × ${price} تومان / متر</div>`;
-        const total =
-          (item.quantity || 1) *
-          item.branchCount *
-          (item.branchLength / 100) *
-          price;
+        const total = Math.round((item.quantity || 1) * item.branchCount * (item.branchLength / 100) * price * (100 - discount) / 100);
         line += `<div style="font-size:13px;color:#111;margin-top:2px">جمع: ${formatPrice(total)}</div>`;
       } else {
         line += `<div style="font-size:12px;color:#666;margin-top:2px">تعداد: ${faNum(item.quantity)} × ${formatPrice(price)} = ${formatPrice(price * item.quantity)}</div>`;
+        line += `<div style="font-size:12px;color:#c0392b;margin-top:2px">تخفیف: ${discount}٪ — جمع: ${formatPrice(Math.round(price * item.quantity * (100 - discount) / 100))}</div>`;
       }
       return `<div style="border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fafafa">${line}</div>`;
     })

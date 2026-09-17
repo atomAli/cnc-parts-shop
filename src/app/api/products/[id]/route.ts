@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
+import { localImages } from "@/lib/local-images";
 
 export async function GET(
   request: NextRequest,
@@ -47,7 +48,8 @@ export async function GET(
     isPrimary: img.isPrimary,
   }));
   const primary = imgs.find((i) => i.isPrimary) ?? imgs[0];
-  const visible = isAdmin ? imgs : primary ? [primary] : [];
+  const local = localImages(product.slug, isAdmin);
+  const visible = local ?? (isAdmin ? imgs : primary ? [primary] : []);
 
   return NextResponse.json({
     id: product.id,

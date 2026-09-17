@@ -2,118 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-
-interface InvoiceLineInput {
-  productId: string;
-  unitPrice?: number;
-  quantity?: number;
-  length?: number | string | null;
-  branchCount?: number;
-  branchLength?: number | string | null;
-  baseLength?: number | string | null;
-}
-
-interface StoredItem {
-  productId: string;
-  name: string;
-  slug: string;
-  unitPrice: number;
-  price: number;
-  quantity: number;
-  length?: number;
-  isMeter?: boolean;
-  branchCount?: number;
-  branchLength?: number;
-  baseLength?: number;
-}
+import { computeInvoice, InvoiceLineInput } from "@/lib/invoice-items";
 
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return unauthorized();
 
   const body = await req.json();
-  const { customerName, customerPhone, userId, notes } = body;
+  const { customerName, customerPhone, userId, notes, status } = body;
   const items = Array.isArray(body.items) ? (body.items as InvoiceLineInput[]) : [];
+  const finalStatus = status === "DONE" ? "DONE" : "PENDING";
 
   if (!customerName?.trim() || !customerPhone?.trim()) {
     return NextResponse.json({ error: "نام و شماره تلفن مشتری الزامی است" }, { status: 400 });
   }
-  if (items.length === 0) {
-    return NextResponse.json({ error: "حداقل یک کالا انتخاب کنید" }, { status: 400 });
+
+  const lineResult = await computeInvoice(items);
+  if ("error" in lineResult) {
+    return NextResponse.json({ error: lineResult.error }, { status: 400 });
   }
 
-  const ids = items.map((i) => i.productId).filter(Boolean);
-  const products = await prisma.product.findMany({ where: { id: { in: ids } } });
-  if (products.length !== ids.length) {
-    return NextResponse.json({ error: "یک یا چند کالا یافت نشد" }, { status: 400 });
-  }
-  const productMap = new Map(products.map((p) => [p.id, p]));
-
-  const storedItems: StoredItem[] = [];
-  let totalPrice = 0;
-
-  for (const it of items) {
-    const prod = productMap.get(it.productId);
-    if (!prod) continue;
-
-    const unitPrice = Number(it.unitPrice);
-    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-      return NextResponse.json({ error: `قیمت ${prod.name} نامعتبر است` }, { status: 400 });
-    }
-
-    const quantity = Math.max(1, it.quantity != null ? Math.floor(it.quantity) : 1);
-    const isMeter = it.branchLength != null && it.branchLength !== "";
-
-    let lineTotal: number;
-    if (isMeter) {
-      const branchCount = Math.max(1, it.branchCount != null ? Math.floor(it.branchCount) : 1);
-      const branchLength = Number(it.branchLength);
-      const baseLength = Number(it.baseLength) || 400;
-      if (!Number.isFinite(branchLength) || branchLength <= 0) {
-        return NextResponse.json({ error: `متراژ ${prod.name} نامعتبر است` }, { status: 400 });
-      }
-      lineTotal = unitPrice * branchCount * (branchLength / 100);
-      storedItems.push({
-        productId: prod.id,
-        name: prod.name,
-        slug: prod.slug,
-        unitPrice,
-        price: unitPrice,
-        quantity: branchCount,
-        isMeter: true,
-        branchCount,
-        branchLength,
-        baseLength,
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const invoiceNumber = 1000000 + Math.floor(Math.random() * 9000000);
+    try {
+      const invoice = await prisma.preInvoice.create({
+        data: {
+          userId: userId || null,
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          items: lineResult.storedItems as unknown as Prisma.InputJsonValue,
+          totalPrice: lineResult.totalPrice,
+          invoiceNumber,
+          notes: notes || null,
+          status: finalStatus,
+        },
       });
-    } else {
-      lineTotal = unitPrice * quantity;
-      storedItems.push({
-        productId: prod.id,
-        name: prod.name,
-        slug: prod.slug,
-        unitPrice,
-        price: unitPrice,
-        quantity,
-      });
+      return NextResponse.json({ success: true, id: invoice.id }, { status: 201 });
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code === "P2002") continue;
+      throw e;
     }
-    totalPrice += lineTotal;
   }
 
-  if (storedItems.length === 0) {
-    return NextResponse.json({ error: "حداقل یک کالا انتخاب کنید" }, { status: 400 });
-  }
-
-  const invoice = await prisma.preInvoice.create({
-    data: {
-      userId: userId || null,
-      customerName: customerName.trim(),
-      customerPhone: customerPhone.trim(),
-      items: storedItems as unknown as Prisma.InputJsonValue,
-      totalPrice: Math.round(totalPrice),
-      notes: notes || null,
-      status: "DONE",
-    },
-  });
-
-  return NextResponse.json({ success: true, id: invoice.id }, { status: 201 });
+  return NextResponse.json({ error: "خطا در ایجاد شماره فاکتور؛ دوباره تلاش کنید" }, { status: 500 });
 }
