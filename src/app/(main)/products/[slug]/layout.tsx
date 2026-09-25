@@ -48,67 +48,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProductLayout({ params, children }: Props) {
-  const { slug } = await params;
-  const product = await getProduct(slug);
-
-  const ldImage = product
-    ? (product.images.find((i) => i.isPrimary) || product.images[0])?.url
-    : undefined;
-
-  const ld = product
-    ? JSON.stringify(
-        {
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: product.name,
-          description: product.description || undefined,
-          image: ldImage ? [ldImage] : undefined,
-          sku: product.sku || undefined,
-          brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
-          category: product.category.name,
-          offers: {
-            "@type": "Offer",
-            url: `${siteUrl}/products/${slug}`,
-            priceCurrency: "IRR",
-            price: product.price ? Math.round(product.price).toString() : undefined,
-            availability: "https://schema.org/InStock",
-            seller: { "@type": "Organization", name: "شیک" },
-          },
-        },
-        null,
-      )
-        .replace(/</g, "\\u003c")
-    : null;
-
-  const breadcrumbLd = product
-    ? JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "خانه", item: `${siteUrl}/` },
-          { "@type": "ListItem", position: 2, name: "محصولات", item: `${siteUrl}/products` },
-          { "@type": "ListItem", position: 3, name: product.category.name, item: `${siteUrl}/products?category=${product.category.slug}` },
-          { "@type": "ListItem", position: 4, name: product.name, item: `${siteUrl}/products/${slug}` },
-        ],
-      }).replace(/</g, "\\u003c")
-    : null;
-
-  return (
-    <>
-      {ld && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: ld }}
-        />
-      )}
-      {breadcrumbLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: breadcrumbLd }}
-        />
-      )}
-      {children}
-    </>
-  );
+export default function ProductLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
