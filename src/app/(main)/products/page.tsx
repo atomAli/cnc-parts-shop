@@ -328,7 +328,12 @@ function ProductsContent() {
                     className="w-full h-full object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-110"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400 text-sm">تصویر محصول</div>
+                  <img
+                    src="/logo.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="opacity-60 max-h-full max-w-full object-contain p-4"
+                  />
                 )}
                 {isRailOrScrew(product) ? (
                   <span className="absolute top-3 left-3 rounded-full bg-amber-500 px-3 py-1 text-[11px] font-bold text-white shadow">

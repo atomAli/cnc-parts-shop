@@ -148,7 +148,13 @@ export default function ProductView({
                   priority
                 />
               ) : (
-                <span className="text-gray-400">تصویر محصول</span>
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src="/logo.png"
+                  alt=""
+                  aria-hidden="true"
+                  className="opacity-60 max-h-full max-w-full object-contain p-6"
+                />
               )}
             </div>
             {isAdmin && product.images.length > 1 && (

@@ -48,7 +48,13 @@ function ProductCard({ product }: { product: Product }) {
             className="max-h-full max-w-full object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-110"
           />
         ) : (
-          <div className="text-gray-300 text-sm">تصویر محصول</div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/logo.png"
+            alt=""
+            aria-hidden="true"
+            className="opacity-60 max-h-full max-w-full object-contain p-4"
+          />
         )}
         {product.brand?.name && (
           <span className="absolute top-3 right-3 rounded-full bg-white/80 backdrop-blur px-3 py-1 text-[11px] font-bold text-stone-500">
