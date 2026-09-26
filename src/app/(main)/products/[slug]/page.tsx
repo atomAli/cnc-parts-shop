@@ -47,7 +47,9 @@ export default async function ProductPage({ params }: Props) {
   }));
 
   const ldImage =
-    product.images.find((i) => i.isPrimary)?.url || product.images[0]?.url;
+    product.images.find((i) => i.isPrimary)?.url ||
+    product.images[0]?.url ||
+    `${SITE_URL}/logo.png`;
 
   const productLd = JSON.stringify({
     "@context": "https://schema.org",
