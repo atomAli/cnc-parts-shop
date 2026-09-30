@@ -27,7 +27,7 @@ const electricalSubs = [
 const mechanicalSubs = [
   { name: "ریل و واگن خطی", slug: "linear-guide" },
   { name: "بال اسکرو، مهره و ساپورت", slug: "ball-screw" },
-  { name: "بلبرینگ و یاتاقان", slug: "ball-bearings" },
+  { name: "بلبرینگ", slug: "ball-bearings" },
   { name: "گیربکس", slug: "gearboxes" },
   { name: "کوپلینگ", slug: "couplings" },
   { name: "دنده شانه‌ای", slug: "gear-racks" },
