@@ -210,7 +210,7 @@ function ProductsContent() {
             onChange={(e) => setSortBy(e.target.value)}
             className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="kw">کیلووات (کم به زیاد)</option>
+            <option value="kw">پیش‌فرض</option>
             <option value="newest">جدیدترین</option>
             <option value="price-asc">ارزان‌ترین</option>
             <option value="price-desc">گران‌ترین</option>
