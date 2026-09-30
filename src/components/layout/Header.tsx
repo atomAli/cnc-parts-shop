@@ -27,12 +27,12 @@ const electricalSubs = [
 const mechanicalSubs = [
   { name: "ریل و واگن خطی", slug: "linear-guide" },
   { name: "بال اسکرو، مهره و ساپورت", slug: "ball-screw" },
-  { name: "بلبرینگ", slug: "ball-bearings" },
-  { name: "گیربکس", slug: "gearboxes" },
-  { name: "کوپلینگ", slug: "couplings" },
-  { name: "دنده شانه‌ای و مقابل", slug: "gear-racks" },
-  { name: "محافظ کابل", slug: "cable-carriers" },
   { name: "شفت، ساپورت، بلبرینگ خطی", slug: "shafts" },
+  { name: "دنده شانه‌ای و مقابل", slug: "gear-racks" },
+  { name: "گیربکس", slug: "gearboxes" },
+  { name: "بلبرینگ", slug: "ball-bearings" },
+  { name: "کوپلینگ", slug: "couplings" },
+  { name: "محافظ کابل", slug: "cable-carriers" },
   { name: "پروفیل", slug: "profile" },
 ];
 
