@@ -18,6 +18,8 @@ export function isRailOrScrew(product: ProductInput): boolean {
     "hiwin-rail",
     "hqm-wagon",
     "hiwin-wagon",
+    "ریل-خطی",
+    "ریل-مینیاتوری",
   ];
   const screwSlugs = [
     "ball-screw",
