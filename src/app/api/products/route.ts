@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { normalizeFa } from "@/lib/search";
 import { kWFromName } from "@/lib/kw";
 import { getSearchCandidates, rankProducts } from "@/lib/search-catalog";
+import { getAllCategoriesIndex, collectDescendantIds } from "@/lib/category-tree";
 import { localImages } from "@/lib/local-images";
 
 interface ProductRow {
@@ -83,16 +84,12 @@ export async function GET(request: NextRequest) {
 
   const where: Prisma.ProductWhereInput = { active: true };
 
-  if (subSlug) {
-    const subCat = await prisma.category.findUnique({ where: { slug: subSlug } });
-    if (subCat) {
-      where.categoryId = subCat.id;
-    }
-  } else if (category) {
-    const parentCat = await prisma.category.findUnique({ where: { slug: category } });
-    if (parentCat) {
-      const childIds = (await prisma.category.findMany({ where: { parentId: parentCat.id } })).map((c) => c.id);
-      where.categoryId = { in: [parentCat.id, ...childIds] };
+  if (subSlug || category) {
+    const slug = (subSlug || category) ?? "";
+    const cat = await prisma.category.findUnique({ where: { slug }, select: { id: true } });
+    if (cat) {
+      const index = await getAllCategoriesIndex();
+      where.categoryId = { in: [cat.id, ...collectDescendantIds(index, cat.id)] };
     }
   }
 
