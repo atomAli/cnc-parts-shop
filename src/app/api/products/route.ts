@@ -15,12 +15,13 @@ interface ProductRow {
   discountPrice: number | null;
   stock: number;
   isMeter?: boolean | null;
-  category?: {
-    id: string;
-    slug: string;
-    name: string;
-    parent?: { slug: string; name: string } | null;
-  } | null;
+category?: {
+      id: string;
+      slug: string;
+      name: string;
+      order?: number;
+      parent?: { slug: string; name: string } | null;
+    } | null;
   brand?: { id: string; slug: string; name: string } | null;
   images?: {
     id: string;
@@ -44,6 +45,7 @@ function mapProduct(p: ProductRow) {
     subcategory: p.category?.slug || "",
     isMeter: p.isMeter ?? null,
     kW: kWFromName(p.name),
+    categoryOrder: p.category?.order || 0,
     category: {
       id: p.category?.id || "",
       slug: p.category?.slug || "",

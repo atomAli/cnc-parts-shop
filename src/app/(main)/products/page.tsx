@@ -17,6 +17,7 @@ interface Product {
   subcategory?: string;
   isMeter?: boolean | null;
   kW?: number | null;
+  categoryOrder?: number;
   images: { url: string; isPrimary: boolean }[];
   stock: number;
 }
@@ -138,6 +139,9 @@ function ProductsContent() {
         const ka = a.kW ?? Infinity;
         const kb = b.kW ?? Infinity;
         if (ka !== kb) return ka - kb;
+        const oa = a.categoryOrder || 0;
+        const ob = b.categoryOrder || 0;
+        if (oa !== ob) return oa - ob;
         return a.name.localeCompare(b.name, "fa");
       }
       case "price-asc": return (a.price || 0) - (b.price || 0);
