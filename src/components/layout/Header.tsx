@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cart";
 import { ShoppingCart, User, Menu, X, Search, Phone, ChevronDown, Zap, Settings, Wrench, Sparkles } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import SearchBar from "@/components/layout/SearchBar";
 import Logo from "@/components/Logo";
 
@@ -46,21 +46,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [mobileSubmenu, setMobileSubmenu] = useState<string | null>(null);
-  const [subcats, setSubcats] = useState<Record<string, { name: string; slug: string }[]>>({});
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => r.json())
-      .then((data: { slug: string; children: { name: string; slug: string }[] }[] = []) => {
-        const map: Record<string, { name: string; slug: string }[]> = {};
-        for (const c of data) {
-          map[c.slug] = c.children || [];
-        }
-        setSubcats(map);
-      })
-      .catch(() => {});
-  }, []);
 
   const isLoggedIn = status === "authenticated" && session;
   const isAdmin = isLoggedIn && (session.user as { role?: string } | null | undefined)?.role === "ADMIN";
@@ -227,7 +213,7 @@ export default function Header() {
                   </div>
                   قطعات برقی
                 </Link>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
@@ -237,21 +223,6 @@ export default function Header() {
                       >
                         {sub.name}
                       </Link>
-                      {subcats[sub.slug]?.length > 0 && (
-                        <ul className="mr-3 mt-0.5 space-y-0.5 border-r border-blue-100 pr-3">
-                          {subcats[sub.slug].map((ch) => (
-                            <li key={ch.slug}>
-                              <Link
-                                href={`/products?category=${ch.slug}`}
-                                className="block px-3 py-1 text-xs text-stone-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                onClick={() => setMegaMenuOpen(false)}
-                              >
-                                {ch.name}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </li>
                   ))}
                 </ul>
@@ -268,7 +239,7 @@ export default function Header() {
                   </div>
                   قطعات مکانیکی
                 </Link>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
@@ -278,21 +249,6 @@ export default function Header() {
                       >
                         {sub.name}
                       </Link>
-                      {subcats[sub.slug]?.length > 0 && (
-                        <ul className="mr-3 mt-0.5 space-y-0.5 border-r border-amber-100 pr-3">
-                          {subcats[sub.slug].map((ch) => (
-                            <li key={ch.slug}>
-                              <Link
-                                href={`/products?category=${ch.slug}`}
-                                className="block px-3 py-1 text-xs text-stone-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                                onClick={() => setMegaMenuOpen(false)}
-                              >
-                                {ch.name}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </li>
                   ))}
                 </ul>
@@ -376,7 +332,7 @@ export default function Header() {
                 قطعات برقی
                 <ChevronDown size={16} className={`transition-transform ${mobileSubmenu === "electrical" ? "rotate-180" : ""}`} />
               </button>
-              <div className={`overflow-hidden transition-all duration-200 ${mobileSubmenu === "electrical" ? "max-h-[800px]" : "max-h-0"}`}>
+              <div className={`overflow-hidden transition-all duration-200 ${mobileSubmenu === "electrical" ? "max-h-[500px]" : "max-h-0"}`}>
                 <ul className="pr-4 pb-2">
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
@@ -387,21 +343,6 @@ export default function Header() {
                       >
                         {sub.name}
                       </Link>
-                      {subcats[sub.slug]?.length > 0 && (
-                        <ul className="pr-4 space-y-0.5">
-                          {subcats[sub.slug].map((ch) => (
-                            <li key={ch.slug}>
-                              <Link
-                                href={`/products?category=${ch.slug}`}
-                                className="block px-4 py-1.5 text-xs text-stone-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                                onClick={() => setMobileMenuOpen(false)}
-                              >
-                                {ch.name}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </li>
                   ))}
                 </ul>
@@ -415,7 +356,7 @@ export default function Header() {
                 قطعات مکانیکی
                 <ChevronDown size={16} className={`transition-transform ${mobileSubmenu === "mechanical" ? "rotate-180" : ""}`} />
               </button>
-              <div className={`overflow-hidden transition-all duration-200 ${mobileSubmenu === "mechanical" ? "max-h-[800px]" : "max-h-0"}`}>
+              <div className={`overflow-hidden transition-all duration-200 ${mobileSubmenu === "mechanical" ? "max-h-[500px]" : "max-h-0"}`}>
                 <ul className="pr-4 pb-2">
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
@@ -426,21 +367,6 @@ export default function Header() {
                       >
                         {sub.name}
                       </Link>
-                      {subcats[sub.slug]?.length > 0 && (
-                        <ul className="pr-4 space-y-0.5">
-                          {subcats[sub.slug].map((ch) => (
-                            <li key={ch.slug}>
-                              <Link
-                                href={`/products?category=${ch.slug}`}
-                                className="block px-4 py-1.5 text-xs text-stone-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
-                                onClick={() => setMobileMenuOpen(false)}
-                              >
-                                {ch.name}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </li>
                   ))}
                 </ul>
