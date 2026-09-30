@@ -11,7 +11,8 @@ function normalizeDigits(s: string): string {
 
 export function kWFromName(name: string): number | null {
   const n = normalizeDigits(name);
-  const m = n.match(/(\d+[.,]?\d*)\s*(کیلووات|کیلو وات|کیلووات|kw|KW|kW|وات)/);
+  if (/یک کیلووات/.test(n)) return 1;
+  const m = n.match(/(\d+[.,]?\d*)\s*w?\s*(کیلووات|کیلو وات|کیلووات|وات|kw|KW|kW)/);
   if (!m) return null;
   const value = parseFloat(m[1].replace(",", "."));
   if (Number.isNaN(value)) return null;
