@@ -11,7 +11,8 @@ import Logo from "@/components/Logo";
 const electricalSubs = [
   { name: "اینورتر و درایو", slug: "inverter" },
   { name: "سروو موتور", slug: "servo-motors" },
-  { name: "استپ موتور و درایو", slug: "stepper-motors" },
+  { name: "استپ موتور", slug: "stepper-motors" },
+  { name: "درایو استپ", slug: "stepper-drive" },
   { name: "اسپیندل و قطعات", slug: "spindle" },
   { name: "لوازم جانبی و قطعات اسپیندل", slug: "لوازم-جانبی-اسپیندل" },
   { name: "کنترلر CNC", slug: "controllers" },
