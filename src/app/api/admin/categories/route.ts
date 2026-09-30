@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const categories = await prisma.category.findMany({
     include: {
       _count: { select: { products: true, children: true } },
-      children: true,
+      children: { orderBy: { order: "asc" } },
     },
     where: { parentId: null },
     orderBy: { order: "asc" },
