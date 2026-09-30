@@ -32,6 +32,7 @@ const mechanicalSubs = [
   { name: "کوپلینگ", slug: "couplings" },
   { name: "دنده شانه‌ای و مقابل", slug: "gear-racks" },
   { name: "محافظ کابل", slug: "cable-carriers" },
+  { name: "شفت، ساپورت، بلبرینگ خطی", slug: "shafts" },
   { name: "پروفیل", slug: "profile" },
 ];
 
