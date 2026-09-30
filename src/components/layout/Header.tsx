@@ -13,7 +13,7 @@ const electricalSubs = [
   { name: "سروو موتور", slug: "servo-motors" },
   { name: "استپ موتور و درایو", slug: "stepper-motors" },
   { name: "اسپیندل و قطعات", slug: "spindle" },
-  { name: "لوازم جانبی", slug: "لوازم-جانبی-اسپیندل" },
+  { name: "لوازم جانبی و قطعات اسپیندل", slug: "لوازم-جانبی-اسپیندل" },
   { name: "کنترلر CNC", slug: "controllers" },
   { name: "PLC و HMI", slug: "plc-hmi" },
   { name: "منبع تغذیه و تجهیزات برق", slug: "power-supplies" },
