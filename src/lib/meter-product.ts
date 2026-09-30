@@ -26,6 +26,7 @@ export function isRailOrScrew(product: ProductInput): boolean {
     "ballscrew",
     "ball-screw-nut-support",
     "nut-support",
+    "پیچ-بالسکرو",
   ];
 
   if (railSlugs.includes(sub)) {
