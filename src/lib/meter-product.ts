@@ -8,7 +8,7 @@ export function isRailOrScrew(product: ProductInput): boolean {
   if (product.isMeter === true) return true;
   if (product.isMeter === false) return false;
 
-  const name = (product.name || "").trim();
+  const name = (product.name || "").trim().replace(/\u200C/g, " ");
   const sub = product.subcategory || "";
 
   const railSlugs = [
@@ -34,7 +34,7 @@ export function isRailOrScrew(product: ProductInput): boolean {
 
   if (screwSlugs.includes(sub)) {
     if (name.includes("مهره") || name.includes("ساپورت")) return false;
-    return name.startsWith("بالسکرو") || name.startsWith("پیچ بال اسکرو");
+    return name.includes("بال اسکرو") || name.includes("بالسکرو");
   }
 
   return false;
