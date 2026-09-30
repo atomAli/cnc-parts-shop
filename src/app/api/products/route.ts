@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { normalizeFa } from "@/lib/search";
+import { kWFromName } from "@/lib/kw";
 import { getSearchCandidates, rankProducts } from "@/lib/search-catalog";
 import { localImages } from "@/lib/local-images";
 
@@ -42,6 +43,7 @@ function mapProduct(p: ProductRow) {
     discountPrice: p.discountPrice,
     subcategory: p.category?.slug || "",
     isMeter: p.isMeter ?? null,
+    kW: kWFromName(p.name),
     category: {
       id: p.category?.id || "",
       slug: p.category?.slug || "",

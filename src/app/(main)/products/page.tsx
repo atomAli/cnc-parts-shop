@@ -16,6 +16,7 @@ interface Product {
   category: { name: string; slug: string; parentSlug?: string; parentName?: string };
   subcategory?: string;
   isMeter?: boolean | null;
+  kW?: number | null;
   images: { url: string; isPrimary: boolean }[];
   stock: number;
 }
@@ -49,7 +50,7 @@ function ProductsContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("kw");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -133,6 +134,12 @@ function ProductsContent() {
 
   const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
+      case "kw": {
+        const ka = a.kW ?? Infinity;
+        const kb = b.kW ?? Infinity;
+        if (ka !== kb) return ka - kb;
+        return a.name.localeCompare(b.name, "fa");
+      }
       case "price-asc": return (a.price || 0) - (b.price || 0);
       case "price-desc": return (b.price || 0) - (a.price || 0);
       case "name": return a.name.localeCompare(b.name, "fa");
@@ -203,6 +210,7 @@ function ProductsContent() {
             onChange={(e) => setSortBy(e.target.value)}
             className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
           >
+            <option value="kw">کیلووات (کم به زیاد)</option>
             <option value="newest">جدیدترین</option>
             <option value="price-asc">ارزان‌ترین</option>
             <option value="price-desc">گران‌ترین</option>
