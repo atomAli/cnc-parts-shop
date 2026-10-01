@@ -5,8 +5,6 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Printer, ArrowRight } from "lucide-react";
 
-const A5_MAX_ITEMS = 8;
-
 interface PrintItem {
   name: string;
   slug: string;
@@ -47,7 +45,7 @@ export default function InvoicePrintPage() {
   const [invoice, setInvoice] = useState<PrintInvoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [paper, setPaper] = useState<"auto" | "a5l" | "a4p" | "a4l">("auto");
+  const [paper, setPaper] = useState<"a5l" | "a4p" | "a4l">("a4l");
 
   useEffect(() => {
     const run = async () => {
@@ -86,7 +84,7 @@ export default function InvoicePrintPage() {
     );
   }
 
-  const effective = paper === "auto" ? (invoice.items.length <= A5_MAX_ITEMS ? "a5l" : "a4p") : paper;
+  const effective = paper;
   const paperSize =
     effective === "a5l" ? "A5 landscape" : effective === "a4p" ? "A4 portrait" : "A4 landscape";
   const [contentWidth, contentHeight] =
@@ -142,13 +140,12 @@ export default function InvoicePrintPage() {
             کاغذ:
             <select
               value={paper}
-              onChange={(e) => setPaper(e.target.value as "auto" | "a5l" | "a4p" | "a4l")}
+              onChange={(e) => setPaper(e.target.value as "a5l" | "a4p" | "a4l")}
               className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
             >
-              <option value="auto">خودکار ({invoice.items.length <= A5_MAX_ITEMS ? "A5 افقی" : "A4 عمودی"})</option>
-              <option value="a5l">A5 افقی</option>
-              <option value="a4p">A4 عمودی</option>
               <option value="a4l">A4 افقی</option>
+              <option value="a4p">A4 عمودی</option>
+              <option value="a5l">A5 افقی</option>
             </select>
           </label>
           <button
