@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
-import { recordPriceChange } from "@/lib/price-history";
 
 function collectCategoryIds(categories: { id: string; parentId: string | null }[], categoryId: string): string[] {
   const ids: string[] = [];
@@ -50,6 +49,14 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ products, total: products.length });
 }
 
+export const maxDuration = 60;
+
+function chunkBatches<T>(items: T[], size: number): T[][] {
+  const batches: T[][] = [];
+  for (let i = 0; i < items.length; i += size) batches.push(items.slice(i, i + size));
+  return batches;
+}
+
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return unauthorized();
@@ -75,28 +82,22 @@ export async function POST(req: NextRequest) {
   });
 
   const factor = mode === "increase" ? 1 + percent / 100 : 1 - percent / 100;
-  let skipped = 0;
+  const skipped = products.filter((p) => p.price <= 0).length;
 
-  const updates = products.flatMap((p) => {
-    if (p.price <= 0) {
-      skipped++;
-      return [];
-    }
-    const newPrice = Math.max(0, Math.round(p.price * factor));
-    const newDiscount =
-      p.discountPrice != null && p.discountPrice > 0
-        ? Math.max(0, Math.round(p.discountPrice * factor))
-        : p.discountPrice;
-    return prisma.product.update({
-      where: { id: p.id },
-      data: { price: newPrice, discountPrice: newDiscount },
-    });
+  const openRows = await prisma.productPriceHistory.findMany({
+    where: { productId: { in: products.map((p) => p.id) }, validUntil: null },
+    select: { id: true, productId: true, price: true, discountPrice: true },
   });
+  const openById = new Map(openRows.map((r) => [r.productId, r]));
 
-  if (updates.length > 0) {
-    await prisma.$transaction(updates);
-  }
-
+  const now = new Date();
+  const changes: {
+    id: string;
+    price: number;
+    discountPrice: number | null;
+    differs: boolean;
+    openRowId: string | null;
+  }[] = [];
   for (const p of products) {
     if (p.price <= 0) continue;
     const newPrice = Math.max(0, Math.round(p.price * factor));
@@ -104,8 +105,34 @@ export async function POST(req: NextRequest) {
       p.discountPrice != null && p.discountPrice > 0
         ? Math.max(0, Math.round(p.discountPrice * factor))
         : p.discountPrice;
-    await recordPriceChange({ productId: p.id, price: newPrice, discountPrice: newDiscount });
+    const open = openById.get(p.id);
+    const differs = !open || open.price !== newPrice || (open.discountPrice ?? null) !== (newDiscount ?? null);
+    changes.push({ id: p.id, price: newPrice, discountPrice: newDiscount, differs, openRowId: open?.id ?? null });
   }
 
-  return NextResponse.json({ updated: updates.length, skipped });
+  const CHUNK = 40;
+  const runParallel = <T>(items: T[], fn: (item: T) => Promise<unknown>) =>
+    Promise.all(chunkBatches(items, CHUNK).map((batch) => Promise.all(batch.map(fn))));
+
+  await prisma.$transaction(
+    async (tx) => {
+      await runParallel(changes, (c) =>
+        tx.product.update({ where: { id: c.id }, data: { price: c.price, discountPrice: c.discountPrice } })
+      );
+
+      const historyChanges = changes.filter((c) => c.differs);
+      await runParallel(historyChanges, (c) =>
+        tx.productPriceHistory.create({
+          data: { productId: c.id, price: c.price, discountPrice: c.discountPrice ?? null, validFrom: now },
+        })
+      );
+      await runParallel(
+        historyChanges.filter((c) => c.openRowId),
+        (c) => tx.productPriceHistory.update({ where: { id: c.openRowId! }, data: { validUntil: now } })
+      );
+    },
+    { timeout: 120000, maxWait: 20000 }
+  );
+
+  return NextResponse.json({ updated: changes.length, skipped });
 }

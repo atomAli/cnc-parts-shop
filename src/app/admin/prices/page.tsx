@@ -10,11 +10,6 @@ interface Category {
   children?: Category[];
 }
 
-interface Brand {
-  id: string;
-  name: string;
-}
-
 interface PriceProduct {
   id: string;
   name: string;
@@ -30,8 +25,8 @@ const formatPrice = (price: number) => new Intl.NumberFormat("fa-IR").format(pri
 
 export default function PriceManagerPage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
   const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState("");
   const [brandId, setBrandId] = useState("");
   const [products, setProducts] = useState<PriceProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -48,15 +43,8 @@ export default function PriceManagerPage() {
     setCategories(data);
   };
 
-  const fetchBrands = async () => {
-    const res = await fetch("/api/admin/brands");
-    const data = await res.json();
-    if (Array.isArray(data)) setBrands(data);
-  };
-
   useEffect(() => {
     fetchCategories();
-    fetchBrands();
     loadProducts("");
   }, []);
 
@@ -73,16 +61,29 @@ export default function PriceManagerPage() {
     setLoadingProducts(false);
   };
 
-  useEffect(() => {
-    fetchCategories();
-    fetchBrands();
-    loadProducts("");
-  }, []);
-
   const handleCategoryChange = (value: string) => {
     setCategoryId(value);
+    setSubcategoryId("");
+    setBrandId("");
     loadProducts(value);
   };
+
+  const handleSubcategoryChange = (value: string) => {
+    setSubcategoryId(value);
+    setBrandId("");
+    loadProducts(value || categoryId);
+  };
+
+  const subcategories = categories.find((c) => c.id === categoryId)?.children || [];
+
+  const brandOptions = Array.from(
+    products.reduce((m, p) => {
+      if (p.brandId && p.brand?.name) m.set(p.brandId, p.brand.name);
+      return m;
+    }, new Map<string, string>())
+  )
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fa"));
 
   const byBrand = brandId ? products.filter((p) => p.brandId === brandId) : products;
 
@@ -141,23 +142,28 @@ export default function PriceManagerPage() {
 
     setApplying(true);
     setResult(null);
-    const res = await fetch("/api/admin/prices", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productIds: Array.from(selected),
-        percent: pct,
-        mode,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setResult(`${data.updated} کالا به‌روزرسانی شد${data.skipped ? ` (${data.skipped} کالای بدون قیمت رد شد)` : ""}`);
-      loadProducts(categoryId);
-    } else {
-      setResult(data.error || "خطا در اعمال تغییر قیمت");
+    try {
+      const res = await fetch("/api/admin/prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productIds: Array.from(selected),
+          percent: pct,
+          mode,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        setResult(`${data.updated} کالا به‌روزرسانی شد${data.skipped ? ` (${data.skipped} کالای بدون قیمت رد شد)` : ""}`);
+        await loadProducts(subcategoryId || categoryId);
+      } else {
+        setResult(data?.error || "خطا در اعمال تغییر قیمت");
+      }
+    } catch {
+      setResult("خطا در ارتباط با سرور؛ دوباره تلاش کنید");
+    } finally {
+      setApplying(false);
     }
-    setApplying(false);
   };
 
   return (
@@ -169,49 +175,57 @@ export default function PriceManagerPage() {
         </p>
       </div>
 
-      {/* Select category */}
+      {/* Select category → subcategory → brand */}
       <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
         <div className="flex flex-wrap gap-6 items-end">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              انتخاب دسته‌بندی
+              دسته‌بندی
             </label>
             <select
               value={categoryId}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full md:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">انتخاب دسته‌بندی...</option>
-              {categories.map((c) =>
-                c.children && c.children.length > 0 ? (
-                  <optgroup key={c.id} label={c.name}>
-                    {c.children.map((child) => (
-                      <option key={child.id} value={child.id}>
-                        {child.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ) : (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                )
-              )}
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              فیلتر برند
+              زیردسته
+            </label>
+            <select
+              value={subcategoryId}
+              onChange={(e) => handleSubcategoryChange(e.target.value)}
+              disabled={!categoryId}
+              className="w-full md:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">همه زیردسته‌ها</option>
+              {subcategories.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              برند
             </label>
             <select
               value={brandId}
               onChange={(e) => setBrandId(e.target.value)}
-              disabled={false}
               className="w-full md:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">همه برندها</option>
-              {brands.map((b) => (
+              {brandOptions.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
                 </option>
@@ -220,13 +234,13 @@ export default function PriceManagerPage() {
           </div>
         </div>
 
-          <p className="text-sm text-gray-500 mt-3">
-            {loadingProducts
-              ? "در حال بارگذاری..."
-              : categoryId
-                ? `${filtered.length} کالا از ${products.length} کالای این دسته${brandId ? " (فیلتر برند)" : ""}`
-                : `${filtered.length} کالا${brandId ? " (فیلتر برند)" : ""}`}
-          </p>
+        <p className="text-sm text-gray-500 mt-3">
+          {loadingProducts
+            ? "در حال بارگذاری..."
+            : categoryId
+              ? `${filtered.length} کالا از ${products.length} کالای ${subcategoryId ? "زیردسته" : "دسته"}${brandId ? " (فیلتر برند)" : ""}`
+              : `${filtered.length} کالا${brandId ? " (فیلتر برند)" : ""}`}
+        </p>
       </div>
 
       {!loadingProducts && (
