@@ -5,9 +5,7 @@ import {
   Package,
   ShoppingCart,
   Users,
-  TrendingUp,
   Layers,
-  Tag,
   BellRing,
   Globe,
   Clock,
@@ -110,21 +108,17 @@ export default function AdminDashboard() {
       .then((d) => { if (d) setInvoiceStats(d); });
   }, []);
 
-  const statCards = stats
+  const statCards: Array<{
+    label: string;
+    value: string;
+    icon: typeof Package;
+    color: string;
+    href: string;
+    suffix?: string;
+  }> = stats
     ? [
         { label: "تعداد محصولات", value: toPersianNumber(stats.totalProducts), icon: Package, color: "bg-blue-500", href: "/admin/products" },
-        { label: "دسته‌بندی‌ها", value: toPersianNumber(stats.totalCategories), icon: Layers, color: "bg-green-500", href: "/admin/categories" },
-        { label: "برندها", value: toPersianNumber(stats.totalBrands), icon: Tag, color: "bg-orange-500", href: "/admin/brands" },
-        { label: "سفارشات", value: toPersianNumber(stats.totalOrders), icon: ShoppingCart, color: "bg-purple-500", href: "/admin/orders" },
         { label: "کاربران", value: toPersianNumber(stats.totalUsers), icon: Users, color: "bg-pink-500", href: "/admin/users" },
-        {
-          label: "فروش کل",
-          value: toPersianNumber(stats.totalRevenue),
-          suffix: " تومان",
-          icon: TrendingUp,
-          color: "bg-amber-500",
-          href: "/admin/orders",
-        },
       ]
     : [];
 
