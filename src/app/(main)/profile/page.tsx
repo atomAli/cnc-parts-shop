@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, ShoppingCart, LogOut, FileText, ChevronDown } from "lucide-react";
+import { User, ShoppingCart, LogOut, FileText, ChevronDown, Eye } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 interface PreInvoiceItem {
@@ -142,6 +142,15 @@ export default function ProfilePage() {
                     </div>
                     <div className="font-bold text-blue-600 text-sm">{formatPrice(inv.totalPrice)}</div>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
+                    <Link
+                      href={`/profile/invoices/${inv.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      title="نمایش و چاپ فاکتور"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors"
+                    >
+                      <Eye size={14} />
+                      فاکتور
+                    </Link>
                     <ChevronDown size={16} className={`text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                   </div>
 
