@@ -49,7 +49,7 @@ export default function AboutPage() {
           </span>
           <h1 className="text-3xl md:text-5xl font-black mb-4 mt-4 text-stone-900">درباره فروشگاه شیک</h1>
           <p className="text-stone-600 max-w-2xl mx-auto text-lg leading-relaxed">
-            از سال ۱۳۸۸ تا امروز، همراه صنعتگران ایرانی در تأمین قطعات CNC و تجهیزات اتوماسیون صنعتی
+            از سال ۱۳۹۸ تا امروز، همراه صنعتگران ایرانی در تأمین قطعات CNC و تجهیزات اتوماسیون صنعتی
           </p>
         </div>
       </section>
