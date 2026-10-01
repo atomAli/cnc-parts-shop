@@ -36,6 +36,20 @@ const menuItems = [
   { href: "/admin/banners", label: "بنرها", icon: Image },
 ];
 
+function PendingBadge({ count, active }: { count: number | null; active: boolean }) {
+  if (!count || count <= 0) return null;
+  return (
+    <span
+      className={
+        "mr-auto min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center " +
+        (active ? "bg-white text-blue-600" : "bg-red-500 text-white")
+      }
+    >
+      {count.toLocaleString("fa-IR")}
+    </span>
+  );
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -45,6 +59,20 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingInvoices, setPendingInvoices] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!session || (session.user as any)?.role !== "ADMIN") return;
+    const load = () => {
+      fetch("/api/admin/invoices/stats")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d) setPendingInvoices(d.byStatus.PENDING); })
+        .catch(() => {});
+    };
+    load();
+    const timer = setInterval(load, 60000);
+    return () => clearInterval(timer);
+  }, [session]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -98,6 +126,9 @@ export default function AdminLayout({
               >
                 <item.icon size={20} />
                 <span>{item.label}</span>
+                {item.href === "/admin/pre-invoices" && (
+                  <PendingBadge count={pendingInvoices} active={isActive} />
+                )}
               </Link>
             );
           })}
@@ -150,6 +181,9 @@ export default function AdminLayout({
                   >
                     <item.icon size={20} />
                     <span>{item.label}</span>
+                    {item.href === "/admin/pre-invoices" && (
+                      <PendingBadge count={pendingInvoices} active={isActive} />
+                    )}
                   </Link>
                 );
               })}

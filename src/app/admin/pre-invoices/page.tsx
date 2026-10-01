@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { RefreshCw, ChevronDown, Phone, User, Printer, Edit3 } from "lucide-react";
+import { RefreshCw, ChevronDown, Phone, User, Printer, Edit3, BellRing, Clock, Globe } from "lucide-react";
 
 interface PreInvoiceItem {
   name: string;
@@ -26,11 +26,32 @@ interface PreInvoice {
   totalPrice: number;
   status: string;
   notes: string | null;
+  source?: string | null;
   createdAt: string;
   user?: { name: string | null; phone: string | null } | null;
 }
 
 const STATUS_OPTIONS = ["PENDING", "CONTACTED", "DONE"];
+
+interface InvoiceStats {
+  total: number;
+  byStatus: { PENDING: number; PROCESSING: number; CONTACTED: number; DONE: number };
+  fromWebsite: number;
+  recent: Array<{
+    id: string;
+    invoiceNumber?: number;
+    customerName: string;
+    customerPhone: string;
+    totalPrice: number;
+    status: string;
+    source?: string | null;
+    createdAt: string;
+  }>;
+}
+
+function toFa(n: number) {
+  return n.toLocaleString("fa-IR");
+}
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "در انتظار بررسی",
@@ -59,9 +80,27 @@ export default function AdminPreInvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [stats, setStats] = useState<InvoiceStats | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [seenCount, setSeenCount] = useState(0);
+  const lastTotal = useRef<number | null>(null);
 
-  const fetchInvoices = async () => {
-    setLoading(true);
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/admin/invoices/stats");
+      if (!res.ok) return;
+      const data: InvoiceStats = await res.json();
+      // اگر تعداد کل بیشتر شده باشد یعنی سفارش جدیدی ثبت شده
+      if (lastTotal.current !== null && data.total > lastTotal.current) {
+        setSeenCount(data.total - lastTotal.current);
+      }
+      lastTotal.current = data.total;
+      setStats(data);
+    } catch {}
+  };
+
+  const fetchInvoices = async (silent = false) => {
+    if (!silent) setLoading(true);
     const url = filter ? "/api/pre-invoices?status=" + filter : "/api/pre-invoices";
     const res = await fetch(url);
     const data = await res.json();
@@ -71,7 +110,18 @@ export default function AdminPreInvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
+    fetchStats();
   }, [filter]);
+
+  // تازه‌سازی خودکار هر ۳۰ ثانیه
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const timer = setInterval(() => {
+      fetchInvoices(true);
+      fetchStats();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [autoRefresh, filter]);
 
   const updateStatus = async (id: string, newStatus: string) => {
     await fetch("/api/pre-invoices", {
@@ -80,30 +130,82 @@ export default function AdminPreInvoicesPage() {
       body: JSON.stringify({ id, status: newStatus }),
     });
     fetchInvoices();
+    fetchStats();
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">مدیریت فاکتورها</h1>
           <p className="text-sm text-gray-500 mt-1">مشاهده و مدیریت فاکتورهای ثبت شده</p>
         </div>
-        <button onClick={fetchInvoices} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          بروزرسانی
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAutoRefresh((v) => !v)}
+            title={autoRefresh ? "توقف تازه‌سازی خودکار" : "فعال‌سازی تازه‌سازی خودکار"}
+            className={
+              "flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors " +
+              (autoRefresh
+                ? "border-green-300 bg-green-50 text-green-700"
+                : "border-gray-300 hover:bg-gray-50")
+            }
+          >
+            <RefreshCw size={16} className={autoRefresh ? "animate-spin" : ""} />
+            خودکار
+          </button>
+          <button onClick={() => { fetchInvoices(); fetchStats(); }} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            بروزرسانی
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex gap-3 flex-wrap">
-        <button onClick={() => setFilter("")} className={"px-4 py-2 rounded-lg text-sm font-medium transition-colors " + (!filter ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
-          همه
-        </button>
-        {STATUS_OPTIONS.map((s) => (
-          <button key={s} onClick={() => setFilter(s)} className={"px-4 py-2 rounded-lg text-sm font-medium transition-colors " + (filter === s ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
-            {STATUS_LABELS[s]}
+      {seenCount > 0 && (
+        <div className="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 rounded-xl p-4">
+          <BellRing size={20} className="shrink-0" />
+          <div className="flex-1 text-sm font-bold">
+            {toFa(seenCount)} سفارش جدید از سایت ثبت شده است
+          </div>
+          <button
+            onClick={() => setSeenCount(0)}
+            className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700"
+          >
+            مشاهده شد
           </button>
-        ))}
+        </div>
+      )}
+
+      {stats && stats.byStatus.PENDING > 0 && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4">
+          <Clock size={20} className="shrink-0" />
+          <div className="text-sm">
+            <span className="font-bold">{toFa(stats.byStatus.PENDING)} فاکتور</span> در انتظار بررسی شماست
+            {stats.fromWebsite > 0 && (
+              <span className="text-amber-700"> — {toFa(stats.fromWebsite)} فاکتور از سایت ثبت شده</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex gap-3 flex-wrap">
+        <button onClick={() => setFilter("")} className={"flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors " + (!filter ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+          همه
+          {stats && <span className={"px-1.5 py-0.5 rounded-full text-[10px] font-bold " + (!filter ? "bg-white/25 text-white" : "bg-gray-200 text-gray-700")}>{toFa(stats.total)}</span>}
+        </button>
+        {STATUS_OPTIONS.map((s) => {
+          const count = stats?.byStatus[s as keyof typeof stats.byStatus] ?? 0;
+          return (
+            <button key={s} onClick={() => setFilter(s)} className={"flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors " + (filter === s ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+              {STATUS_LABELS[s]}
+              {stats && (
+                <span className={"px-1.5 py-0.5 rounded-full text-[10px] font-bold " + (filter === s ? "bg-white/25 text-white" : count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500")}>
+                  {toFa(count)}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       <div className="space-y-4">
@@ -129,7 +231,15 @@ export default function AdminPreInvoicesPage() {
                     <User size={18} />
                   </div>
                   <div>
-                    <div className="font-bold text-sm">{inv.customerName}</div>
+                    <div className="font-bold text-sm flex items-center gap-2">
+                      {inv.customerName}
+                      {inv.source === "WEBSITE" && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-bold">
+                          <Globe size={10} />
+                          ثبت از سایت
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500" dir="ltr">{inv.customerPhone}</div>
                   </div>
                 </div>

@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
           totalPrice: totalPrice || 0,
           invoiceNumber,
           notes: notes || null,
+          source: "WEBSITE",
         },
       });
     } catch (e) {

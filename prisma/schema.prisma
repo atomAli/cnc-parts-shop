@@ -199,6 +199,7 @@ model PreInvoice {
   totalPrice  Float
   status      String   @default("PENDING")
   notes       String?
+  source      String   @default("ADMIN")
   createdAt   DateTime @default(now())
 
   @@map("pre_invoices")
