@@ -17,7 +17,6 @@ interface User {
   email: string | null;
   role: string;
   createdAt: string;
-  _count: { orders: number };
 }
 
 export default function AdminUsersPage() {
@@ -65,15 +64,14 @@ export default function AdminUsersPage() {
               <th className="text-right px-6 py-3 text-sm font-medium text-gray-500">تلفن</th>
               <th className="text-right px-6 py-3 text-sm font-medium text-gray-500">ایمیل</th>
               <th className="text-right px-6 py-3 text-sm font-medium text-gray-500">نقش</th>
-              <th className="text-right px-6 py-3 text-sm font-medium text-gray-500">سفارشات</th>
               <th className="text-right px-6 py-3 text-sm font-medium text-gray-500">تاریخ عضویت</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-400">در حال بارگذاری...</td></tr>
+              <tr><td colSpan={5} className="text-center py-12 text-gray-400">در حال بارگذاری...</td></tr>
             ) : users.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-400">کاربری یافت نشد</td></tr>
+              <tr><td colSpan={5} className="text-center py-12 text-gray-400">کاربری یافت نشد</td></tr>
             ) : (
               users.map((user) => (
                 <tr key={user.id} className="border-b hover:bg-gray-50">
@@ -87,7 +85,6 @@ export default function AdminUsersPage() {
                       {roleLabels[user.role] || user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm">{user._count.orders}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{formatDate(user.createdAt)}</td>
                 </tr>
               ))

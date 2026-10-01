@@ -39,7 +39,6 @@ export async function GET(req: NextRequest) {
         email: true,
         role: true,
         createdAt: true,
-        _count: { select: { orders: true } },
       },
       skip,
       take: limit,

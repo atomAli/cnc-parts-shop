@@ -6,30 +6,12 @@ export async function GET() {
   const session = await requireAdmin();
   if (!session) return unauthorized();
 
-  const [totalProducts, totalCategories, totalBrands, totalOrders, totalUsers, totalRevenue, recentOrders] =
-    await Promise.all([
-      prisma.product.count(),
-      prisma.category.count(),
-      prisma.brand.count(),
-      prisma.order.count(),
-      prisma.user.count(),
-      prisma.order.aggregate({ _sum: { totalPrice: true }, where: { status: { not: "CANCELLED" } } }),
-      prisma.order.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true } } },
-      }),
-    ]);
+  const [totalProducts, totalUsers] = await Promise.all([
+    prisma.product.count(),
+    prisma.user.count(),
+  ]);
 
   return NextResponse.json({
-    stats: {
-      totalProducts,
-      totalCategories,
-      totalBrands,
-      totalOrders,
-      totalUsers,
-      totalRevenue: totalRevenue._sum?.totalPrice || 0,
-    },
-    recentOrders,
+    stats: { totalProducts, totalUsers },
   });
 }
