@@ -174,7 +174,11 @@ export default function CustomerInvoicePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-6 border-t border-gray-300 py-2">
+            <div
+              className={`grid grid-cols-2 gap-x-6 border-t border-gray-300 py-2 ${
+                invoice.address ? "" : "border-b border-gray-300"
+              }`}
+            >
               <div className="min-w-0">
                 <div className="text-[10px] text-gray-500 mb-0.5">نام مشتری</div>
                 <div className="font-bold text-sm truncate">{invoice.customerName}</div>
@@ -186,7 +190,7 @@ export default function CustomerInvoicePage() {
             </div>
 
             {invoice.address && (
-              <div className="py-2">
+              <div className="py-2 border-b border-gray-300">
                 <div className="text-[10px] text-gray-500 mb-0.5">آدرس</div>
                 <div className="font-bold text-xs leading-relaxed">{invoice.address}</div>
               </div>
