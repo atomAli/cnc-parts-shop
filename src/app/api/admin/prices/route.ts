@@ -51,12 +51,6 @@ export async function GET(req: NextRequest) {
 
 export const maxDuration = 60;
 
-function chunkBatches<T>(items: T[], size: number): T[][] {
-  const batches: T[][] = [];
-  for (let i = 0; i < items.length; i += size) batches.push(items.slice(i, i + size));
-  return batches;
-}
-
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return unauthorized();
@@ -76,12 +70,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "نوع تغییر نامعتبر است" }, { status: 400 });
   }
 
+  const factor = mode === "increase" ? 1 + percent / 100 : 1 - percent / 100;
+
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
     select: { id: true, price: true, discountPrice: true },
   });
-
-  const factor = mode === "increase" ? 1 + percent / 100 : 1 - percent / 100;
   const skipped = products.filter((p) => p.price <= 0).length;
 
   const openRows = await prisma.productPriceHistory.findMany({
@@ -91,48 +85,67 @@ export async function POST(req: NextRequest) {
   const openById = new Map(openRows.map((r) => [r.productId, r]));
 
   const now = new Date();
-  const changes: {
-    id: string;
+  const changes: { id: string; newPrice: number; newDisc: number; applyDisc: boolean }[] = [];
+  const closeIds: string[] = [];
+  const newRows: {
+    productId: string;
     price: number;
     discountPrice: number | null;
-    differs: boolean;
-    openRowId: string | null;
+    validFrom: Date;
+    createdAt: Date;
   }[] = [];
+
   for (const p of products) {
     if (p.price <= 0) continue;
     const newPrice = Math.max(0, Math.round(p.price * factor));
-    const newDiscount =
-      p.discountPrice != null && p.discountPrice > 0
-        ? Math.max(0, Math.round(p.discountPrice * factor))
-        : p.discountPrice;
+    const currentDisc = p.discountPrice ?? 0;
+    const applyDisc = p.discountPrice != null && p.discountPrice > 0;
+    const newDisc = applyDisc ? Math.max(0, Math.round(currentDisc * factor)) : currentDisc;
+    changes.push({ id: p.id, newPrice, newDisc, applyDisc });
+
     const open = openById.get(p.id);
-    const differs = !open || open.price !== newPrice || (open.discountPrice ?? null) !== (newDiscount ?? null);
-    changes.push({ id: p.id, price: newPrice, discountPrice: newDiscount, differs, openRowId: open?.id ?? null });
+    const differs = !open || open.price !== newPrice || (open.discountPrice ?? null) !== (applyDisc ? newDisc : null);
+    if (differs) {
+      if (open) closeIds.push(open.id);
+      newRows.push({
+        productId: p.id,
+        price: newPrice,
+        discountPrice: applyDisc ? newDisc : null,
+        validFrom: now,
+        createdAt: now,
+      });
+    }
   }
 
-  const CHUNK = 40;
-  const runParallel = <T>(items: T[], fn: (item: T) => Promise<unknown>) =>
-    Promise.all(chunkBatches(items, CHUNK).map((batch) => Promise.all(batch.map(fn))));
-
-  await prisma.$transaction(
-    async (tx) => {
-      await runParallel(changes, (c) =>
-        tx.product.update({ where: { id: c.id }, data: { price: c.price, discountPrice: c.discountPrice } })
-      );
-
-      const historyChanges = changes.filter((c) => c.differs);
-      await runParallel(historyChanges, (c) =>
-        tx.productPriceHistory.create({
-          data: { productId: c.id, price: c.price, discountPrice: c.discountPrice ?? null, validFrom: now },
-        })
-      );
-      await runParallel(
-        historyChanges.filter((c) => c.openRowId),
-        (c) => tx.productPriceHistory.update({ where: { id: c.openRowId! }, data: { validUntil: now } })
-      );
-    },
-    { timeout: 120000, maxWait: 20000 }
-  );
+  if (changes.length > 0) {
+    await prisma.$transaction(
+      async (tx) => {
+        if (closeIds.length > 0) {
+          await tx.productPriceHistory.updateMany({
+            where: { id: { in: closeIds } },
+            data: { validUntil: now },
+          });
+        }
+        if (newRows.length > 0) {
+          await tx.productPriceHistory.createMany({ data: newRows });
+        }
+        await tx.$executeRaw`
+          UPDATE products p
+          SET price = v.new_price,
+              "discountPrice" = CASE WHEN v.apply_disc THEN v.new_disc ELSE p."discountPrice" END,
+              "updatedAt" = now()
+          FROM unnest(
+            ${changes.map((c) => c.id)}::text[],
+            ${changes.map((c) => c.newPrice)}::double precision[],
+            ${changes.map((c) => c.newDisc)}::double precision[],
+            ${changes.map((c) => c.applyDisc)}::boolean[]
+          ) AS v(id, new_price, new_disc, apply_disc)
+          WHERE p.id = v.id
+        `;
+      },
+      { timeout: 50000, maxWait: 15000 }
+    );
+  }
 
   return NextResponse.json({ updated: changes.length, skipped });
 }
