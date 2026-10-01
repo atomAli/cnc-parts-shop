@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [address, setAddress] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +29,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, password }),
+        body: JSON.stringify({ name, phone, password, address: address.trim() || undefined }),
       });
 
       const data = await res.json();
@@ -95,6 +96,20 @@ export default function RegisterPage() {
                   placeholder="09120000000"
                   dir="ltr"
                   required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="address" className="block text-sm font-bold text-stone-700 mb-1.5">
+                  آدرس <span className="text-stone-400 font-normal">(اختیاری)</span>
+                </label>
+                <textarea
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="input resize-none"
+                  rows={2}
+                  placeholder="تهران، خیابان ..."
                 />
               </div>
 

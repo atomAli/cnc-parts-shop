@@ -54,6 +54,7 @@ interface InvoiceRecord {
   invoiceNumber?: number;
   customerName: string;
   customerPhone: string;
+  address?: string | null;
   items: InvoiceItem[];
   totalPrice: number;
   createdAt: string;
@@ -82,6 +83,7 @@ export default function AdminInvoicesPage() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [history, setHistory] = useState<InvoiceRecord[] | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -167,6 +169,7 @@ export default function AdminInvoicesPage() {
           invoiceNumber: inv.invoiceNumber,
           customerName: inv.customerName,
           customerPhone: inv.customerPhone,
+          address: inv.address || null,
           items: inv.items,
           totalPrice: inv.totalPrice,
           createdAt: inv.createdAt,
@@ -339,6 +342,7 @@ export default function AdminInvoicesPage() {
     setLines(enriched);
     setCustomerName(inv.customerName);
     setCustomerPhone(inv.customerPhone);
+    setAddress(inv.address || "");
     setUserId(inv.user?.id || null);
     setExpandedHistory(null);
   };
@@ -356,6 +360,7 @@ export default function AdminInvoicesPage() {
     const body = {
       customerName,
       customerPhone,
+      address: address.trim() || null,
       userId,
       notes: notes.trim() || null,
       status: markDone ? "DONE" : "PENDING",
@@ -504,6 +509,17 @@ export default function AdminInvoicesPage() {
                 dir="ltr"
               />
             </div>
+          </div>
+
+          <div className="mt-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">آدرس مشتری (اختیاری)</label>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+              placeholder="آدرس تحویل سفارش"
+            />
           </div>
 
           <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">

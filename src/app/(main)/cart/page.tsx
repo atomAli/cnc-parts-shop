@@ -2,35 +2,52 @@
 
 import { useCartStore } from "@/store/cart";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Trash2, Plus, Minus, ShoppingCart, FileText, CheckCircle, Loader2 } from "lucide-react";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getTotal } = useCartStore();
   const { data: session } = useSession();
   const isLoggedIn = !!session;
+  const router = useRouter();
 
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [address, setAddress] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fa-IR").format(price) + " تومان";
 
+  // پیش‌فرض آدرس از پروفایل کاربر
+  useEffect(() => {
+    if (!session) return;
+    fetch("/api/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.address) setAddress(d.address); })
+      .catch(() => {});
+  }, [session]);
+
   const handleSubmit = async () => {
-    if (!isLoggedIn && (!name.trim() || !phone.trim())) return;
+    if (!isLoggedIn && (!name.trim() || !phone.trim() || password.length < 6)) return;
 
     setLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/pre-invoices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerName: isLoggedIn ? (session.user as any).name || "" : name.trim(),
-          customerPhone: isLoggedIn ? (session.user as any).phone || "" : phone.trim(),
+          customerName: isLoggedIn ? (session?.user as any)?.name || "" : name.trim(),
+          customerPhone: isLoggedIn ? (session?.user as any)?.phone || "" : phone.trim(),
+          password: isLoggedIn ? undefined : password,
+          address: address.trim() || undefined,
           items: items.map((i) => ({
             name: i.name,
             slug: i.slug,
@@ -45,11 +62,27 @@ export default function CartPage() {
         }),
       });
 
-      if (res.ok) {
-        setSubmitted(true);
-        clearCart();
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data.error || "خطا در ثبت پیش فاکتور");
+        setLoading(false);
+        return;
       }
-    } catch {}
+
+      clearCart();
+
+      // کاربر مهمان: حساب ساخته شد → ورود خودکار و نمایش فاکتور
+      if (data.accountCreated) {
+        await signIn("credentials", { phone: phone.trim(), password, redirect: false });
+        router.push(`/profile/invoices/${data.id}`);
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError("خطا در ارتباط با سرور");
+    }
     setLoading(false);
   };
 
@@ -165,9 +198,12 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Guest form */}
+            {/* فرم مهمان: نام، تلفن، رمز (بدون آدرس) */}
             {showForm && !isLoggedIn && (
               <div className="space-y-3 mb-4 p-4 bg-gray-50 rounded-xl">
+                <p className="text-xs text-stone-600 leading-relaxed">
+                  با ثبت پیش فاکتور، حساب کاربری برای شما ساخته می‌شود تا فاکتورهایتان را ببینید.
+                </p>
                 <input
                   type="text"
                   placeholder="نام و نام خانوادگی"
@@ -183,7 +219,35 @@ export default function CartPage() {
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   dir="ltr"
                 />
+                <input
+                  type="password"
+                  placeholder="رمز عبور (حداقل ۶ کاراکتر)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  dir="ltr"
+                />
               </div>
+            )}
+
+            {/* آدرس اختیاری */}
+            {isLoggedIn && (
+              <div className="mb-4">
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  rows={2}
+                  placeholder="آدرس تحویل (اختیاری)"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                />
+                <p className="text-[11px] text-stone-400 mt-1">
+                  در صورت خالی بودن، آدرس ذخیره‌شدهٔ پروفایل شما استفاده می‌شود.
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-xs leading-relaxed">{error}</div>
             )}
 
             <button
@@ -194,7 +258,7 @@ export default function CartPage() {
                 }
                 handleSubmit();
               }}
-              disabled={loading || (!isLoggedIn && showForm && (!name.trim() || !phone.trim()))}
+              disabled={loading || (!isLoggedIn && showForm && (!name.trim() || !phone.trim() || password.length < 6))}
               className="w-full btn-primary justify-center mb-3 disabled:opacity-50"
             >
               {loading ? (

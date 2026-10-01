@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   if (!session) return unauthorized();
 
   const body = await req.json();
-  const { customerName, customerPhone, userId, notes, status } = body;
+  const { customerName, customerPhone, address, userId, notes, status } = body;
   const items = Array.isArray(body.items) ? (body.items as InvoiceLineInput[]) : [];
   const finalStatus = status === "DONE" ? "DONE" : "PENDING";
 
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
           userId: userId || null,
           customerName: customerName.trim(),
           customerPhone: customerPhone.trim(),
+          address: typeof address === "string" && address.trim() ? address.trim() : null,
           items: lineResult.storedItems as unknown as Prisma.InputJsonValue,
           totalPrice: lineResult.totalPrice,
           invoiceNumber,

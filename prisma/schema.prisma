@@ -14,6 +14,7 @@ model User {
   password      String
   role          Role      @default(USER)
   image         String?
+  address       String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orders        Order[]
@@ -193,6 +194,7 @@ model PreInvoice {
   invoiceNumber Int @unique
   customerName String
   customerPhone String
+  address      String?
   items       Json
   totalPrice  Float
   status      String   @default("PENDING")

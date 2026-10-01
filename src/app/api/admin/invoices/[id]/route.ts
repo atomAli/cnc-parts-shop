@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   if (!id) return NextResponse.json({ error: "شناسه فاکتور الزامی است" }, { status: 400 });
 
   const body = await req.json();
-  const { customerName, customerPhone, userId, notes, status } = body;
+  const { customerName, customerPhone, address, userId, notes, status } = body;
   const items = Array.isArray(body.items) ? (body.items as InvoiceLineInput[]) : [];
   const finalStatus = status === "DONE" ? "DONE" : "PENDING";
 
@@ -51,6 +51,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
       userId: userId || null,
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
+      address: typeof address === "string" ? address.trim() || null : undefined,
       items: lineResult.storedItems as unknown as Prisma.InputJsonValue,
       totalPrice: lineResult.totalPrice,
       notes: notes || null,

@@ -23,6 +23,7 @@ interface CustomerInvoice {
   invoiceNumber?: number;
   customerName: string;
   customerPhone: string;
+  address?: string | null;
   items: PrintItem[];
   totalPrice?: number;
   notes?: string | null;
@@ -183,6 +184,13 @@ export default function CustomerInvoicePage() {
                 <div className="font-bold text-sm" dir="ltr">{invoice.customerPhone}</div>
               </div>
             </div>
+
+            {invoice.address && (
+              <div className="border-b border-gray-300 py-2.5">
+                <div className="text-xs text-gray-500">آدرس</div>
+                <div className="font-bold text-sm leading-relaxed">{invoice.address}</div>
+              </div>
+            )}
 
             <table className="w-full mt-3 text-sm">
               <thead>

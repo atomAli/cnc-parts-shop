@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import type { PreInvoice } from "@prisma/client";
 import { getServerSession } from "next-auth";
+import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { sendPreInvoiceEmail } from "@/lib/email";
 
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { customerName, customerPhone, items, totalPrice, notes } = body;
+  const { customerName, customerPhone, items, totalPrice, notes, address, password } = body;
 
   if (!customerName || !customerPhone) {
     return NextResponse.json({ error: "نام و شماره تلفن الزامی است" }, { status: 400 });
@@ -40,7 +41,58 @@ export async function POST(req: NextRequest) {
   }
 
   const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id || null;
+  let sessionUserId: string | null = (session?.user as any)?.id || null;
+  const phone = String(customerPhone).trim();
+
+  // کاربر مهمان: باید برایش حساب ساخته شود (رمز بدون آدرس)
+  let accountCreated = false;
+  if (!session) {
+    if (typeof password !== "string" || password.length < 6) {
+      return NextResponse.json(
+        { error: "برای ساخت حساب کاربری، رمز عبور (حداقل ۶ کاراکتر) الزامی است" },
+        { status: 400 }
+      );
+    }
+
+    const existing = await prisma.user.findUnique({ where: { phone }, select: { id: true } });
+    if (existing) {
+      return NextResponse.json(
+        { error: "این شماره تلفن قبلاً ثبت شده است؛ لطفاً وارد حساب خود شوید" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const created = await prisma.user.create({
+        data: {
+          name: String(customerName).trim(),
+          phone,
+          password: await bcrypt.hash(password, 12),
+        },
+        select: { id: true },
+      });
+      sessionUserId = created.id;
+      accountCreated = true;
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code === "P2002") {
+        return NextResponse.json(
+          { error: "این شماره تلفن قبلاً ثبت شده است؛ لطفاً وارد حساب خود شوید" },
+          { status: 400 }
+        );
+      }
+      throw e;
+    }
+  }
+
+  // آدرس: مقدار ارسالی، وگرنه آدرس ذخیره‌شدهٔ حساب
+  let finalAddress = typeof address === "string" ? address.trim() : "";
+  if (!finalAddress && sessionUserId) {
+    const owner = await prisma.user
+      .findUnique({ where: { id: sessionUserId }, select: { address: true } })
+      .catch(() => null);
+    finalAddress = owner?.address?.trim() || "";
+  }
 
   let preInvoice: PreInvoice | null = null;
   for (let attempt = 0; attempt < 10 && !preInvoice; attempt++) {
@@ -48,9 +100,10 @@ export async function POST(req: NextRequest) {
     try {
       preInvoice = await prisma.preInvoice.create({
         data: {
-          userId,
+          userId: sessionUserId,
           customerName,
-          customerPhone,
+          customerPhone: phone,
+          address: finalAddress || null,
           items,
           totalPrice: totalPrice || 0,
           invoiceNumber,
@@ -83,7 +136,7 @@ export async function POST(req: NextRequest) {
     toEmail
   ).catch(() => {});
 
-  return NextResponse.json({ success: true, id: preInvoice.id });
+  return NextResponse.json({ success: true, id: preInvoice.id, accountCreated });
 }
 
 export async function PATCH(req: NextRequest) {

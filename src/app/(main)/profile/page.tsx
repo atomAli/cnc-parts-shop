@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, ShoppingCart, LogOut, FileText, ChevronDown, Eye } from "lucide-react";
+import { User, ShoppingCart, LogOut, FileText, ChevronDown, Eye, MapPin } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 interface PreInvoiceItem {
@@ -39,6 +39,9 @@ export default function ProfilePage() {
   const [invoices, setInvoices] = useState<PreInvoice[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [address, setAddress] = useState("");
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressMsg, setAddressMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth/login");
@@ -50,8 +53,35 @@ export default function ProfilePage() {
         .then((r) => r.json())
         .then((data) => { setInvoices(Array.isArray(data) ? data : []); setLoadingInvoices(false); })
         .catch(() => setLoadingInvoices(false));
+
+      fetch("/api/profile")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d) setAddress(d.address || ""); })
+        .catch(() => {});
     }
   }, [session]);
+
+  const saveAddress = async () => {
+    setSavingAddress(true);
+    setAddressMsg(null);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAddressMsg({ ok: false, text: data.error || "خطا در ذخیره آدرس" });
+      } else {
+        setAddress(data.address || "");
+        setAddressMsg({ ok: true, text: "آدرس ذخیره شد" });
+      }
+    } catch {
+      setAddressMsg({ ok: false, text: "خطا در ارتباط با سرور" });
+    }
+    setSavingAddress(false);
+  };
 
   if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
@@ -87,6 +117,36 @@ export default function ProfilePage() {
             <span className="text-gray-600">نقش:</span>
             <span className="font-medium">{(session.user as any)?.role === "ADMIN" ? "مدیر" : "کاربر"}</span>
           </div>
+        </div>
+      </div>
+
+      {/* آدرس */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-amber-100 text-amber-600 p-3 rounded-lg"><MapPin size={22} /></div>
+          <div>
+            <h2 className="font-bold text-lg">آدرس من</h2>
+            <p className="text-sm text-gray-500">برای فاکتور و تحویل سفارش استفاده می‌شود</p>
+          </div>
+        </div>
+        <textarea
+          value={address}
+          onChange={(e) => { setAddress(e.target.value); setAddressMsg(null); }}
+          rows={3}
+          placeholder="آدرس خود را وارد کنید (اختیاری)"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+        />
+        <div className="flex items-center gap-3 mt-3">
+          <button
+            onClick={saveAddress}
+            disabled={savingAddress}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+          >
+            {savingAddress ? "در حال ذخیره..." : "ذخیره آدرس"}
+          </button>
+          {addressMsg && (
+            <span className={`text-xs ${addressMsg.ok ? "text-green-600" : "text-red-600"}`}>{addressMsg.text}</span>
+          )}
         </div>
       </div>
 

@@ -17,6 +17,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
       invoiceNumber: true,
       customerName: true,
       customerPhone: true,
+      address: true,
       items: true,
       totalPrice: true,
       status: true,
