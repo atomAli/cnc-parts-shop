@@ -178,21 +178,21 @@ export default function InvoicePrintPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 border-y border-gray-300 py-2.5">
-              <div>
-                <div className="text-xs text-gray-500">نام مشتری</div>
-                <div className="font-bold text-sm">{invoice.customerName}</div>
+            <div className="grid grid-cols-2 gap-x-6 border-y border-gray-300 py-2">
+              <div className="min-w-0">
+                <div className="text-[10px] text-gray-500 mb-0.5">نام مشتری</div>
+                <div className="font-bold text-sm truncate">{invoice.customerName}</div>
               </div>
-              <div>
-                <div className="text-xs text-gray-500">شماره تماس</div>
+              <div className="min-w-0">
+                <div className="text-[10px] text-gray-500 mb-0.5">شماره تماس</div>
                 <div className="font-bold text-sm" dir="ltr">{invoice.customerPhone}</div>
               </div>
             </div>
 
             {invoice.address && (
-              <div className="border-b border-gray-300 py-2.5">
-                <div className="text-xs text-gray-500">آدرس</div>
-                <div className="font-bold text-sm leading-relaxed">{invoice.address}</div>
+              <div className="py-2">
+                <div className="text-[10px] text-gray-500 mb-0.5">آدرس</div>
+                <div className="font-bold text-xs leading-relaxed">{invoice.address}</div>
               </div>
             )}
 
