@@ -45,12 +45,21 @@ const STATUS_MAP: Record<string, string> = {
   DONE: "تکمیل شده",
 };
 
+const PAPER_MAP = {
+  a4l: { size: "A4 landscape", label: "A4 افقی", w: "297mm", h: "210mm" },
+  a4p: { size: "A4 portrait", label: "A4 عمودی", w: "210mm", h: "297mm" },
+  a5l: { size: "A5 landscape", label: "A5 افقی", w: "210mm", h: "148mm" },
+} as const;
+
+type Paper = keyof typeof PAPER_MAP;
+
 export default function CustomerInvoicePage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : (params.id ?? "");
   const [invoice, setInvoice] = useState<CustomerInvoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [paper, setPaper] = useState<Paper>("a4l");
 
   useEffect(() => {
     const run = async () => {
@@ -90,6 +99,7 @@ export default function CustomerInvoicePage() {
   }
 
   const title = invoice.status === "DONE" ? "فاکتور فروش" : "پیش فاکتور فروش";
+  const sheet = PAPER_MAP[paper];
 
   const invoiceTotal = Number.isFinite(invoice.totalPrice as number)
     ? (invoice.totalPrice as number)
@@ -113,7 +123,7 @@ export default function CustomerInvoicePage() {
     <div className="min-h-screen bg-gray-100 print:bg-white">
       <style>
         {`@media print {
-          @page { size: A4 portrait; margin: 10mm; }
+          @page { size: ${sheet.size}; margin: 10mm; }
           html, body { padding: 0 !important; margin: 0 !important; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print-scroll { overflow: visible !important; padding: 0 !important; }
@@ -130,6 +140,15 @@ export default function CustomerInvoicePage() {
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-500">{STATUS_MAP[invoice.status || "PENDING"]}</span>
+          <select
+            value={paper}
+            onChange={(e) => setPaper(e.target.value as Paper)}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700"
+          >
+            <option value="a4l">A4 افقی</option>
+            <option value="a4p">A4 عمودی</option>
+            <option value="a5l">A5 افقی</option>
+          </select>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
@@ -141,7 +160,7 @@ export default function CustomerInvoicePage() {
       </div>
 
       <div className="print-scroll overflow-auto p-4 print:p-0">
-        <div className="print-sheet bg-white text-gray-900 mx-auto print:mx-0 shadow-sm" style={{ width: "190mm", minHeight: "277mm" }}>
+        <div className="print-sheet bg-white text-gray-900 mx-auto print:mx-0 shadow-sm" style={{ width: sheet.w, minHeight: sheet.h }}>
           <div className="py-6 px-7">
             <div className="flex items-start justify-between pb-3">
               <div>
