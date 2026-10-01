@@ -176,24 +176,26 @@ export default function InvoicePrintPage() {
             </div>
 
             <div
-              className={`grid grid-cols-2 gap-x-6 border-t border-gray-300 py-2 ${
+              className={`grid grid-cols-2 gap-x-6 border-t border-gray-300 py-1.5 ${
                 invoice.address ? "" : "border-b border-gray-300"
               }`}
             >
-              <div className="min-w-0">
-                <div className="text-[10px] text-gray-500 mb-0.5">نام مشتری</div>
-                <div className="font-bold text-sm truncate">{invoice.customerName}</div>
+              <div className="min-w-0 flex items-baseline gap-1.5">
+                <span className="text-[10px] text-gray-500 shrink-0">نام مشتری:</span>
+                <span className="font-bold text-sm truncate">{invoice.customerName}</span>
               </div>
-              <div className="min-w-0">
-                <div className="text-[10px] text-gray-500 mb-0.5">شماره تماس</div>
-                <div className="font-bold text-sm" dir="ltr">{invoice.customerPhone}</div>
+              <div className="min-w-0 flex items-baseline gap-1.5">
+                <span className="text-[10px] text-gray-500 shrink-0">شماره تماس:</span>
+                <span className="font-bold text-sm" dir="ltr">{invoice.customerPhone}</span>
               </div>
             </div>
 
             {invoice.address && (
-              <div className="py-2 border-b border-gray-300">
-                <div className="text-[10px] text-gray-500 mb-0.5">آدرس</div>
-                <div className="font-bold text-xs leading-relaxed">{invoice.address}</div>
+              <div className="py-1.5 border-b border-gray-300">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[10px] text-gray-500 shrink-0">آدرس:</span>
+                  <span className="font-bold text-xs leading-relaxed">{invoice.address}</span>
+                </div>
               </div>
             )}
 
