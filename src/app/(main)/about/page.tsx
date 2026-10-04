@@ -40,8 +40,6 @@ export default function AboutPage() {
     <div>
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50">
-        <div className="pointer-events-none absolute -top-20 -left-20 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 -right-16 h-64 w-64 rounded-full bg-amber-200/40 blur-3xl" />
         <div className="container-page relative py-16 md:py-24 text-center">
           <span className="eyebrow mb-6">
             <Sparkles size={15} className="text-amber-500" />
@@ -91,7 +89,6 @@ export default function AboutPage() {
           </div>
 
           <div className="card grid place-items-center h-80 lg:h-[420px] relative overflow-hidden">
-            <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-blue-100 blur-2xl" />
             <div className="relative text-center text-gray-400">
               <img src="/logo.png" alt="شیک" className="mx-auto mb-4 h-24 w-auto object-contain" />
               <p className="text-stone-500 font-bold">فروشگاه شیک</p>
@@ -170,7 +167,6 @@ export default function AboutPage() {
       {/* Contact strip */}
       <section className="container-page py-16">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 p-8 md:p-12 text-center text-white">
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-sm font-bold">
               <Sparkles size={15} className="text-amber-300" />

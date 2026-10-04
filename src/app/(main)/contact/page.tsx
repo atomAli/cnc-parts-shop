@@ -23,8 +23,6 @@ export default function ContactPage() {
     <div>
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50">
-        <div className="pointer-events-none absolute -top-20 -left-20 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 -right-16 h-64 w-64 rounded-full bg-amber-200/40 blur-3xl" />
         <div className="container-page relative py-14 md:py-20 text-center">
           <span className="eyebrow mb-6">
             <MessageSquareText size={15} />

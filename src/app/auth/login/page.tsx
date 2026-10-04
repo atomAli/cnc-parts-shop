@@ -39,8 +39,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50 py-12 px-4">
-      <div className="pointer-events-none absolute -top-20 -left-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 -right-16 h-72 w-72 rounded-full bg-amber-200/40 blur-3xl" />
       <div className="relative max-w-md w-full">
         <div className="card p-8 sm:p-10">
           <div className="text-center mb-8">

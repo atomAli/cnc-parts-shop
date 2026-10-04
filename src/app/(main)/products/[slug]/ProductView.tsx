@@ -318,7 +318,6 @@ export default function ProductView({
 
       {/* Contact CTA */}
       <div className="mt-8 relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 px-6 py-8 md:p-10 text-center text-white">
-        <div className="pointer-events-none absolute -top-16 -left-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
         <div className="relative">
           <h3 className="text-xl font-black mb-2">سوالی دارید؟ با ما تماس بگیرید</h3>
           <p className="text-blue-100 mb-5">شیک خرید کنید؛ مشاوران ما آماده پاسخگویی به سوالات فنی شما هستند</p>

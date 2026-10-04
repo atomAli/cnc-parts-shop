@@ -15,7 +15,6 @@ export default function Footer() {
   return (
     <footer className="relative mt-auto overflow-hidden bg-[#211d19] text-stone-300">
       {/* soft glow */}
-      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-48 w-[560px] rounded-full bg-blue-500/20 blur-3xl" />
 
       <div className="container-page relative py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">

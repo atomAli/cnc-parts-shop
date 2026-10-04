@@ -93,9 +93,6 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50">
         {/* decorative blobs */}
-        <div className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute top-1/3 -right-24 h-72 w-72 rounded-full bg-amber-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-blue-100/40 blur-3xl" />
 
         <div className="container-page relative py-16 md:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -106,9 +103,7 @@ export default function HomePage() {
               </span>
               <h1 className="text-4xl md:text-6xl font-black leading-tight text-stone-900 mb-6">
                 شیک
-                <span className="bg-gradient-to-l from-blue-500 to-blue-700 bg-clip-text text-transparent">
-                  {" "}خرید کنید
-                </span>
+                <span className="text-blue-700"> خرید کنید</span>
               </h1>
               <p className="text-lg md:text-xl text-stone-600 leading-relaxed mb-8 max-w-xl">
                 انواع قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی از برندهای
@@ -211,7 +206,6 @@ export default function HomePage() {
             href="/products?category=inverter"
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-600/30"
           >
-            <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-xl" />
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/20 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
               <Zap size={28} />
             </div>
@@ -226,7 +220,6 @@ export default function HomePage() {
             href="/products?category=linear-guide"
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-amber-700 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/30"
           >
-            <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-xl" />
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/20 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
               <Settings size={28} />
             </div>
@@ -243,8 +236,6 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="container-page pb-16">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 px-6 py-14 md:p-14 text-center text-white">
-          <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl" />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-sm font-bold">
               <Sparkles size={15} className="text-amber-300" />
