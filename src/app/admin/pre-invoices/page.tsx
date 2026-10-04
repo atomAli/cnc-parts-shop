@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RefreshCw, ChevronDown, Phone, User, Printer, Edit3, BellRing, Clock, Globe } from "lucide-react";
 
@@ -76,9 +77,11 @@ function faNum(n: number | string) {
 }
 
 export default function AdminPreInvoicesPage() {
+  const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<PreInvoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("");
+  // اگر با /admin/pre-invoices?status=PENDING باز شد، همان فیلتر اعمال شود
+  const [filter, setFilter] = useState(searchParams.get("status") || "");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [stats, setStats] = useState<InvoiceStats | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);

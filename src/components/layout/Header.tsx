@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cart";
 import { ShoppingCart, User, Menu, X, Search, Phone, ChevronDown, Zap, Settings, Wrench, Sparkles } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import SearchBar from "@/components/layout/SearchBar";
 import Logo from "@/components/Logo";
 
@@ -51,6 +51,43 @@ export default function Header() {
 
   const isLoggedIn = status === "authenticated" && session;
   const isAdmin = isLoggedIn && (session.user as { role?: string } | null | undefined)?.role === "ADMIN";
+
+  // تعداد فاکتورهای جدیدِ ثبت‌شده از سایت که هنوز «در انتظار بررسی» هستند
+  const [newInvoiceCount, setNewInvoiceCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setNewInvoiceCount(0);
+      return;
+    }
+    let cancelled = false;
+
+    const load = async () => {
+      // وقتی تب در پس‌زمینه است، درخواست بی‌فایده نفرست
+      if (typeof document !== "undefined" && document.hidden) return;
+      try {
+        const res = await fetch("/api/admin/invoices/badge", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setNewInvoiceCount(data.count || 0);
+      } catch {}
+    };
+
+    load();
+    const timer = setInterval(load, 60000);
+
+    // با برگشت کاربر به تب، فوراً تازه کن
+    const onVisible = () => {
+      if (!document.hidden) load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [isAdmin]);
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -117,10 +154,15 @@ export default function Header() {
                 </Link>
                 {isAdmin && (
                   <Link
-                    href="/admin"
-                    className="hidden sm:inline-block px-4 py-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 text-sm transition-colors"
+                    href={newInvoiceCount > 0 ? "/admin/pre-invoices?status=PENDING" : "/admin"}
+                    className="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 text-sm transition-colors"
                   >
                     پنل مدیریت
+                    {newInvoiceCount > 0 && (
+                      <span className="bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
+                        {newInvoiceCount}
+                      </span>
+                    )}
                   </Link>
                 )}
                 <button
@@ -392,8 +434,17 @@ export default function Header() {
                 </li>
                 {isAdmin && (
                   <li>
-                    <Link href="/admin" className="block px-4 py-3 text-emerald-600 hover:bg-emerald-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
-                      پنل مدیریت
+                    <Link
+                      href={newInvoiceCount > 0 ? "/admin/pre-invoices?status=PENDING" : "/admin"}
+                      className="flex items-center justify-between px-4 py-3 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <span>پنل مدیریت</span>
+                      {newInvoiceCount > 0 && (
+                        <span className="bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
+                          {newInvoiceCount}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 )}
