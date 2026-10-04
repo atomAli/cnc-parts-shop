@@ -172,7 +172,7 @@ export default function AboutPage() {
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 p-8 md:p-12 text-center text-white">
           <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-1.5 text-sm font-bold backdrop-blur">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-sm font-bold">
               <Sparkles size={15} className="text-amber-300" />
               شیک خرید کنید
             </span>

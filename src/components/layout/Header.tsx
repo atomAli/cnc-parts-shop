@@ -62,7 +62,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+    <header className="sticky top-0 z-50 bg-white/95 border-b border-gray-100">
       {/* Top bar */}
       <div className="bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 text-white text-sm">
         <div className="container-page py-2 flex items-center justify-between">
@@ -195,7 +195,7 @@ export default function Header() {
 
         {/* Mega Menu Dropdown */}
         <div
-          className={`absolute top-full right-0 left-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 shadow-[var(--shadow-card)] transition-all duration-200 ${
+          className={`absolute top-full right-0 left-0 bg-white border-t border-gray-100 shadow-[var(--shadow-card)] transition-all duration-200 ${
             megaMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
           }`}
           onMouseEnter={handleMouseEnter}

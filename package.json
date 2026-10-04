@@ -31,12 +31,11 @@
     "zustand": "^5.0.14"
   },
   "browserslist": [
-    "chrome >= 60",
-    "edge >= 79",
-    "firefox >= 60",
-    "safari >= 10",
-    "ios_saf >= 10",
-    "android >= 5"
+    "chrome >= 94",
+    "edge >= 94",
+    "firefox >= 93",
+    "safari >= 15",
+    "ios_saf >= 15"
   ],
   "devDependencies": {
     "@prisma/adapter-better-sqlite3": "^7.10.0",

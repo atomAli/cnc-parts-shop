@@ -57,7 +57,7 @@ function ProductCard({ product }: { product: Product }) {
           />
         )}
         {product.brand?.name && (
-          <span className="absolute top-3 right-3 rounded-full bg-white/80 backdrop-blur px-3 py-1 text-[11px] font-bold text-stone-500">
+          <span className="absolute top-3 right-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-stone-500">
             {product.brand.name}
           </span>
         )}
@@ -212,7 +212,7 @@ export default function HomePage() {
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-600/30"
           >
             <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-xl" />
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/15 backdrop-blur mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/20 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
               <Zap size={28} />
             </div>
             <h3 className="font-black text-xl mb-2">قطعات برقی</h3>
@@ -227,7 +227,7 @@ export default function HomePage() {
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-amber-700 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/30"
           >
             <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-xl" />
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/15 backdrop-blur mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/20 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
               <Settings size={28} />
             </div>
             <h3 className="font-black text-xl mb-2">قطعات مکانیکی</h3>
@@ -246,7 +246,7 @@ export default function HomePage() {
           <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl" />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-1.5 text-sm font-bold backdrop-blur">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-sm font-bold">
               <Sparkles size={15} className="text-amber-300" />
               شیک خرید کنید
             </span>
