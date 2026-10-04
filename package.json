@@ -30,6 +30,14 @@
     "uuid": "^14.0.2",
     "zustand": "^5.0.14"
   },
+  "browserslist": [
+    "chrome >= 60",
+    "edge >= 79",
+    "firefox >= 60",
+    "safari >= 10",
+    "ios_saf >= 10",
+    "android >= 5"
+  ],
   "devDependencies": {
     "@prisma/adapter-better-sqlite3": "^7.10.0",
     "@tailwindcss/postcss": "^4",
@@ -42,6 +50,7 @@
     "better-sqlite3": "^13.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
+    "postcss-lightningcss": "^1.1.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5"
