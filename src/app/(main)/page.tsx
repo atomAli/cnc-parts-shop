@@ -68,7 +68,7 @@ function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="mt-3">
           {product.price ? (
-            <span className="text-lg font-black text-blue-600">{formatPrice(product.price)}</span>
+            <span className="text-lg font-bold text-blue-700">{formatPrice(product.price)}</span>
           ) : (
             <span className="text-sm text-gray-500 font-medium">تماس بگیرید</span>
           )}
@@ -120,7 +120,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="mt-8 flex items-center gap-3 text-sm text-stone-500">
-                <a href="tel:+982133724136" className="inline-flex items-center gap-2 font-bold text-blue-600 hover:text-blue-700" dir="ltr">
+                <a href="tel:+982133724136" className="inline-flex items-center gap-2 font-bold text-blue-700 hover:text-blue-700" dir="ltr">
                   021-33724136
                 </a>
                 <span className="h-1 w-1 rounded-full bg-stone-300" />

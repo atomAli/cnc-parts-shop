@@ -360,7 +360,7 @@ function ProductsContent() {
                 </Link>
                 <div className="mt-2">
                   {product.price ? (
-                    <span className="text-lg font-black text-blue-600">{formatPrice(product.price)}</span>
+                    <span className="text-lg font-bold text-blue-700">{formatPrice(product.price)}</span>
                   ) : (
                     <span className="text-sm text-stone-500 font-medium">تماس بگیرید</span>
                   )}

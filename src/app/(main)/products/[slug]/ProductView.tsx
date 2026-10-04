@@ -190,15 +190,15 @@ export default function ProductView({
               )}
             </div>
 
-            <div className="rounded-2xl bg-blue-700 border border-blue-100/60 p-5 mb-6">
+            <div className="mb-6">
               {product.price ? (
-                <span className="text-3xl font-black text-blue-600">
+                <span className="text-3xl font-bold text-blue-700">
                   {formatPrice(product.price)}
                 </span>
               ) : (
                 <div>
                   <span className="text-lg text-stone-500">قیمت: </span>
-                  <span className="text-lg font-black text-blue-600">تماس بگیرید</span>
+                  <span className="text-lg font-bold text-blue-700">تماس بگیرید</span>
                 </div>
               )}
             </div>
@@ -241,7 +241,7 @@ export default function ProductView({
                     <div className="mt-3 pt-3 border-t border-amber-200">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">قیمت کل:</span>
-                        <span className="font-bold text-blue-600">{formatPrice(product.price * branchCount * (branchLength / 100))}</span>
+                        <span className="font-bold text-blue-700">{formatPrice(product.price * branchCount * (branchLength / 100))}</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         {branchCount} شاخه × {branchLength} سانتی‌متر × {formatPrice(product.price)} تومان <span className="text-amber-600">/ متر</span>
