@@ -264,7 +264,7 @@ function ProductsContent() {
       {showBrands && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-black shadow">۱</span>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-700 text-white text-xs font-black shadow">۱</span>
             <span className="text-sm font-bold text-stone-700">برند</span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -326,18 +326,18 @@ function ProductsContent() {
           {sortedProducts.map((product) => (
             <div
               key={product.id}
-              className={`group card overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] ${
+              className={`card overflow-hidden transition-colors duration-150 hover:shadow-[var(--shadow-card)] ${
                 viewMode === "list" ? "flex" : ""
               }`}
             >
-              <Link href={`/products/${product.slug}`} className={`block bg-gradient-to-b from-gray-50 to-blue-50/60 relative overflow-hidden ${
+              <Link href={`/products/${product.slug}`} className={`block bg-gray-50 relative overflow-hidden ${
                 viewMode === "list" ? "w-48 shrink-0" : "h-48"
               }`}>
                 {product.images?.[0]?.url ? (
                   <img
                     src={product.images[0].url}
                     alt={product.name}
-                    className="w-full h-full object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-110"
+                    className="w-full h-full object-contain p-2 transition-transform duration-500 ease-out"
                   />
                 ) : (
                   <img

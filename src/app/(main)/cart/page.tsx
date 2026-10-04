@@ -89,7 +89,7 @@ export default function CartPage() {
   if (items.length === 0 && !submitted) {
     return (
       <div className="container-page py-16 text-center">
-        <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-gray-100 text-gray-300">
+        <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-2xl bg-gray-100 text-gray-300">
           <ShoppingCart size={40} />
         </div>
         <h1 className="text-2xl font-black mb-2">سبد خرید شما خالی است</h1>
@@ -104,7 +104,7 @@ export default function CartPage() {
   if (submitted) {
     return (
       <div className="container-page py-16 text-center">
-        <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-green-100 text-green-600">
+        <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-2xl bg-green-100 text-green-600">
           <CheckCircle size={40} />
         </div>
         <h1 className="text-2xl font-black mb-2">پیش فاکتور شما ثبت شد</h1>

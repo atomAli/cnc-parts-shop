@@ -22,7 +22,7 @@ export default function ContactPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50">
+      <section className="relative overflow-hidden bg-amber-50">
         <div className="container-page relative py-14 md:py-20 text-center">
           <span className="eyebrow mb-6">
             <MessageSquareText size={15} />
@@ -100,27 +100,27 @@ export default function ContactPage() {
               <h2 className="font-bold text-lg mb-4">سرویس‌های پشتیبانی</h2>
               <ul className="space-y-3 text-sm">
                 <li>
-                  <Link href="/repairs" className="group flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                  <Link href="/repairs" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
                     <span>خدمات تعمیرات CNC</span>
-                    <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                    <ChevronLeft size={16} className="shrink-0" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/products" className="group flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                  <Link href="/products" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
                     <span>استعلام قیمت محصولات</span>
-                    <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                    <ChevronLeft size={16} className="shrink-0" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/products?category=electrical" className="group flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                  <Link href="/products?category=electrical" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
                     <span>قطعات برقی و الکترونیک</span>
-                    <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                    <ChevronLeft size={16} className="shrink-0" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/products?category=mechanical" className="group flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                  <Link href="/products?category=mechanical" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
                     <span>قطعات مکانیکی</span>
-                    <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                    <ChevronLeft size={16} className="shrink-0" />
                   </Link>
                 </li>
               </ul>

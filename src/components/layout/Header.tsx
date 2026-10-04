@@ -64,9 +64,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white/95 border-b border-gray-100">
       {/* Top bar */}
-      <div className="bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 text-white text-sm">
+      <div className="bg-blue-800 text-white text-sm">
         <div className="container-page py-2 flex items-center justify-between">
-          <a href="tel:+982133724136" className="flex items-center gap-1.5 hover:text-blue-100 transition-colors">
+          <a href="tel:+982133724136" className="flex items-center gap-1.5 hover:text-blue-50 transition-colors">
             <Phone size={14} />
             <span dir="ltr">021-33724136</span>
           </a>
@@ -195,7 +195,7 @@ export default function Header() {
 
         {/* Mega Menu Dropdown */}
         <div
-          className={`absolute top-full right-0 left-0 bg-white border-t border-gray-100 shadow-[var(--shadow-card)] transition-all duration-200 ${
+          className={`absolute top-full right-0 left-0 bg-white border-t border-gray-100 shadow-[var(--shadow-card)] transition-colors duration-200 ${
             megaMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
           }`}
           onMouseEnter={handleMouseEnter}
@@ -282,7 +282,7 @@ export default function Header() {
               </div>
 
               {/* CTA */}
-              <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-amber-50 p-6">
+              <div className="rounded-2xl bg-blue-50 p-6">
                 <h3 className="font-black text-lg mb-1.5 text-stone-900">نیاز به مشاوره دارید؟</h3>
                 <p className="text-sm text-stone-600 mb-5">
                   شیک خرید کنید؛ تیم متخصص ما آماده راهنمایی شماست
@@ -309,7 +309,7 @@ export default function Header() {
 
       {/* Mobile menu */}
       <div
-        className={`md:hidden border-t border-gray-100 bg-white overflow-hidden transition-all duration-300 ${
+        className={`md:hidden border-t border-gray-100 bg-white overflow-hidden transition-colors duration-150 ${
           mobileMenuOpen ? "max-h-[900px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
@@ -333,7 +333,7 @@ export default function Header() {
                 قطعات برقی
                 <ChevronDown size={16} className={`transition-transform ${mobileSubmenu === "electrical" ? "rotate-180" : ""}`} />
               </button>
-              <div className={`overflow-hidden transition-all duration-200 ${mobileSubmenu === "electrical" ? "max-h-[500px]" : "max-h-0"}`}>
+              <div className={`overflow-hidden transition-colors duration-200 ${mobileSubmenu === "electrical" ? "max-h-[500px]" : "max-h-0"}`}>
                 <ul className="pr-4 pb-2">
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
@@ -357,7 +357,7 @@ export default function Header() {
                 قطعات مکانیکی
                 <ChevronDown size={16} className={`transition-transform ${mobileSubmenu === "mechanical" ? "rotate-180" : ""}`} />
               </button>
-              <div className={`overflow-hidden transition-all duration-200 ${mobileSubmenu === "mechanical" ? "max-h-[500px]" : "max-h-0"}`}>
+              <div className={`overflow-hidden transition-colors duration-200 ${mobileSubmenu === "mechanical" ? "max-h-[500px]" : "max-h-0"}`}>
                 <ul className="pr-4 pb-2">
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>

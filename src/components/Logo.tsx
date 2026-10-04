@@ -2,11 +2,11 @@ import Link from "next/link";
 
 export default function Logo({ dark = false, className = "" }: { dark?: boolean; className?: string }) {
   return (
-    <Link href="/" className={`group flex items-center gap-2.5 ${className}`}>
+    <Link href="/" className={`flex items-center gap-2.5 ${className}`}>
       <img
         src="/logo.png"
         alt="شیک"
-        className="h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+        className="h-11 w-auto object-contain transition-transform duration-300"
       />
       <span className="leading-none">
         <span className={`block text-xl font-black tracking-tight ${dark ? "text-white" : "text-stone-900"}`}>

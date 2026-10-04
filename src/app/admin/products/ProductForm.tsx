@@ -370,7 +370,7 @@ export default function ProductEditPage({ productId }: { productId?: string }) {
             {images.map((img, index) => (
               <div
                 key={index}
-                className={`relative group w-24 h-24 rounded-lg overflow-hidden border-2 ${
+                className={`relative w-24 h-24 rounded-lg overflow-hidden border-2 ${
                   img.isPrimary ? "border-blue-500" : "border-gray-200"
                 }`}
               >

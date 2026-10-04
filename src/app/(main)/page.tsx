@@ -38,14 +38,14 @@ function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group card overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card)]"
+      className="card overflow-hidden transition-colors duration-150 hover:shadow-[var(--shadow-card)]"
     >
-      <div className="relative h-48 bg-gradient-to-b from-gray-50 to-blue-50/60 flex items-center justify-center overflow-hidden">
+      <div className="relative h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
         {product.images?.[0]?.url ? (
           <img
             src={product.images[0].url}
             alt={product.name}
-            className="max-h-full max-w-full object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-110"
+            className="max-h-full max-w-full object-contain p-4 transition-transform duration-500 ease-out"
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
@@ -91,7 +91,7 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50">
+      <section className="relative overflow-hidden bg-amber-50">
         {/* decorative blobs */}
 
         <div className="container-page relative py-16 md:py-24">
@@ -131,7 +131,7 @@ export default function HomePage() {
             {/* Hero visual */}
             <div className="relative hidden sm:block">
               <div className="card p-8 rotate-1 transition-transform duration-500 hover:rotate-0">
-                <div className="grid place-items-center rounded-2xl bg-gradient-to-br from-stone-100 to-gray-200 p-8">
+                <div className="grid place-items-center rounded-2xl bg-blue-50 p-8">
                   <img src="/logo.png" alt="شیک" className="h-24 w-auto object-contain" />
                 </div>
                 <div className="mt-6 flex items-center justify-between">
@@ -156,7 +156,7 @@ export default function HomePage() {
       <section className="container-page py-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {features.map((feature, i) => (
-            <div key={i} className="card flex items-center gap-3 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200">
+            <div key={i} className="card flex items-center gap-3 p-4 transition-colors duration-150.5 hover:border-blue-200">
               <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-600">
                 <feature.icon size={22} />
               </div>
@@ -204,28 +204,28 @@ export default function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Link
             href="/products?category=inverter"
-            className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-600/30"
+            className="block rounded-2xl bg-blue-700 p-8 text-white hover:bg-blue-800"
           >
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/20 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <div className="grid h-14 w-14 place-items-center rounded-xl bg-blue-600 mb-6">
               <Zap size={28} />
             </div>
-            <h3 className="font-black text-xl mb-2">قطعات برقی</h3>
-            <p className="text-blue-100 text-sm">موتور سروو، پی ال سی، اچ ام آی، اینورتر و کنترلر</p>
-            <span className="mt-6 inline-flex items-center gap-1 text-sm font-bold text-white/90 group-hover:gap-2 transition-all">
+            <h3 className="font-bold text-xl mb-2">قطعات برقی</h3>
+            <p className="text-blue-50 text-sm">موتور سروو، پی ال سی، اچ ام آی، اینورتر و کنترلر</p>
+            <span className="mt-6 inline-flex items-center gap-1 text-sm font-bold">
               مشاهده
               <ChevronLeft size={16} />
             </span>
           </Link>
           <Link
             href="/products?category=linear-guide"
-            className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-amber-700 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/30"
+            className="block rounded-2xl bg-amber-700 p-8 text-white hover:bg-amber-800"
           >
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/20 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <div className="grid h-14 w-14 place-items-center rounded-xl bg-amber-600 mb-6">
               <Settings size={28} />
             </div>
-            <h3 className="font-black text-xl mb-2">قطعات مکانیکی</h3>
-            <p className="text-amber-100 text-sm">ریل و واگن، بالسکرو، گیربکس و کوپلینگ</p>
-            <span className="mt-6 inline-flex items-center gap-1 text-sm font-bold text-white/90 group-hover:gap-2 transition-all">
+            <h3 className="font-bold text-xl mb-2">قطعات مکانیکی</h3>
+            <p className="text-amber-50 text-sm">ریل و واگن، بالسکرو، گیربکس و کوپلینگ</p>
+            <span className="mt-6 inline-flex items-center gap-1 text-sm font-bold">
               مشاهده
               <ChevronLeft size={16} />
             </span>
@@ -235,14 +235,14 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <section className="container-page pb-16">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 px-6 py-14 md:p-14 text-center text-white">
-          <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-sm font-bold">
+        <div className="rounded-2xl bg-blue-800 px-6 py-10 text-center text-white">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-700 px-4 py-1.5 text-sm font-bold">
               <Sparkles size={15} className="text-amber-300" />
               شیک خرید کنید
             </span>
-            <h2 className="text-3xl md:text-4xl font-black mt-6 mb-4">نیاز به مشاوره دارید؟</h2>
-            <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold mt-6 mb-4">نیاز به مشاوره دارید؟</h2>
+            <p className="text-blue-50 mb-8 max-w-2xl mx-auto">
               تیم متخصص ما آماده پاسخگویی به سوالات فنی و ارائه بهترین راه‌حل‌ها برای پروژه‌های شماست
             </p>
             <div className="flex flex-wrap justify-center gap-4">

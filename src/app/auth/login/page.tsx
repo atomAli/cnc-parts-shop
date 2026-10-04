@@ -38,11 +38,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50 py-12 px-4">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-amber-50 py-12 px-4">
       <div className="relative max-w-md w-full">
         <div className="card p-8 sm:p-10">
           <div className="text-center mb-8">
-            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-2xl font-black text-white shadow-lg shadow-blue-600/30">
+            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-blue-600 text-2xl font-black text-white shadow-lg shadow-blue-600/30">
               ش
             </div>
             <h1 className="text-2xl font-black text-stone-900">ورود به حساب کاربری</h1>

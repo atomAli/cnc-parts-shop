@@ -90,7 +90,7 @@ export default function RepairsPage() {
               </p>
             </div>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-amber-50 h-64 flex items-center justify-center">
+          <div className="rounded-2xl bg-blue-50 h-64 flex items-center justify-center">
             <Wrench size={64} className="text-blue-600" />
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function RepairsPage() {
       {/* Services grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {repairServices.map((s, i) => (
-          <div key={i} className="card p-6 transition-all duration-300 hover:-translate-y-1">
+          <div key={i} className="card p-6 transition-colors duration-150">
             <s.icon size={32} className="text-blue-600 mb-4" />
             <h3 className="font-bold text-lg mb-2">{s.title}</h3>
             <p className="text-gray-600 text-sm leading-relaxed">{s.description}</p>
@@ -140,9 +140,9 @@ export default function RepairsPage() {
       </div>
 
       {/* Consultation CTA */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 p-8 md:p-12 text-center text-white">
+      <div className="relative overflow-hidden rounded-2xl bg-blue-800 p-8 md:p-12 text-center text-white">
         <h3 className="text-2xl font-bold mb-3">مشاوره فنی و برآورد هزینه رایگان</h3>
-        <p className="text-blue-100 mb-6">
+        <p className="text-blue-50 mb-6">
           کارشناسان ما آماده پاسخگویی به سوالات فنی شما درباره تعمیر و نگهداری ماشین‌آلات CNC هستند
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -135,15 +135,15 @@ export default function ProductView({
       <div className="card overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 md:p-8">
           {/* Image */}
-          <div className="group">
-            <div className="bg-gradient-to-b from-gray-50 to-blue-50/60 rounded-2xl h-96 flex items-center justify-center overflow-hidden">
+          <div className="">
+            <div className="bg-gray-50 rounded-2xl h-96 flex items-center justify-center overflow-hidden">
               {product.images?.[activeImage]?.url ? (
                 <Image
                   src={product.images[activeImage].url}
                   alt={product.name}
                   width={400}
                   height={400}
-                  className="object-contain max-h-full max-w-full transition-transform duration-300 ease-out group-hover:scale-110"
+                  className="object-contain max-h-full max-w-full transition-transform duration-150 ease-out"
                   unoptimized
                   priority
                 />
@@ -190,7 +190,7 @@ export default function ProductView({
               )}
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-l from-blue-50 to-amber-50/60 border border-blue-100/60 p-5 mb-6">
+            <div className="rounded-2xl bg-blue-700 border border-blue-100/60 p-5 mb-6">
               {product.price ? (
                 <span className="text-3xl font-black text-blue-600">
                   {formatPrice(product.price)}
@@ -317,10 +317,10 @@ export default function ProductView({
       </div>
 
       {/* Contact CTA */}
-      <div className="mt-8 relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 px-6 py-8 md:p-10 text-center text-white">
+      <div className="mt-8 relative overflow-hidden rounded-2xl bg-blue-800 px-6 py-8 md:p-10 text-center text-white">
         <div className="relative">
           <h3 className="text-xl font-black mb-2">سوالی دارید؟ با ما تماس بگیرید</h3>
-          <p className="text-blue-100 mb-5">شیک خرید کنید؛ مشاوران ما آماده پاسخگویی به سوالات فنی شما هستند</p>
+          <p className="text-blue-50 mb-5">شیک خرید کنید؛ مشاوران ما آماده پاسخگویی به سوالات فنی شما هستند</p>
           <a
             href="tel:+982133724136"
             className="btn-white"

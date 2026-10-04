@@ -39,7 +39,7 @@ export default function AboutPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-bl from-amber-50 via-background to-blue-50">
+      <section className="relative overflow-hidden bg-amber-50">
         <div className="container-page relative py-16 md:py-24 text-center">
           <span className="eyebrow mb-6">
             <Sparkles size={15} className="text-amber-500" />
@@ -117,7 +117,7 @@ export default function AboutPage() {
       {/* Mission / Vision */}
       <section className="container-page py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="card p-8 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200">
+          <div className="card p-8 transition-colors duration-150 hover:border-blue-200">
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-blue-100 text-blue-600 mb-5">
               <Target size={28} />
             </div>
@@ -127,7 +127,7 @@ export default function AboutPage() {
               تا صنعتگر ایرانی بدون توقف، به تولید بپردازد.
             </p>
           </div>
-          <div className="card p-8 transition-all duration-300 hover:-translate-y-1 hover:border-amber-200">
+          <div className="card p-8 transition-colors duration-150 hover:border-amber-200">
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-amber-100 text-amber-600 mb-5">
               <Eye size={28} />
             </div>
@@ -152,7 +152,7 @@ export default function AboutPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, i) => (
-              <div key={i} className="card p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-200">
+              <div key={i} className="card p-6 text-center transition-colors duration-150 hover:border-blue-200">
                 <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-blue-100 text-blue-600">
                   <value.icon size={26} />
                 </div>
@@ -166,14 +166,14 @@ export default function AboutPage() {
 
       {/* Contact strip */}
       <section className="container-page py-16">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-blue-600 via-blue-700 to-blue-800 p-8 md:p-12 text-center text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-blue-800 p-8 md:p-12 text-center text-white">
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-sm font-bold">
               <Sparkles size={15} className="text-amber-300" />
               شیک خرید کنید
             </span>
             <h2 className="text-2xl md:text-3xl font-black mb-3 mt-5">همکاری یا سفارش تخصصی دارید؟</h2>
-            <p className="text-blue-100 mb-7 max-w-2xl mx-auto">
+            <p className="text-blue-50 mb-7 max-w-2xl mx-auto">
               تیم ما آماده است تا در انتخاب قطعات و تجهیزات پروژه شما مشاوره فنی رایگان ارائه دهد
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
