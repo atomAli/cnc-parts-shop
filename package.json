@@ -12,7 +12,9 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "check:ui": "node scripts/check-ui.mjs",
+    "verify": "npm run check:ui && npm run build"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
