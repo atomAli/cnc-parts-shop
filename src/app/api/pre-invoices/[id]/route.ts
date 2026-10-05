@@ -24,6 +24,8 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
       notes: true,
       createdAt: true,
       userId: true,
+      adminEditedAt: true,
+      adminEditSeenAt: true,
     },
   });
 

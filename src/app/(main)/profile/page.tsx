@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, ShoppingCart, LogOut, FileText, ChevronDown, Eye, MapPin } from "lucide-react";
+import { User, ShoppingCart, LogOut, FileText, ChevronDown, Eye, MapPin, Bell, AlertTriangle } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { toFaDigits } from "@/lib/phone";
 
@@ -17,12 +17,15 @@ interface PreInvoiceItem {
 
 interface PreInvoice {
   id: string;
+  invoiceNumber: number;
   customerName: string;
   customerPhone: string;
   items: PreInvoiceItem[];
   totalPrice: number;
   status: string;
   createdAt: string;
+  adminEditedAt: string | null;
+  adminEditSeenAt: string | null;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -43,6 +46,10 @@ export default function ProfilePage() {
   const [address, setAddress] = useState("");
   const [savingAddress, setSavingAddress] = useState(false);
   const [addressMsg, setAddressMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [ackBusy, setAckBusy] = useState(false);
+
+  // فاکتورهایی که مدیر ویرایش کرده و کاربر هنوز اعلانش را ندیده
+  const pendingEdits = invoices.filter((i) => i.adminEditedAt && !i.adminEditSeenAt);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth/login");
@@ -61,6 +68,38 @@ export default function ProfilePage() {
         .catch(() => {});
     }
   }, [session]);
+
+  /** اعلام «دیدم» برای یک فاکتور یا همهٔ اعلان‌های دیده‌نشده */
+  const acknowledge = async (invoiceIds?: string[]) => {
+    if (ackBusy) return;
+    setAckBusy(true);
+    // خوش‌بینانه UI را بلافاصله به‌روز می‌کنیم تا حس کند سریع است
+    const now = new Date().toISOString();
+    setInvoices((prev) =>
+      prev.map((i) =>
+        i.adminEditedAt && !i.adminEditSeenAt && (!invoiceIds || invoiceIds.includes(i.id))
+          ? { ...i, adminEditSeenAt: now }
+          : i
+      )
+    );
+    // به هدر خبر می‌دهیم که نشان را پاک کند
+    window.dispatchEvent(new Event("profile-invoice-edits-seen"));
+    try {
+      await fetch("/api/pre-invoices/edits/seen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(invoiceIds ? { invoiceIds } : {}),
+      });
+    } catch {}
+    setAckBusy(false);
+  };
+
+  /** باز/بسته کردن جزئیات — با باز شدن، اعلان آن فاکتور دیده‌شده می‌شود */
+  const toggleExpand = (inv: PreInvoice) => {
+    const next = expanded === inv.id ? null : inv.id;
+    setExpanded(next);
+    if (next && inv.adminEditedAt && !inv.adminEditSeenAt) acknowledge([inv.id]);
+  };
 
   const saveAddress = async () => {
     setSavingAddress(true);
@@ -94,6 +133,125 @@ export default function ProfilePage() {
     <div className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-2xl font-black mb-8">پروفایل کاربری</h1>
 
+      {/* بنر اعلان: مدیر فاکتور را اصلاح کرده */}
+      {pendingEdits.length > 0 && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="bg-amber-500 text-white p-2.5 rounded-lg shrink-0">
+              <Bell size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-amber-900 flex items-center gap-2">
+                <AlertTriangle size={16} className="text-amber-600" />
+                {toFaDigits(pendingEdits.length)} فاکتور شما توسط مدیر اصلاح شده
+              </div>
+              <p className="text-sm text-amber-800 mt-1">
+                لطفاً مشخصات و مبلغ فاکتورهای زیر را بررسی کنید.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {pendingEdits.map((inv) => (
+                  <li key={inv.id}>
+                    <Link
+                      href={`/profile/invoices/${inv.id}`}
+                      className="flex items-center justify-between gap-3 p-3 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                    >
+                      <span className="text-sm font-medium text-stone-700">
+                        فاکتور شماره {toFaDigits(String(inv.invoiceNumber ?? "—"))}
+                      </span>
+                      <span className="text-xs text-amber-700 font-bold shrink-0">
+                        اصلاح {new Date(inv.adminEditedAt!).toLocaleDateString("fa-IR")}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => acknowledge()}
+                disabled={ackBusy}
+                className="mt-3 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-bold hover:bg-amber-700 disabled:opacity-50 transition-colors"
+              >
+                {ackBusy ? "در حال ثبت..." : "متوجه شدم"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* خریدهای من — بلافاصله زیر عنوان، بالاتر از همه‌چیز */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-blue-100 text-blue-600 p-3 rounded-lg"><FileText size={22} /></div>
+          <div>
+            <h2 className="font-bold text-lg">خریدهای من</h2>
+            <p className="text-sm text-gray-500">پیش فاکتورها و سفارشات شما</p>
+          </div>
+        </div>
+
+        {loadingInvoices && <div className="text-center py-8 text-gray-400">در حال بارگذاری...</div>}
+
+        {!loadingInvoices && invoices.length === 0 && (
+          <div className="text-center py-8 text-gray-400">
+            <FileText size={40} className="mx-auto mb-3 text-gray-300" />
+            <p>هنوز پیش فاکتوری ثبت نکرده‌اید</p>
+            <Link href="/products" className="mt-3 inline-block text-sm text-blue-600 hover:underline">مشاهده محصولات</Link>
+          </div>
+        )}
+
+        {!loadingInvoices && invoices.length > 0 && (
+          <div className="space-y-3">
+            {invoices.map((inv) => {
+              const isExpanded = expanded === inv.id;
+              const st = STATUS_MAP[inv.status] || STATUS_MAP.PENDING;
+              const wasEdited = !!inv.adminEditedAt;
+              return (
+                <div
+                  key={inv.id}
+                  className={`border rounded-xl overflow-hidden ${wasEdited && !inv.adminEditSeenAt ? "border-amber-300" : "border-gray-100"}`}
+                >
+                  <div className="p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50/50" onClick={() => toggleExpand(inv)}>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold">{new Date(inv.createdAt).toLocaleDateString("fa-IR")}</div>
+                      <div className="text-xs text-gray-500">{toFaDigits(inv.items.length)} کالا</div>
+                      {wasEdited && (
+                        <div className="text-xs text-amber-700 font-medium mt-1">
+                          اصلاح‌شده توسط مدیر — {new Date(inv.adminEditedAt!).toLocaleDateString("fa-IR")}
+                        </div>
+                      )}
+                    </div>
+                    <div className="font-bold text-blue-600 text-sm shrink-0">{formatPrice(inv.totalPrice)}</div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 ${st.color}`}>{st.label}</span>
+                    <Link
+                      href={`/profile/invoices/${inv.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      title="نمایش و چاپ فاکتور"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors shrink-0"
+                    >
+                      <Eye size={14} />
+                      فاکتور
+                    </Link>
+                    <ChevronDown size={16} className={`text-gray-400 transition-transform shrink-0 ${isExpanded ? "rotate-180" : ""}`} />
+                  </div>
+
+                  {isExpanded && (
+                    <div className="border-t border-gray-100 p-4 space-y-2">
+                      {inv.items.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
+                          <a href={`/products/${item.slug}`} className="text-blue-600 hover:underline">{item.name}</a>
+                          <div className="flex items-center gap-4">
+                            <span className="text-gray-500">×{toFaDigits(item.quantity)}</span>
+                            <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* User Info */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
         <div className="flex items-center gap-4 mb-6">
@@ -112,11 +270,7 @@ export default function ProfilePage() {
           </div>
           <div className="p-3 bg-gray-50 rounded-lg flex justify-between">
             <span className="text-gray-600">تلفن:</span>
-            <span className="font-medium" dir="ltr">{(session.user as any)?.phone || "-"}</span>
-          </div>
-          <div className="p-3 bg-gray-50 rounded-lg flex justify-between">
-            <span className="text-gray-600">نقش:</span>
-            <span className="font-medium">{(session.user as any)?.role === "ADMIN" ? "مدیر" : "کاربر"}</span>
+            <span className="font-medium" dir="ltr">{toFaDigits((session.user as any)?.phone || "")}</span>
           </div>
         </div>
       </div>
@@ -167,72 +321,6 @@ export default function ProfilePage() {
             <div className="text-sm text-gray-500">خروج از پروفایل</div>
           </div>
         </button>
-      </div>
-
-      {/* خریدهای من */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-blue-100 text-blue-600 p-3 rounded-lg"><FileText size={22} /></div>
-          <div>
-            <h2 className="font-bold text-lg">خریدهای من</h2>
-            <p className="text-sm text-gray-500">پیش فاکتورها و سفارشات شما</p>
-          </div>
-        </div>
-
-        {loadingInvoices && <div className="text-center py-8 text-gray-400">در حال بارگذاری...</div>}
-
-        {!loadingInvoices && invoices.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
-            <FileText size={40} className="mx-auto mb-3 text-gray-300" />
-            <p>هنوز پیش فاکتوری ثبت نکرده‌اید</p>
-            <Link href="/products" className="mt-3 inline-block text-sm text-blue-600 hover:underline">مشاهده محصولات</Link>
-          </div>
-        )}
-
-        {!loadingInvoices && invoices.length > 0 && (
-          <div className="space-y-3">
-            {invoices.map((inv) => {
-              const isExpanded = expanded === inv.id;
-              const st = STATUS_MAP[inv.status] || STATUS_MAP.PENDING;
-              return (
-                <div key={inv.id} className="border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50/50" onClick={() => setExpanded(isExpanded ? null : inv.id)}>
-                    <div className="flex-1">
-                      <div className="text-sm font-bold">{new Date(inv.createdAt).toLocaleDateString("fa-IR")}</div>
-                      <div className="text-xs text-gray-500">{inv.items.length} کالا</div>
-                    </div>
-                    <div className="font-bold text-blue-600 text-sm">{formatPrice(inv.totalPrice)}</div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
-                    <Link
-                      href={`/profile/invoices/${inv.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      title="نمایش و چاپ فاکتور"
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors"
-                    >
-                      <Eye size={14} />
-                      فاکتور
-                    </Link>
-                    <ChevronDown size={16} className={`text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                  </div>
-
-                  {isExpanded && (
-                    <div className="border-t border-gray-100 p-4 space-y-2">
-                      {inv.items.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
-                          <a href={`/products/${item.slug}`} className="text-blue-600 hover:underline">{item.name}</a>
-                          <div className="flex items-center gap-4">
-                            <span className="text-gray-500">×{item.quantity}</span>
-                            <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );

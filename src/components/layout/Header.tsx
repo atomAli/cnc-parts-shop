@@ -54,6 +54,8 @@ export default function Header() {
 
   // تعداد فاکتورهای جدیدِ ثبت‌شده از سایت که هنوز «در انتظار بررسی» هستند
   const [newInvoiceCount, setNewInvoiceCount] = useState(0);
+  // تعداد فاکتورهایی که مدیر دستی ویرایش کرده و کاربر هنوز اعلانش را ندیده
+  const [editNoticeCount, setEditNoticeCount] = useState(0);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -88,6 +90,44 @@ export default function Header() {
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [isAdmin]);
+
+  // اعلان «فاکتور شما توسط مدیر اصلاح شد» — نشان کنار دکمهٔ پروفایل
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setEditNoticeCount(0);
+      return;
+    }
+    let cancelled = false;
+
+    const load = async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      try {
+        const res = await fetch("/api/pre-invoices/edits/badge", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setEditNoticeCount(data.count || 0);
+      } catch {}
+    };
+
+    load();
+    const timer = setInterval(load, 60000);
+
+    const onVisible = () => {
+      if (!document.hidden) load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    // وقتی کاربر در پروفایل اعلان را دید، بلافاصله نشان را پاک کن
+    const onSeen = () => load();
+    window.addEventListener("profile-invoice-edits-seen", onSeen);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("profile-invoice-edits-seen", onSeen);
+    };
+  }, [isLoggedIn]);
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -147,10 +187,18 @@ export default function Header() {
               <>
                 <Link
                   href="/profile"
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-stone-700 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                  className="relative hidden sm:flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-stone-700 hover:border-blue-300 hover:text-blue-600 transition-colors"
                 >
                   <User size={18} />
                   <span className="text-sm font-medium">{session.user?.name || "پروفایل"}</span>
+                  {editNoticeCount > 0 && (
+                    <span
+                      title={`${editNoticeCount} فاکتور توسط مدیر اصلاح شده — برای مشاهده کلیک کنید`}
+                      className="absolute -top-2 -left-2 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center"
+                    >
+                      {editNoticeCount}
+                    </span>
+                  )}
                 </Link>
                 {isAdmin && (
                   <Link
@@ -428,8 +476,13 @@ export default function Header() {
             {isLoggedIn && (
               <>
                 <li className="border-t border-gray-100 pt-1 mt-1">
-                  <Link href="/profile" className="block px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/profile" className="flex items-center justify-between px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
                     پروفایل
+                    {editNoticeCount > 0 && (
+                      <span className="bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
+                        {editNoticeCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
                 {isAdmin && (

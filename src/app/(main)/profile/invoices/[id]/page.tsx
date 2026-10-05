@@ -30,6 +30,8 @@ interface CustomerInvoice {
   notes?: string | null;
   status?: string;
   createdAt: string;
+  adminEditedAt?: string | null;
+  adminEditSeenAt?: string | null;
 }
 
 function faNum(value: number | string) {
@@ -71,7 +73,18 @@ export default function CustomerInvoicePage() {
           setFailed(true);
           return;
         }
-        setInvoice((await res.json()) as CustomerInvoice);
+        const data = (await res.json()) as CustomerInvoice;
+        setInvoice(data);
+        // باز کردن فاکتور یعنی کاربر اعلان را دیده است
+        if (data.adminEditedAt && !data.adminEditSeenAt) {
+          fetch("/api/pre-invoices/edits/seen", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ invoiceIds: [data.id] }),
+          })
+            .then(() => window.dispatchEvent(new Event("profile-invoice-edits-seen")))
+            .catch(() => {});
+        }
       } catch {
         setFailed(true);
       } finally {

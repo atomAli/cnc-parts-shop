@@ -208,7 +208,11 @@ model PreInvoice {
   status      String   @default("PENDING")
   notes       String?
   source      String   @default("ADMIN")
+  // آخرین بار که مدیر فاکتور را دستی ویرایش کرد + زمانی که کاربر اعلان را دیده
+  adminEditedAt   DateTime?
+  adminEditSeenAt DateTime?
   createdAt   DateTime @default(now())
 
+  @@index([userId, adminEditedAt])
   @@map("pre_invoices")
 }
