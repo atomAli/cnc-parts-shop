@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
-  money, num, jalali, balanceTone, balanceTitle, chequeStatusLabel, kindLabel,
+  money, num, jalali, balanceTone, balanceTitle,
 } from "@/lib/accounting";
 import { toFaDigits } from "@/lib/phone";
-import { BookOpen, Users, Receipt, ShoppingCart, Wallet, FileText } from "lucide-react";
+import { BookOpen, Users, Receipt, ShoppingCart, Wallet, FileText, Boxes } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +38,7 @@ export default async function AccountingDashboard() {
     salesAgg, purchaseAgg,
     receiptAgg, paymentAgg,
     cashBox, bankAccount,
-    chequeAgg, unsettledCheques, stockCount,
+    chequeAgg, unsettledCheques, stockAgg,
     topDebtors, recentSales,
   ] = await Promise.all([
     prisma.party.count(),
@@ -66,7 +66,17 @@ export default async function AccountingDashboard() {
 
     prisma.cheque.aggregate({ _sum: { amount: true }, _count: true }),
     prisma.cheque.count({ where: { isSettled: false } }),
-    prisma.stockMovement.count(),
+    prisma.$queryRaw<{ items: number; value: number; movements: number }[]>`
+      SELECT
+        (SELECT count(*) FROM stock_movements) AS movements,
+        (SELECT count(DISTINCT name) FROM stock_movements
+          WHERE name IS NOT NULL AND name <> '') AS items,
+        (SELECT COALESCE(SUM(stock * "averagePrice"), 0)
+         FROM (SELECT DISTINCT ON (name) name, stock, "averagePrice"
+                 FROM stock_movements
+                 WHERE name IS NOT NULL AND name <> ''
+                 ORDER BY name, "date" DESC, "legacyId" DESC) t) AS value
+    `,
 
     prisma.$queryRaw<
       { id: string; name: string; balance: number }[]
@@ -123,7 +133,7 @@ export default async function AccountingDashboard() {
       </div>
 
       {/* خلاصهٔ ارقام */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         <Card
           icon={Receipt} title="فروش کل" href="/admin/accounting/sales"
           value={`${money(salesAgg._sum.total ?? 0)} تومان`}
@@ -149,7 +159,7 @@ export default async function AccountingDashboard() {
       </div>
 
       {/* موجودی و چک */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         <Card
           icon={Wallet} title="موجودی صندوق"
           href="/admin/accounting/cash"
@@ -167,6 +177,12 @@ export default async function AccountingDashboard() {
           href="/admin/accounting/cheques"
           value={`${num(unsettledCheques)} فقره`}
           sub={`کل چک ${money(chequeAgg._sum.amount ?? 0)} تومان`}
+        />
+        <Card
+          icon={Boxes} title="موجودی انبار"
+          href="/admin/accounting/stock"
+          value={`${num(Number(stockAgg[0]?.items ?? 0))} قلم کالا`}
+          sub={`ارزش ${money(Number(stockAgg[0]?.value ?? 0))} تومان`}
         />
         <Card
           icon={Users} title="طرف حساب"

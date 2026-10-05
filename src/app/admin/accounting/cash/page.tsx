@@ -19,10 +19,9 @@ export default async function CashPage({
     ? sp.kind
     : "";
 
-  const [cashBox, bankAccount, agg, rows] = await Promise.all([
+  const [cashBox, bankAccount, rows] = await Promise.all([
     prisma.cashBox.findFirst({ orderBy: { legacyId: "asc" } }),
     prisma.bankAccount.findFirst({ orderBy: { legacyId: "asc" } }),
-    prisma.cashMovement.aggregate({ _sum: { amount: true } }),
     prisma.cashMovement.findMany({
       where: kind ? { kind } : {},
       orderBy: [{ date: "desc" }, { legacyId: "desc" }],

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   money, num, jalali, balanceTone, balanceTitle, kindLabel, kindTone,
-  voucherLabel, chequeStatusLabel, stockOpLabel,
+  voucherLabel, chequeStatusLabel,
 } from "@/lib/accounting";
 import { toFaDigits } from "@/lib/phone";
 
