@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { onPreInvoiceStatusChanged } from "@/lib/accounting-new";
 import prisma from "@/lib/prisma";
 import type { PreInvoice } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -195,5 +196,14 @@ export async function PATCH(req: NextRequest) {
     data: { status },
   });
 
-  return NextResponse.json(preInvoice);
+  // حسابداری جدید: با رفتن به «تکمیل شده»، پیش‌نویس تخصیص بهای تمام‌شده ساخته می‌شود
+  // (هیچ سند قطعی نمی‌خورد تا مدیر تأیید کند)
+  let cogsAllocation = null;
+  try {
+    cogsAllocation = await onPreInvoiceStatusChanged(preInvoice.id, status);
+  } catch {
+    cogsAllocation = null;
+  }
+
+  return NextResponse.json({ ...preInvoice, cogsAllocation });
 }

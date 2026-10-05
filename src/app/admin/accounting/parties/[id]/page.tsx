@@ -26,7 +26,10 @@ export default async function PartyDetail({
       purchaseInvoices: { orderBy: { date: "desc" }, take: 20 },
       cashMovements: { orderBy: { date: "desc" }, take: 20 },
       cheques: { orderBy: { dueDate: "desc" } },
-      ledgerEntries: { orderBy: [{ date: "desc" }, { legacyId: "desc" }] },
+      ledgerEntries: {
+        where: { source: "ACCESS" },
+        orderBy: [{ date: "desc" }, { legacyId: "desc" }],
+      },
     },
   });
   if (!party) notFound();

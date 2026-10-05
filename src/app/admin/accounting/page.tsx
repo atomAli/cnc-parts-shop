@@ -117,6 +117,7 @@ export default async function AccountingDashboard() {
       SELECT p.id, p.name, SUM(l.amount) AS balance
       FROM ledger_entries l
       JOIN parties p ON p.id = l."partyId"
+      WHERE l.source = 'ACCESS' 
       GROUP BY p.id, p.name
       ORDER BY SUM(l.amount) ASC
       LIMIT 8
@@ -307,7 +308,7 @@ export default async function AccountingDashboard() {
             )}
           </div>
           <div className="mt-2 text-[11px] text-gray-500">
-            {balanceTitle(Number(topDebtors[0]?.balance ?? 0))} — عدد مثبت یعنی
+            {balanceTitle(Number(topDebtors[0]?.balance ?? 0))} — عدد منفی یعنی
             طلب ما از طرف حساب
           </div>
         </div>

@@ -24,7 +24,7 @@ export default async function PartiesPage({
       : kind === "CUSTOMER" ? { kind: "CUSTOMER" as const } : {}),
   };
 
-  // مانده حساب = جمع دفتر؛ علامت مثبت یعنی بستانکار (طلب ما)
+  // مانده حساب = جمع دفتر؛ علامت منفی یعنی طرف حساب بدهکار ماست (طلب ما)
   const rows = await prisma.$queryRaw<
     { id: string; name: string; kind: string; phone: string | null; balance: number; n: number }[]
   >`
@@ -32,7 +32,7 @@ export default async function PartiesPage({
            COALESCE(SUM(l.amount), 0) AS balance,
            COUNT(l.id) AS n
     FROM parties p
-    LEFT JOIN ledger_entries l ON l."partyId" = p.id
+    LEFT JOIN ledger_entries l ON l."partyId" = p.id AND l.source = 'ACCESS'
     WHERE (${q} = '' OR p.name ILIKE ${"%" + q + "%"})
       AND (${kind} = '' OR p.kind = ${kind})
     GROUP BY p.id, p.name, p.kind, p.phone

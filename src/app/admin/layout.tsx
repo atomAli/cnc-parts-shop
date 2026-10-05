@@ -25,7 +25,8 @@ import { signOut } from "next-auth/react";
 
 const menuItems = [
   { href: "/admin", label: "داشبورد", icon: LayoutDashboard },
-  { href: "/admin/accounting", label: "حسابداری", icon: BookOpen },
+  { href: "/admin/accounting-new", label: "حسابداری جدید", icon: BookOpen },
+  { href: "/admin/accounting", label: "حسابداری قدیمی", icon: BookOpen },
   { href: "/admin/products", label: "محصولات", icon: Package },
   { href: "/admin/prices", label: "مدیریت قیمت", icon: BadgeDollarSign },
   { href: "/admin/categories", label: "دسته‌بندی‌ها", icon: FolderTree },

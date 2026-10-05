@@ -26,10 +26,14 @@ model User {
   updatedAt    DateTime     @updatedAt
   orders       Order[]
   cartItems    CartItem[]
-  preInvoices  PreInvoice[]
+  preInvoices              PreInvoice[]
+  approvedCogsAllocations  CogsAllocation[] @relation("CogsApprovedBy")
+  rejectedCogsAllocations  CogsAllocation[] @relation("CogsRejectedBy")
+  createdCustomerReceipts  CustomerReceipt[] @relation("CustomerReceiptCreatedBy")
   party        Party?
 
   @@index([isActive])
+
   @@map("users")
 }
 
@@ -37,7 +41,6 @@ enum Role {
   USER
   ADMIN
 }
-
 model Category {
   id          String     @id @default(cuid())
   name        String
@@ -100,6 +103,9 @@ model Product {
 
   prices         ProductPrice[]
   stockMovements StockMovement[]
+
+  purchaseBatches   ProductPurchaseBatch[]
+  cogsLines         CogsAllocationLine[]
 
   @@map("products")
 }
@@ -223,6 +229,9 @@ model PreInvoice {
   createdAt       DateTime      @default(now())
 
   @@index([userId, adminEditedAt])
+  customerReceipts CustomerReceipt[]
+  cogsAllocation   CogsAllocation?
+
   @@map("pre_invoices")
 }
 
@@ -266,6 +275,9 @@ model Party {
 
   @@index([name])
   @@index([kind])
+  supplierBatches  ProductPurchaseBatch[] @relation("SupplierBatches")
+  customerReceipts CustomerReceipt[]
+
   @@map("parties")
 }
 
@@ -328,6 +340,8 @@ model PurchaseInvoice {
 
   @@index([date])
   @@index([partyId])
+  purchaseBatches  ProductPurchaseBatch[]
+
   @@map("purchase_invoices")
 }
 
@@ -393,8 +407,14 @@ model LedgerEntry {
 
   party   Party  @relation(fields: [partyId], references: [id], onDelete: Cascade)
   partyId String
+  /// منبع سند: ACCESS = حسابداری قدیم، NEW = حسابداری جدید
+  source  String @default("ACCESS")
 
   @@index([partyId, date])
+  @@index([source])
+  customerReceipt  CustomerReceipt?
+  cogsAllocation   CogsAllocation?
+
   @@map("ledger_entries")
 }
 
@@ -518,4 +538,101 @@ model StockMovement {
   @@index([date])
   @@index([productId])
   @@map("stock_movements")
+}
+
+model ProductPurchaseBatch {
+  id                String   @id @default(cuid())
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id])
+  supplierId        String
+  supplier          Party    @relation("SupplierBatches", fields: [supplierId], references: [id])
+  quantity          Float    @default(0)
+  unitCost          Float    @default(0)
+  remainingQty      Float    @default(0)
+  date              String
+  reference         String?
+  purchaseInvoiceId String?
+  purchaseInvoice   PurchaseInvoice? @relation(fields: [purchaseInvoiceId], references: [id])
+  note              String?
+  status            String   @default("ACTIVE")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  cogsLines         CogsAllocationLine[]
+
+  @@index([productId, date])
+  @@index([supplierId])
+  @@index([purchaseInvoiceId])
+  @@map("product_purchase_batches")
+}
+
+model CustomerReceipt {
+  id            String   @id @default(cuid())
+  partyId       String
+  party         Party    @relation(fields: [partyId], references: [id])
+  preInvoiceId  String?
+  preInvoice    PreInvoice? @relation(fields: [preInvoiceId], references: [id])
+  amount        Float
+  date          String
+  method        String   @default("CASH")
+  note          String?
+  ledgerEntryId String?  @unique
+  ledgerEntry   LedgerEntry? @relation(fields: [ledgerEntryId], references: [id])
+  createdById   String?
+  createdBy     User?    @relation("CustomerReceiptCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([partyId, date])
+  @@index([preInvoiceId])
+  @@map("customer_receipts")
+}
+
+model CogsAllocation {
+  id             String    @id @default(cuid())
+  preInvoiceId   String    @unique
+  preInvoice     PreInvoice @relation(fields: [preInvoiceId], references: [id])
+  status         String    @default("PENDING_APPROVAL")
+  totalCogs      Float     @default(0)
+  salesTotal     Float     @default(0)
+  grossProfit    Float     @default(0)
+  note           String?
+  approvedById   String?
+  approvedBy     User?     @relation("CogsApprovedBy", fields: [approvedById], references: [id])
+  approvedAt     DateTime?
+  rejectedById   String?
+  rejectedBy     User?     @relation("CogsRejectedBy", fields: [rejectedById], references: [id])
+  rejectedAt     DateTime?
+  rejectionNote  String?
+  ledgerEntryId  String?   @unique
+  ledgerEntry    LedgerEntry? @relation(fields: [ledgerEntryId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  lines          CogsAllocationLine[]
+
+  @@index([status])
+  @@map("cogs_allocations")
+}
+
+model CogsAllocationLine {
+  id                  String   @id @default(cuid())
+  allocationId        String
+  allocation          CogsAllocation @relation(fields: [allocationId], references: [id], onDelete: Cascade)
+  preInvoiceItemIndex Int?
+  productId           String?
+  product             Product? @relation(fields: [productId], references: [id])
+  nameSnapshot        String
+  quantity            Float
+  unitPrice           Float
+  lineTotal           Float
+  allocatedQty        Float
+  unitCogs            Float
+  cogsTotal           Float
+  batchId             String?
+  batch               ProductPurchaseBatch? @relation(fields: [batchId], references: [id])
+
+  @@index([allocationId])
+  @@index([productId])
+  @@map("cogs_allocation_lines")
 }
