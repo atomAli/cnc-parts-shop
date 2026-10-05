@@ -33,11 +33,11 @@ interface PreInvoice {
   user?: { name: string | null; phone: string | null } | null;
 }
 
-const STATUS_OPTIONS = ["PENDING", "CONTACTED", "DONE"];
+const STATUS_OPTIONS = ["PENDING", "CONTACTED", "DONE", "COMPLETED"];
 
 interface InvoiceStats {
   total: number;
-  byStatus: { PENDING: number; PROCESSING: number; CONTACTED: number; DONE: number };
+  byStatus: { PENDING: number; PROCESSING: number; CONTACTED: number; DONE: number; COMPLETED: number };
   fromWebsite: number;
   recent: Array<{
     id: string;
@@ -60,6 +60,7 @@ const STATUS_LABELS: Record<string, string> = {
   PROCESSING: "در حال پردازش",
   CONTACTED: "تماس گرفته شد",
   DONE: "تکمیل شده",
+    COMPLETED: "تکمیل شده",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -67,6 +68,7 @@ const STATUS_COLORS: Record<string, string> = {
   PROCESSING: "bg-blue-100 text-blue-700",
   CONTACTED: "bg-green-100 text-green-700",
   DONE: "bg-gray-100 text-gray-600",
+    COMPLETED: "bg-green-100 text-green-700",
 };
 
 function formatPrice(price: number) {
