@@ -20,13 +20,42 @@ export async function GET(req: NextRequest) {
   if (!isAdmin) where.userId = userId;
   if (status) where.status = status;
 
-  const preInvoices = await prisma.preInvoice.findMany({
+  // پنل کاربر فقط «۵ خرید آخر» را می‌خواهد؛ پنل مدیریت این پارامتر را
+  // نمی‌فرستد و همهٔ فاکتورها را می‌بیند.
+  const limitRaw = Number(searchParams.get("limit"));
+  const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 100 ? limitRaw : null;
+
+  const orderBy = { createdAt: "desc" } as const;
+  const include = { user: { select: { name: true, phone: true } } };
+
+  if (!limit || isAdmin) {
+    const all = await prisma.preInvoice.findMany({ where, orderBy, include });
+    return NextResponse.json(all);
+  }
+
+  const recent = await prisma.preInvoice.findMany({
     where,
-    orderBy: { createdAt: "desc" },
-    include: { user: { select: { name: true, phone: true } } },
+    orderBy,
+    include,
+    take: limit,
   });
 
-  return NextResponse.json(preInvoices);
+  // اگر فاکتوری قدیمی‌تر از این ۵ تا توسط بخش فروش اصلاح شده باشد، باید باز هم
+  // دیده شود — وگرنه نشانِ هدر عددی نشان می‌داد ولی بنرِ پروفایل چیزی
+  // برای نمایش نداشت.
+  const unseenEdits = await prisma.preInvoice.findMany({
+    where: { ...where, adminEditedAt: { not: null }, adminEditSeenAt: null },
+    orderBy,
+    include,
+  });
+
+  const recentIds = new Set(recent.map((i) => i.id));
+  const extra = unseenEdits.filter((i) => !recentIds.has(i.id));
+  const merged = [...recent, ...extra].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+  );
+
+  return NextResponse.json(merged);
 }
 
 export async function POST(req: NextRequest) {

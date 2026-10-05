@@ -57,7 +57,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (session) {
-      fetch("/api/pre-invoices")
+      fetch("/api/pre-invoices?limit=5")
         .then((r) => r.json())
         .then((data) => { setInvoices(Array.isArray(data) ? data : []); setLoadingInvoices(false); })
         .catch(() => setLoadingInvoices(false));
@@ -143,7 +143,7 @@ export default function ProfilePage() {
             <div className="flex-1 min-w-0">
               <div className="font-bold text-amber-900 flex items-center gap-2">
                 <AlertTriangle size={16} className="text-amber-600" />
-                {toFaDigits(pendingEdits.length)} فاکتور شما توسط مدیر اصلاح شده
+                {toFaDigits(pendingEdits.length)} فاکتور شما توسط بخش فروش اصلاح شده
               </div>
               <p className="text-sm text-amber-800 mt-1">
                 لطفاً مشخصات و مبلغ فاکتورهای زیر را بررسی کنید.
@@ -183,9 +183,15 @@ export default function ProfilePage() {
           <div className="bg-blue-100 text-blue-600 p-3 rounded-lg"><FileText size={22} /></div>
           <div>
             <h2 className="font-bold text-lg">خریدهای من</h2>
-            <p className="text-sm text-gray-500">پیش فاکتورها و سفارشات شما</p>
+            <p className="text-sm text-gray-500">۵ خرید آخر شما</p>
           </div>
         </div>
+
+        {!loadingInvoices && invoices.length >= 5 && (
+          <p className="text-xs text-gray-500 mb-4 bg-gray-50 rounded-lg px-3 py-2">
+            برای مشاهدهٔ خریدهای قدیمی‌تر با بخش فروش تماس بگیرید.
+          </p>
+        )}
 
         {loadingInvoices && <div className="text-center py-8 text-gray-400">در حال بارگذاری...</div>}
 
@@ -214,7 +220,7 @@ export default function ProfilePage() {
                       <div className="text-xs text-gray-500">{toFaDigits(inv.items.length)} کالا</div>
                       {wasEdited && (
                         <div className="text-xs text-amber-700 font-medium mt-1">
-                          اصلاح‌شده توسط مدیر — {new Date(inv.adminEditedAt!).toLocaleDateString("fa-IR")}
+                          اصلاح‌شده توسط بخش فروش — {new Date(inv.adminEditedAt!).toLocaleDateString("fa-IR")}
                         </div>
                       )}
                     </div>

@@ -193,7 +193,7 @@ export default function Header() {
                   <span className="text-sm font-medium">{session.user?.name || "پروفایل"}</span>
                   {editNoticeCount > 0 && (
                     <span
-                      title={`${editNoticeCount} فاکتور توسط مدیر اصلاح شده — برای مشاهده کلیک کنید`}
+                      title={`${editNoticeCount} فاکتور توسط بخش فروش اصلاح شده — برای مشاهده کلیک کنید`}
                       className="absolute -top-2 -left-2 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center"
                     >
                       {editNoticeCount}
