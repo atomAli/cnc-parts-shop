@@ -33,6 +33,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   PROCESSING: { label: "در حال پردازش", color: "bg-blue-100 text-blue-700" },
   CONTACTED: { label: "تماس گرفته شد", color: "bg-green-100 text-green-700" },
   DONE: { label: "تکمیل شده", color: "bg-gray-100 text-gray-600" },
+  COMPLETED: { label: "ارسال شده", color: "bg-blue-100 text-blue-700" },
 };
 
 const formatPrice = (price: number) => new Intl.NumberFormat("fa-IR").format(price) + " تومان";

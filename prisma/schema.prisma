@@ -631,6 +631,8 @@ model CogsAllocationLine {
   cogsTotal           Float
   batchId             String?
   batch               ProductPurchaseBatch? @relation(fields: [batchId], references: [id])
+  /// مصرف دقیق از هر بچ: [{ batchId, qty, unitCost }] — برای بازگردانی هنگام حذف
+  batchUsage          Json?
 
   @@index([allocationId])
   @@index([productId])

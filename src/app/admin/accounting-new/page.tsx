@@ -72,11 +72,20 @@ type Kpis = {
   profit: number;
 };
 
-type Party = { id: string; name: string; kind: string; phone: string | null };
+type Party = {
+  id: string;
+  name: string;
+  kind: string;
+  phone: string | null;
+  balance?: number;
+  entries?: number;
+  newEntries?: number;
+};
 
 const TABS = [
   { id: "pending", label: "در انتظار تأیید" },
   { id: "approved", label: "تأیید شده" },
+  { id: "parties", label: "حساب افراد" },
   { id: "receipts", label: "دریافت‌ها" },
   { id: "batches", label: "لیست خرید کالاها" },
 ] as const;
@@ -158,6 +167,20 @@ export default function AccountingNewPage() {
       const data = await res.json();
       if (!res.ok) notify(false, data.error || "خطا");
       else notify(true, action === "approve" ? "تأیید و ثبت شد" : "رد شد");
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function delAlloc(id: string) {
+    if (!confirm("تخصیص تأییدشده حذف شود؟ سند دفتر و بهای تمام‌شده پاک و بچ‌ها بازگردانده می‌شود.")) return;
+    setBusy(id);
+    try {
+      const res = await fetch(`/api/admin/accounting-new/cogs/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) notify(false, data.error || "خطا در حذف");
+      else notify(true, "تخصیص حذف شد");
       await load();
     } finally {
       setBusy(null);
@@ -332,7 +355,7 @@ export default function AccountingNewPage() {
               موردی در انتظار تأیید نیست.
               <br />
               <span className="text-[11px] text-gray-400">
-                فاکتورها بعد از «تکمیل شده» اینجا ظاهر می‌شوند و تا تأیید شما هیچ سندی ثبت نمی‌شود.
+                فاکتورها بعد از «ارسال شده» اینجا ظاهر می‌شوند و تا تأیید شما هیچ سندی ثبت نمی‌شود.
               </span>
             </div>
           ) : (
@@ -467,6 +490,7 @@ export default function AccountingNewPage() {
                   <th className="p-3 text-left">فروش</th>
                   <th className="p-3 text-left">بهای تمام‌شده</th>
                   <th className="p-3 text-left">سود</th>
+                  <th className="p-3 text-left"></th>
                 </tr>
               </thead>
               <tbody>
@@ -480,11 +504,107 @@ export default function AccountingNewPage() {
                     <td className="p-3 text-left">{money(a.salesTotal)}</td>
                     <td className="p-3 text-left">{money(a.totalCogs)}</td>
                     <td className="p-3 text-left font-bold text-green-700">{money(a.grossProfit)}</td>
+                    <td className="p-3 text-left">
+                      <button
+                        onClick={() => delAlloc(a.id)}
+                        disabled={busy === a.id}
+                        className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
+                      >
+                        {busy === a.id ? "…" : "حذف"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
+        </div>
+      )}
+
+      {/* حساب افراد */}
+      {!loading && tab === "parties" && (
+        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+          {(() => {
+            const rows = parties
+              .filter((p) => (p.entries ?? 0) > 0)
+              .sort((a, b) => Math.abs(b.balance ?? 0) - Math.abs(a.balance ?? 0));
+            const total = rows.reduce((sum, p) => sum + Number(p.balance ?? 0), 0);
+
+            if (rows.length === 0) {
+              return (
+                <div className="p-6 text-center text-sm text-gray-500">هنوز طرف‌حسابی سند ندارد.</div>
+              );
+            }
+
+            return (
+              <>
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500 text-xs">
+                    <tr>
+                      <th className="p-3 text-right">نام</th>
+                      <th className="p-3 text-right">نوع</th>
+                      <th className="p-3 text-right">تلفن</th>
+                      <th className="p-3 text-left">اسناد</th>
+                      <th className="p-3 text-left">مانده</th>
+                      <th className="p-3 text-right">وضعیت</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((p) => {
+                      const bal = Number(p.balance ?? 0);
+                      const state = bal < -0.5 ? "بدهکار" : bal > 0.5 ? "بستانکار" : "تسویه";
+                      const stateCls =
+                        bal < -0.5
+                          ? "bg-green-100 text-green-700"
+                          : bal > 0.5
+                            ? "bg-red-100 text-red-700"
+                            : "bg-gray-100 text-gray-600";
+                      return (
+                        <tr key={p.id} className="border-t border-gray-100">
+                          <td className="p-3">{p.name}</td>
+                          <td className="p-3 text-xs text-gray-500">{p.kind}</td>
+                          <td className="p-3 text-xs text-gray-500">
+                            {p.phone ? toFaDigits(p.phone) : "—"}
+                          </td>
+                          <td className="p-3 text-left text-xs text-gray-500">
+                            {toFaDigits(String(p.entries ?? 0))}
+                            {(p.newEntries ?? 0) > 0 && (
+                              <span className="text-blue-700"> ({toFaDigits(String(p.newEntries))} جدید)</span>
+                            )}
+                          </td>
+                          <td
+                            className={
+                              "p-3 text-left font-bold " +
+                              (bal < -0.5 ? "text-green-700" : bal > 0.5 ? "text-red-700" : "text-gray-600")
+                            }
+                          >
+                            {money(bal)}
+                          </td>
+                          <td className="p-3 text-right">
+                            <span className={"rounded-lg px-2 py-0.5 text-xs " + stateCls}>{state}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-gray-200 bg-gray-50 font-bold">
+                      <td className="p-3" colSpan={4}>
+                        مجموع {toFaDigits(String(rows.length))} طرف‌حساب
+                      </td>
+                      <td className={"p-3 text-left " + (total < 0 ? "text-green-700" : total > 0 ? "text-red-700" : "text-gray-600")}>
+                        {money(total)}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+                <div className="p-3 text-[11px] text-gray-500 bg-gray-50 border-t border-gray-200">
+                  منفی = طرف حساب بدهکار ماست (طلب ما از او) — مثبت = بستانکار (طلب او از ما)
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 

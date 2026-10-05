@@ -47,6 +47,7 @@ const STATUS_MAP: Record<string, string> = {
   PROCESSING: "در حال پردازش",
   CONTACTED: "تماس گرفته شد",
   DONE: "تکمیل شده",
+  COMPLETED: "ارسال شده",
 };
 
 const PAPER_MAP = {
@@ -113,7 +114,7 @@ export default function CustomerInvoicePage() {
     );
   }
 
-  const title = invoice.status === "DONE" ? "فاکتور فروش" : "پیش فاکتور فروش";
+  const title = invoice.status === "DONE" || invoice.status === "COMPLETED" ? "فاکتور فروش" : "پیش فاکتور فروش";
   const sheet = PAPER_MAP[paper];
 
   const invoiceTotal = Number.isFinite(invoice.totalPrice as number)

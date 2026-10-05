@@ -93,6 +93,8 @@ export async function createPendingAllocation(preInvoiceId: string) {
 
 // ───────────────────────── ۲) FIFO ────────────────────────
 
+type BatchUsage = { batchId: string; qty: number; unitCost: number };
+
 type PlannedLine = {
   index: number;
   productId: string | null;
@@ -105,6 +107,7 @@ type PlannedLine = {
   cogsTotal: number;
   batchId: string | null;
   missing: number;
+  batchUsage?: BatchUsage[];
 };
 
 /** پیش‌نمایش FIFO بدون اعمال تغییر (برای نمایش «در انتظار تأیید») */
@@ -234,6 +237,7 @@ export async function approveAllocation(allocationId: string, adminId: string): 
         let weighted = 0;
         let got = 0;
         let firstBatchId: string | null = null;
+        const usage: BatchUsage[] = [];
 
         // قفل ردیف‌های بچ برای جلوگیری از race در تراکنش
         const batches = await tx.$queryRaw<
@@ -254,6 +258,7 @@ export async function approveAllocation(allocationId: string, adminId: string): 
           need -= take;
           got += take;
           if (!firstBatchId) firstBatchId = b.id;
+          usage.push({ batchId: b.id, qty: take, unitCost: Number(b.unitCost) });
 
           await tx.$executeRaw`
             UPDATE product_purchase_batches
@@ -267,7 +272,7 @@ export async function approveAllocation(allocationId: string, adminId: string): 
         totalCogs += weighted;
         confirmed.push({ index: i, productId, name, quantity, unitPrice, lineTotal,
           allocatedQty: got, unitCogs: got > 0 ? weighted / got : 0, cogsTotal: weighted,
-          batchId: firstBatchId, missing: need });
+          batchId: firstBatchId, missing: need, batchUsage: usage });
       }
 
       // ── ۳. ثبت قطعی ──
@@ -285,7 +290,8 @@ export async function approveAllocation(allocationId: string, adminId: string): 
           unitCogs: l.unitCogs,
           cogsTotal: l.cogsTotal,
           batchId: l.batchId,
-        })),
+            batchUsage: (l.batchUsage ?? []) as unknown as object[],
+          })),
       });
 
       const grossProfit = total - totalCogs;
@@ -326,6 +332,57 @@ export async function rejectAllocation(allocationId: string, adminId: string, re
     },
   });
 }
+
+// ─────────────────────── ۴-ب) حذف تخصیص تأییدشده (توسط مدیر) ──────────────────────
+/**
+ * حذف تخصیص تأییدشده = بازگردانی کامل:
+ *   - بازگردانی remainingQty هر بچ دقیقاً همان‌قدر که مصرف شده بود
+ *   - حذف سند دفتر فروش (نوع ۳۰)
+ *   - حذف خطوط و خود تخصیص
+ * فاکتور COMPLETED می‌ماند؛ فقط اثر حسابداری‌اش پاک می‌شود.
+ */
+export async function deleteAllocation(
+  allocationId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await prisma.$transaction(async (tx) => {
+      const alloc = await tx.cogsAllocation.findUnique({
+        where: { id: allocationId },
+        include: { lines: true },
+      });
+      if (!alloc) throw new Error("پیش‌نویس پیدا نشد");
+      if (alloc.status !== "APPROVED") throw new Error("فقط تخصیص تأییدشده قابل حذف است");
+
+      for (const line of alloc.lines) {
+        const usage = Array.isArray(line.batchUsage)
+          ? (line.batchUsage as unknown as BatchUsage[])
+          : [];
+        for (const u of usage) {
+          if (!u?.batchId || !(Number(u.qty) > 0)) continue;
+          await tx.$executeRaw`
+            UPDATE product_purchase_batches
+            SET "remainingQty" = "remainingQty" + ${Number(u.qty)},
+                status = 'ACTIVE',
+                "updatedAt" = now()
+            WHERE id = ${u.batchId}
+          `;
+        }
+      }
+
+      if (alloc.ledgerEntryId) {
+        await tx.ledgerEntry.deleteMany({ where: { id: alloc.ledgerEntryId, source: "NEW" } });
+      }
+
+      await tx.cogsAllocationLine.deleteMany({ where: { allocationId } });
+      await tx.cogsAllocation.delete({ where: { id: allocationId } });
+    });
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, error: "حذف ناموفق: " + msg };
+  }
+}
+
 
 // ───────────────────────── ۵) دریافت‌های مشتری ────────────────────────
 

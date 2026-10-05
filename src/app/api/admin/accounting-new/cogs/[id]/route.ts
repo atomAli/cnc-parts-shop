@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
-import { approveAllocation, rejectAllocation } from "@/lib/accounting-new";
+import { approveAllocation, rejectAllocation, deleteAllocation } from "@/lib/accounting-new";
 
 // POST — تأیید یا رد پیش‌نویس تخصیص COGS
 export async function POST(
@@ -30,3 +30,18 @@ export async function POST(
 
   return NextResponse.json({ error: "action نامعتبر است" }, { status: 400 });
 }
+
+// DELETE — حذف تخصیص تأییدشده توسط مدیر
+export async function DELETE(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const admin = await requireAdmin();
+  if (!admin) return unauthorized();
+
+  const { id } = await context.params;
+  const res = await deleteAllocation(id);
+  if (!res.ok) return NextResponse.json({ error: res.error }, { status: 400 });
+  return NextResponse.json(res);
+}
+

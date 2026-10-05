@@ -60,7 +60,7 @@ const STATUS_LABELS: Record<string, string> = {
   PROCESSING: "در حال پردازش",
   CONTACTED: "تماس گرفته شد",
   DONE: "تکمیل شده",
-    COMPLETED: "تکمیل شده",
+    COMPLETED: "ارسال شده",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -68,7 +68,7 @@ const STATUS_COLORS: Record<string, string> = {
   PROCESSING: "bg-blue-100 text-blue-700",
   CONTACTED: "bg-green-100 text-green-700",
   DONE: "bg-gray-100 text-gray-600",
-    COMPLETED: "bg-green-100 text-green-700",
+    COMPLETED: "bg-blue-100 text-blue-700",
 };
 
 function formatPrice(price: number) {
