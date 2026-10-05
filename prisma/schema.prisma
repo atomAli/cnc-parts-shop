@@ -78,6 +78,10 @@ model Product {
   discountPrice  Float?
   stock          Int                   @default(0)
   sku            String?
+  /// شماره کالا در نرم‌افزار حسابداری SHIK. کالاهای تاریخی که فقط برای نگه‌داری
+  /// سابقه و اتصال به فاکتورها وارد شده‌اند active=false هستند و در سایت دیده
+  /// نمی‌شوند، ولی چون کاتالوگ Access با کاتالوگ سایت اشتراک ندارد این کلید لازم است
+  legacyGoodId   Int?                  @unique
   isMeter        Boolean?
   sourceUrl      String?
   featured       Boolean               @default(false)

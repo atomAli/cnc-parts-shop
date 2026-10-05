@@ -3,17 +3,36 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
-  money, num, jalali, balanceTone, balanceTitle,
+  money,
+  num,
+  jalali,
+  balanceTone,
+  balanceTitle,
 } from "@/lib/accounting";
 import { toFaDigits } from "@/lib/phone";
-import { BookOpen, Users, Receipt, ShoppingCart, Wallet, FileText, Boxes } from "lucide-react";
+import {
+  BookOpen,
+  Users,
+  Receipt,
+  ShoppingCart,
+  Wallet,
+  FileText,
+  Boxes,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 function Card({
-  title, value, sub, href, icon: Icon,
+  title,
+  value,
+  sub,
+  href,
+  icon: Icon,
 }: {
-  title: string; value: string; sub?: string; href: string;
+  title: string;
+  value: string;
+  sub?: string;
+  href: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
 }) {
   return (
@@ -34,30 +53,45 @@ export default async function AccountingDashboard() {
   if (!(await requireAdmin())) redirect("/auth/login");
 
   const [
-    partyCount, supplierCount,
-    salesAgg, purchaseAgg,
-    receiptAgg, paymentAgg,
-    cashBox, bankAccount,
-    chequeAgg, unsettledCheques, stockAgg,
-    topDebtors, recentSales,
+    partyCount,
+    supplierCount,
+    salesAgg,
+    purchaseAgg,
+    receiptAgg,
+    paymentAgg,
+    cashBox,
+    bankAccount,
+    chequeAgg,
+    unsettledCheques,
+    stockAgg,
+    topDebtors,
+    recentSales,
   ] = await Promise.all([
     prisma.party.count(),
     prisma.party.count({ where: { kind: "SUPPLIER" } }),
 
     prisma.salesInvoice.aggregate({
-      _sum: { total: true }, _count: true, _max: { date: true }, _min: { date: true },
+      _sum: { total: true },
+      _count: true,
+      _max: { date: true },
+      _min: { date: true },
       where: { status: "DONE" },
     }),
     prisma.purchaseInvoice.aggregate({
-      _sum: { total: true }, _count: true, _max: { date: true }, _min: { date: true },
+      _sum: { total: true },
+      _count: true,
+      _max: { date: true },
+      _min: { date: true },
     }),
 
     prisma.cashMovement.aggregate({
-      _sum: { amount: true }, _count: true,
+      _sum: { amount: true },
+      _count: true,
       where: { kind: "RECEIPT" },
     }),
     prisma.cashMovement.aggregate({
-      _sum: { amount: true }, _count: true,
+      _sum: { amount: true },
+      _count: true,
       where: { kind: "PAYMENT" },
     }),
 
@@ -69,18 +103,17 @@ export default async function AccountingDashboard() {
     prisma.$queryRaw<{ items: number; value: number; movements: number }[]>`
       SELECT
         (SELECT count(*) FROM stock_movements) AS movements,
-        (SELECT count(DISTINCT name) FROM stock_movements
+        (SELECT count(DISTINCT COALESCE("productId", name)) FROM stock_movements
           WHERE name IS NOT NULL AND name <> '') AS items,
         (SELECT COALESCE(SUM(stock * "averagePrice"), 0)
-         FROM (SELECT DISTINCT ON (name) name, stock, "averagePrice"
-                 FROM stock_movements
-                 WHERE name IS NOT NULL AND name <> ''
-                 ORDER BY name, "date" DESC, "legacyId" DESC) t) AS value
+         FROM (SELECT DISTINCT ON (COALESCE(m."productId", m.name))
+                      m.stock, m."averagePrice"
+                 FROM stock_movements m
+                 WHERE m.name IS NOT NULL AND m.name <> ''
+                 ORDER BY COALESCE(m."productId", m.name), m."date" DESC, m."legacyId" DESC) t) AS value
     `,
 
-    prisma.$queryRaw<
-      { id: string; name: string; balance: number }[]
-    >`
+    prisma.$queryRaw<{ id: string; name: string; balance: number }[]>`
       SELECT p.id, p.name, SUM(l.amount) AS balance
       FROM ledger_entries l
       JOIN parties p ON p.id = l."partyId"
@@ -95,8 +128,11 @@ export default async function AccountingDashboard() {
     }),
   ]);
 
-  const cashBalance = (cashBox?.openingBalance ?? 0) + (receiptAgg._sum.amount ?? 0) - (paymentAgg._sum.amount ?? 0);
-  const bankBalance = (bankAccount?.openingBalance ?? 0);
+  const cashBalance =
+    (cashBox?.openingBalance ?? 0) +
+    (receiptAgg._sum.amount ?? 0) -
+    (paymentAgg._sum.amount ?? 0);
+  const bankBalance = bankAccount?.openingBalance ?? 0;
   const grossProfit =
     (salesAgg._sum.total ?? 0) - (purchaseAgg._sum.total ?? 0);
 
@@ -110,7 +146,10 @@ export default async function AccountingDashboard() {
     WHERE status = 'DONE' AND "date" ~ '^[0-9]{4}/[0-9]{2}/[0-9]{2}$'
     GROUP BY 1 ORDER BY 1
   `;
-  const maxMonthly = Math.max(...monthly.map((m) => Math.abs(Number(m.total))), 1);
+  const maxMonthly = Math.max(
+    ...monthly.map((m) => Math.abs(Number(m.total))),
+    1,
+  );
 
   return (
     <div className="space-y-6">
@@ -127,31 +166,43 @@ export default async function AccountingDashboard() {
       <div className="text-xs text-gray-500">
         داده‌های تاریخی از نرم‌افزار حسابداری قدیمی وارد شده است
         {salesAgg._min.date && salesAgg._max.date && (
-          <> — بازهٔ <span className="font-medium">{jalali(salesAgg._min.date)}</span> تا{" "}
-          <span className="font-medium">{jalali(salesAgg._max.date)}</span></>
+          <>
+            {" "}
+            — بازهٔ{" "}
+            <span className="font-medium">
+              {jalali(salesAgg._min.date)}
+            </span> تا{" "}
+            <span className="font-medium">{jalali(salesAgg._max.date)}</span>
+          </>
         )}
       </div>
 
       {/* خلاصهٔ ارقام */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         <Card
-          icon={Receipt} title="فروش کل" href="/admin/accounting/sales"
+          icon={Receipt}
+          title="فروش کل"
+          href="/admin/accounting/sales"
           value={`${money(salesAgg._sum.total ?? 0)} تومان`}
           sub={`${num(salesAgg._count)} فاکتور`}
         />
         <Card
-          icon={ShoppingCart} title="خرید کل" href="/admin/accounting/purchases"
+          icon={ShoppingCart}
+          title="خرید کل"
+          href="/admin/accounting/purchases"
           value={`${money(purchaseAgg._sum.total ?? 0)} تومان`}
           sub={`${num(purchaseAgg._count)} فاکتور`}
         />
         <Card
-          icon={Wallet} title="خالص نقد"
+          icon={Wallet}
+          title="خالص نقد"
           href="/admin/accounting/cash"
           value={`${money((receiptAgg._sum.amount ?? 0) - (paymentAgg._sum.amount ?? 0))} تومان`}
           sub={`دریافت ${num(receiptAgg._count)} · پرداخت ${num(paymentAgg._count)}`}
         />
         <Card
-          icon={BookOpen} title="سود ناخالص"
+          icon={BookOpen}
+          title="سود ناخالص"
           href="/admin/accounting/sales"
           value={`${money(grossProfit)} تومان`}
           sub="فروش منهای خرید — بدون بهای تمام‌شده"
@@ -161,31 +212,36 @@ export default async function AccountingDashboard() {
       {/* موجودی و چک */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         <Card
-          icon={Wallet} title="موجودی صندوق"
+          icon={Wallet}
+          title="موجودی صندوق"
           href="/admin/accounting/cash"
           value={`${money(cashBalance)} تومان`}
           sub={`اول دوره ${money(cashBox?.openingBalance ?? 0)}`}
         />
         <Card
-          icon={Wallet} title="موجودی بانک"
+          icon={Wallet}
+          title="موجودی بانک"
           href="/admin/accounting/cash"
           value={`${money(bankBalance)} تومان`}
           sub={bankAccount ? `${bankAccount.name}` : "—"}
         />
         <Card
-          icon={FileText} title="چک‌های در جریان"
+          icon={FileText}
+          title="چک‌های در جریان"
           href="/admin/accounting/cheques"
           value={`${num(unsettledCheques)} فقره`}
           sub={`کل چک ${money(chequeAgg._sum.amount ?? 0)} تومان`}
         />
         <Card
-          icon={Boxes} title="موجودی انبار"
+          icon={Boxes}
+          title="موجودی انبار"
           href="/admin/accounting/stock"
           value={`${num(Number(stockAgg[0]?.items ?? 0))} قلم کالا`}
           sub={`ارزش ${money(Number(stockAgg[0]?.value ?? 0))} تومان`}
         />
         <Card
-          icon={Users} title="طرف حساب"
+          icon={Users}
+          title="طرف حساب"
           href="/admin/accounting/parties"
           value={`${num(partyCount)} نفر`}
           sub={`${num(supplierCount)} تأمین‌کننده`}
@@ -201,11 +257,18 @@ export default async function AccountingDashboard() {
           ) : (
             <div className="flex items-end gap-2 h-40">
               {monthly.map((m) => {
-                const pct = Math.round((Math.abs(Number(m.total)) / maxMonthly) * 100);
+                const pct = Math.round(
+                  (Math.abs(Number(m.total)) / maxMonthly) * 100,
+                );
                 return (
-                  <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                  <div
+                    key={m.month}
+                    className="flex-1 flex flex-col items-center gap-1"
+                  >
                     <div className="text-[10px] text-gray-500">
-                      {toFaDigits(String(m.total).replace(/\B(?=(\d{3})+(?!\d))/g, ","))}
+                      {toFaDigits(
+                        String(m.total).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                      )}
                     </div>
                     <div
                       className="w-full bg-blue-600 rounded-t"
@@ -232,7 +295,9 @@ export default async function AccountingDashboard() {
                 className="flex items-center justify-between py-1.5 border-b border-gray-100 hover:bg-gray-50"
               >
                 <span className="text-sm text-gray-800 truncate">{d.name}</span>
-                <span className={`text-sm font-medium ${balanceTone(Number(d.balance))}`}>
+                <span
+                  className={`text-sm font-medium ${balanceTone(Number(d.balance))}`}
+                >
                   {money(Math.abs(Number(d.balance)))}
                 </span>
               </Link>
@@ -252,7 +317,10 @@ export default async function AccountingDashboard() {
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-gray-900">آخرین فاکتورهای فروش</h2>
-          <Link href="/admin/accounting/sales" className="text-sm text-blue-600 hover:text-blue-700">
+          <Link
+            href="/admin/accounting/sales"
+            className="text-sm text-blue-600 hover:text-blue-700"
+          >
             همه ←
           </Link>
         </div>
@@ -270,17 +338,26 @@ export default async function AccountingDashboard() {
               {recentSales.map((s) => (
                 <tr key={s.id} className="border-b border-gray-100">
                   <td className="py-2">
-                    <Link href={`/admin/accounting/sales/${s.id}`} className="text-blue-600 hover:underline">
+                    <Link
+                      href={`/admin/accounting/sales/${s.id}`}
+                      className="text-blue-600 hover:underline"
+                    >
                       {toFaDigits(s.number)}
                     </Link>
                   </td>
                   <td className="py-2 text-gray-600">{jalali(s.date)}</td>
                   <td className="py-2 text-gray-800">{s.party?.name ?? "—"}</td>
-                  <td className="py-2 text-left font-medium">{money(s.total)}</td>
+                  <td className="py-2 text-left font-medium">
+                    {money(s.total)}
+                  </td>
                 </tr>
               ))}
               {recentSales.length === 0 && (
-                <tr><td colSpan={4} className="py-4 text-center text-gray-500">موردی نیست</td></tr>
+                <tr>
+                  <td colSpan={4} className="py-4 text-center text-gray-500">
+                    موردی نیست
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

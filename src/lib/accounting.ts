@@ -112,8 +112,8 @@ export function balanceTone(n: number): string {
 
 /** عنوان مانده */
 export function balanceTitle(n: number): string {
-  if (n > 0) return "بستانکار — طلب ما";
-  if (n < 0) return "بدهکار — طلب طرف حساب";
+  if (n > 0) return "طرف حساب بدهکار ماست — طلب ما از ایشان";
+  if (n < 0) return "ما بدهکاریم — طلب ایشان از ما";
   return "تسویه";
 }
 

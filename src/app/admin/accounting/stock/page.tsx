@@ -2,7 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
-import { money, num, jalali, isPlausibleJalali, stockOpLabel } from "@/lib/accounting";
+import {
+  money,
+  num,
+  jalali,
+  isPlausibleJalali,
+  stockOpLabel,
+} from "@/lib/accounting";
 import { toFaDigits } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
@@ -25,24 +31,35 @@ export default async function StockPage({
   const op = sp.op === "0" || sp.op === "1" || sp.op === "2" ? sp.op : "";
   const showMovements = sp.view === "movements";
 
-  // موجودی فعلی هر کالا = آخرین حرکت ثبت‌شده‌اش. نام کالا snapshot است، پس
-  // بر اساس همین نام گروه‌بندی می‌کنیم نه productId که بیشترشان null است.
+  // موجودی فعلی هر کالا = آخرین حرکت ثبت‌شده‌اش.
+  // نام کالا در حرکت انبار snapshot است و در نرم‌افزار قدیمی برای کالاهای هم‌نام
+  // (مثلاً «پل ۴۰») تکرار می‌شد، پس گروه‌بندی بر اساس productId انجام می‌شود و
+  // فقط برای حرکت‌های بدون محصول به همان نام برمی‌گردیم.
   const current = await prisma.$queryRaw<
     {
-      name: string; stock: number; avg: number; value: number;
-      date: string; op: number; movements: number;
+      name: string;
+      stock: number;
+      avg: number;
+      value: number;
+      date: string;
+      op: number;
+      movements: number;
     }[]
   >`
     WITH last AS (
-      SELECT DISTINCT ON (name)
-             name, stock, "averagePrice" AS avg, date, "operationType" AS op
-      FROM stock_movements
-      WHERE name IS NOT NULL AND name <> ''
-      ORDER BY name, "date" DESC, "legacyId" DESC
+      SELECT DISTINCT ON (COALESCE(m."productId", m.name))
+             COALESCE(m."productId", m.name) AS key,
+             COALESCE(p.name, m.name) AS name,
+             m.stock, m."averagePrice" AS avg, m.date, m."operationType" AS op
+      FROM stock_movements m
+      LEFT JOIN products p ON p.id = m."productId"
+      WHERE m.name IS NOT NULL AND m.name <> ''
+      ORDER BY COALESCE(m."productId", m.name), m."date" DESC, m."legacyId" DESC
     )
     SELECT l.name, l.stock, l.avg, l.stock * l.avg AS value, l.date, l.op,
            (SELECT count(*) FROM stock_movements s
-             WHERE s.name = l.name AND s."operationType" <> 0) AS movements
+             WHERE COALESCE(s."productId", s.name) = l.key
+               AND s."operationType" <> 0) AS movements
     FROM last l
     WHERE (${q} = '' OR l.name ILIKE ${"%" + q + "%"})
     ORDER BY (l.stock * l.avg) DESC, l.name
@@ -53,17 +70,24 @@ export default async function StockPage({
   const movements = showMovements
     ? await prisma.$queryRaw<
         {
-          date: string; name: string; op: number; quantity: number;
-          unitPrice: number; stock: number; avg: number; note: string | null;
+          date: string;
+          name: string;
+          op: number;
+          quantity: number;
+          unitPrice: number;
+          stock: number;
+          avg: number;
+          note: string | null;
         }[]
       >`
-        SELECT date, name, "operationType" AS op, quantity, "unitPrice",
-               stock, "averagePrice" AS avg, note
-        FROM stock_movements
-        WHERE name IS NOT NULL AND name <> ''
-          AND (${q} = '' OR name ILIKE ${"%" + q + "%"})
-          AND (${op} = '' OR "operationType" = ${Number(op)})
-        ORDER BY date DESC, "legacyId" DESC
+        SELECT m.date, COALESCE(p.name, m.name) AS name, m."operationType" AS op,
+               m.quantity, m."unitPrice", m.stock, m."averagePrice" AS avg, m.note
+        FROM stock_movements m
+        LEFT JOIN products p ON p.id = m."productId"
+        WHERE m.name IS NOT NULL AND m.name <> ''
+          AND (${q} = '' OR COALESCE(p.name, m.name) ILIKE ${"%" + q + "%"})
+          AND (${op} = '' OR m."operationType" = ${Number(op)})
+        ORDER BY m.date DESC, m."legacyId" DESC
         LIMIT 400
       `
     : [];
@@ -79,22 +103,27 @@ export default async function StockPage({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">انبار</h1>
-        <Link href="/admin/accounting" className="text-sm text-blue-600 hover:text-blue-700">
+        <Link
+          href="/admin/accounting"
+          className="text-sm text-blue-600 hover:text-blue-700"
+        >
           ← داشبورد حسابداری
         </Link>
       </div>
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-900">
-        کاتالوگ کالای نرم‌افزار قدیمی با کاتالوگ سایت اشتراک نامی ندارد، پس موجودی
-        به محصولات سایت وصل نیست و با نام کالا در همان لحظهٔ ثبت نگه داشته شده است.
-        ارزش موجودی بر اساس میانگین موبینگ قیمت هر کالا محاسبه می‌شود.
+        کاتالوگ کالای نرم‌افزار قدیمی با کاتالوگ سایت اشتراک نامی ندارد، پس
+        موجودی به محصولات سایت وصل نیست و با نام کالا در همان لحظهٔ ثبت نگه
+        داشته شده است. ارزش موجودی بر اساس میانگین موبینگ قیمت هر کالا محاسبه
+        می‌شود.
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-xs text-gray-500">ارزش موجودی</div>
           <div className="mt-1 text-lg font-bold text-gray-900">
-            {money(shownValue)} <span className="text-xs font-normal">تومان</span>
+            {money(shownValue)}{" "}
+            <span className="text-xs font-normal">تومان</span>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
@@ -117,7 +146,8 @@ export default async function StockPage({
             <div className="bg-white rounded-lg shadow p-4">
               <div className="text-xs text-gray-500">ناموجود</div>
               <div className="mt-1 text-lg font-bold text-gray-900">
-                {toFaDigits(outOfStock)} <span className="text-xs font-normal">قلم</span>
+                {toFaDigits(outOfStock)}{" "}
+                <span className="text-xs font-normal">قلم</span>
               </div>
             </div>
           </>
@@ -180,7 +210,10 @@ export default async function StockPage({
             </thead>
             <tbody>
               {movements.map((m, i) => (
-                <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr
+                  key={i}
+                  className="border-b border-gray-100 hover:bg-gray-50"
+                >
                   <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
                     {jalali(m.date)}
                     {!isPlausibleJalali(m.date) && (
@@ -191,20 +224,34 @@ export default async function StockPage({
                   </td>
                   <td className="py-2 px-3">{m.name}</td>
                   <td className="py-2 px-3">
-                    <span className={`px-2 py-0.5 rounded text-xs ${OP_TONE[Number(m.op)] ?? "bg-gray-100 text-gray-700"}`}>
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs ${OP_TONE[Number(m.op)] ?? "bg-gray-100 text-gray-700"}`}
+                    >
                       {stockOpLabel(Number(m.op))}
                     </span>
                   </td>
-                  <td className={`py-2 px-3 text-left ${Number(m.quantity) >= 0 ? "text-green-700" : "text-red-700"}`}>
+                  <td
+                    className={`py-2 px-3 text-left ${Number(m.quantity) >= 0 ? "text-green-700" : "text-red-700"}`}
+                  >
                     {num(Number(m.quantity))}
                   </td>
-                  <td className="py-2 px-3 text-left text-gray-600">{money(Number(m.unitPrice))}</td>
-                  <td className="py-2 px-3 text-left text-gray-600">{num(Number(m.stock))}</td>
-                  <td className="py-2 px-3 text-left text-gray-600">{money(Number(m.avg))}</td>
+                  <td className="py-2 px-3 text-left text-gray-600">
+                    {money(Number(m.unitPrice))}
+                  </td>
+                  <td className="py-2 px-3 text-left text-gray-600">
+                    {num(Number(m.stock))}
+                  </td>
+                  <td className="py-2 px-3 text-left text-gray-600">
+                    {money(Number(m.avg))}
+                  </td>
                 </tr>
               ))}
               {movements.length === 0 && (
-                <tr><td colSpan={7} className="py-6 text-center text-gray-500">موردی نیست</td></tr>
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-gray-500">
+                    موردی نیست
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -214,7 +261,9 @@ export default async function StockPage({
               <tr className="text-gray-500 border-b border-gray-200 bg-gray-50">
                 <th className="text-right font-normal py-2 px-3">کالا</th>
                 <th className="text-left font-normal py-2 px-3">موجودی فعلی</th>
-                <th className="text-left font-normal py-2 px-3">میانگین قیمت</th>
+                <th className="text-left font-normal py-2 px-3">
+                  میانگین قیمت
+                </th>
                 <th className="text-left font-normal py-2 px-3">ارزش</th>
                 <th className="text-right font-normal py-2 px-3">تعداد حرکت</th>
                 <th className="text-right font-normal py-2 px-3">آخرین حرکت</th>
@@ -224,16 +273,25 @@ export default async function StockPage({
               {current.map((r) => {
                 const qty = Number(r.stock);
                 return (
-                  <tr key={r.name} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr
+                    key={r.name}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
                     <td className="py-2 px-3">{r.name}</td>
-                    <td className={`py-2 px-3 text-left font-medium ${qty > 0 ? "text-gray-900" : "text-red-600"}`}>
+                    <td
+                      className={`py-2 px-3 text-left font-medium ${qty > 0 ? "text-gray-900" : "text-red-600"}`}
+                    >
                       {num(qty)}
                     </td>
-                    <td className="py-2 px-3 text-left text-gray-600">{money(Number(r.avg))}</td>
+                    <td className="py-2 px-3 text-left text-gray-600">
+                      {money(Number(r.avg))}
+                    </td>
                     <td className="py-2 px-3 text-left font-medium text-gray-900">
                       {money(Number(r.value))}
                     </td>
-                    <td className="py-2 px-3 text-gray-600">{toFaDigits(Number(r.movements))}</td>
+                    <td className="py-2 px-3 text-gray-600">
+                      {toFaDigits(Number(r.movements))}
+                    </td>
                     <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
                       {jalali(r.date)}
                       <span className="mr-1 text-[10px] text-gray-400">
@@ -244,7 +302,11 @@ export default async function StockPage({
                 );
               })}
               {current.length === 0 && (
-                <tr><td colSpan={6} className="py-6 text-center text-gray-500">موردی نیست</td></tr>
+                <tr>
+                  <td colSpan={6} className="py-6 text-center text-gray-500">
+                    موردی نیست
+                  </td>
+                </tr>
               )}
             </tbody>
             {current.length > 0 && (
