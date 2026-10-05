@@ -7,26 +7,27 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  phone         String?   @unique
-  email         String?   @unique
-  password      String
-  role          Role      @default(USER)
-  image         String?
-  address       String?
+  id           String       @id @default(cuid())
+  name         String?
+  phone        String?      @unique
+  email        String?      @unique
+  password     String
+  role         Role         @default(USER)
+  image        String?
+  address      String?
   // اطلاعات تکمیلی — فقط مدیر پر می‌کند (در فرم ثبت‌نام مشتری نیست)
-  nationalCode  String?
-  companyName   String?
-  province      String?
-  city          String?
-  postalCode    String?
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  orders        Order[]
-  cartItems     CartItem[]
-  preInvoices   PreInvoice[]
+  nationalCode String?
+  companyName  String?
+  province     String?
+  city         String?
+  postalCode   String?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  orders       Order[]
+  cartItems    CartItem[]
+  preInvoices  PreInvoice[]
+  party        Party?
 
   @@index([isActive])
   @@map("users")
@@ -69,29 +70,32 @@ model Brand {
 }
 
 model Product {
-  id              String         @id @default(cuid())
-  name            String
-  slug            String         @unique
-  description     String?
-  price           Float
-  discountPrice   Float?
-  stock           Int            @default(0)
-  sku             String?
-  isMeter         Boolean?
-  sourceUrl       String?
-  featured        Boolean        @default(false)
-  active          Boolean        @default(true)
-  categoryId      String
-  category        Category       @relation(fields: [categoryId], references: [id])
-  brandId         String?
-  brand           Brand?         @relation(fields: [brandId], references: [id])
-  images          ProductImage[]
-  priceHistory    ProductPriceHistory[]
-  specifications  String?
-  orderItems      OrderItem[]
-  cartItems       CartItem[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id             String                @id @default(cuid())
+  name           String
+  slug           String                @unique
+  description    String?
+  price          Float
+  discountPrice  Float?
+  stock          Int                   @default(0)
+  sku            String?
+  isMeter        Boolean?
+  sourceUrl      String?
+  featured       Boolean               @default(false)
+  active         Boolean               @default(true)
+  categoryId     String
+  category       Category              @relation(fields: [categoryId], references: [id])
+  brandId        String?
+  brand          Brand?                @relation(fields: [brandId], references: [id])
+  images         ProductImage[]
+  priceHistory   ProductPriceHistory[]
+  specifications String?
+  orderItems     OrderItem[]
+  cartItems      CartItem[]
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  prices         ProductPrice[]
+  stockMovements StockMovement[]
 
   @@map("products")
 }
@@ -159,12 +163,12 @@ model OrderItem {
 }
 
 model CartItem {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  quantity  Int     @default(1)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -187,32 +191,327 @@ model Banner {
 }
 
 model Settings {
-  id          String @id @default(cuid())
-  key         String @unique
-  value       String
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
 
   @@map("settings")
 }
 
 model PreInvoice {
-  id          String   @id @default(cuid())
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  invoiceNumber Int @unique
-  customerName String
-  customerPhone String
-  address      String?
-  items       Json
-  totalPrice  Float
-  status      String   @default("PENDING")
-  notes       String?
-  source      String   @default("ADMIN")
+  id              String        @id @default(cuid())
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+  invoiceNumber   Int           @unique
+  customerName    String
+  customerPhone   String
+  address         String?
+  items           Json
+  totalPrice      Float
+  status          String        @default("PENDING")
+  notes           String?
+  source          String        @default("ADMIN")
   // آخرین بار که مدیر فاکتور را دستی ویرایش کرد + زمانی که کاربر اعلان را دیده
   adminEditedAt   DateTime?
   adminEditSeenAt DateTime?
-  createdAt   DateTime @default(now())
+  salesInvoice    SalesInvoice?
+  createdAt       DateTime      @default(now())
 
   @@index([userId, adminEditedAt])
   @@map("pre_invoices")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  حسابداری
+//  داده‌ها از نرم‌افزار SHIK (Access) وارد شده‌اند؛ همهٔ مبالغ به «تومان»
+//  و تاریخ‌ها به شمسی «YYYY/MM/DD» ذخیره می‌شوند (هم‌عرض، پس ترتیب
+//  لغوی = ترتیب زمانی). legacyId کلید تطبیق با فایل Access است تا ایمپورت
+//  دوباره رکورد تکراری نسازد.
+// ═══════════════════════════════════════════════════════════════════
+
+/// طرف حساب — مشتری و تأمین‌کننده. `kind` تعیین می‌کند در کدام فاکتورها ظاهر شود.
+model Party {
+  id             String   @id @default(cuid())
+  legacyId       Int?     @unique
+  name           String
+  kind           String   @default("CUSTOMER") // CUSTOMER | SUPPLIER | BOTH
+  phone          String?
+  address        String?
+  nationalCode   String?
+  postalCode     String?
+  city           String?
+  province       String?
+  bankName       String?
+  bankBranch     String?
+  bankAccount    String?
+  /// مانده اول دوره به تومان؛ مثبت = ما طلبکاریم، منفی = ما بدهکاریم
+  openingBalance Float    @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @unique
+
+  salesInvoices    SalesInvoice[]
+  purchaseInvoices PurchaseInvoice[]
+  cashMovements    CashMovement[]
+  cheques          Cheque[]
+  ledgerEntries    LedgerEntry[]
+
+  @@index([name])
+  @@index([kind])
+  @@map("parties")
+}
+
+model SalesInvoice {
+  id           String      @id @default(cuid())
+  legacyId     Int?        @unique
+  number       Int
+  date         String
+  deliveryDate String?
+  discount     Float       @default(0)
+  total        Float
+  status       String      @default("DONE") // DONE | CANCELLED
+  note         String?
+  /// اگر از پیش‌فاکتور سایت ساخته شده باشد
+  preInvoice   PreInvoice? @relation(fields: [preInvoiceId], references: [id])
+  preInvoiceId String?     @unique
+  createdAt    DateTime    @default(now())
+
+  party   Party?             @relation(fields: [partyId], references: [id])
+  partyId String?
+  lines   SalesInvoiceLine[]
+
+  @@index([date])
+  @@index([partyId])
+  @@map("sales_invoices")
+}
+
+model SalesInvoiceLine {
+  id           String       @id @default(cuid())
+  invoiceId    String
+  invoice      SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  position     Int
+  name         String
+  quantity     Float
+  unitPrice    Float
+  discount     Float        @default(0)
+  total        Float
+  productId    String?
+  legacyGoodId Int?
+
+  @@index([invoiceId])
+  @@map("sales_invoice_lines")
+}
+
+model PurchaseInvoice {
+  id           String   @id @default(cuid())
+  legacyId     Int?     @unique
+  number       Int
+  date         String
+  deliveryDate String?
+  discount     Float    @default(0)
+  total        Float
+  status       String   @default("DONE")
+  note         String?
+  createdAt    DateTime @default(now())
+
+  party   Party?                @relation(fields: [partyId], references: [id])
+  partyId String?
+  lines   PurchaseInvoiceLine[]
+
+  @@index([date])
+  @@index([partyId])
+  @@map("purchase_invoices")
+}
+
+model PurchaseInvoiceLine {
+  id           String          @id @default(cuid())
+  invoiceId    String
+  invoice      PurchaseInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  position     Int
+  name         String
+  quantity     Float
+  unitPrice    Float
+  discount     Float           @default(0)
+  total        Float
+  productId    String?
+  legacyGoodId Int?
+
+  @@index([invoiceId])
+  @@map("purchase_invoice_lines")
+}
+
+/// دریافت (مشتری به ما) و پرداخت (ما به تأمین‌کننده) — هر دو در این جدول
+model CashMovement {
+  id        String   @id @default(cuid())
+  /// شناسهٔ سند در فایل Access. دریافت‌ها و پرداخت‌ها هر دو از ۱ شماره‌گذاری
+  /// شده‌اند، پس یکتایی باید همراه با kind باشد وگرنه روی هم می‌افتند
+  legacyId  Int?
+  kind      String // RECEIPT | PAYMENT
+  date      String
+  amount    Float
+  discount  Float    @default(0)
+  note      String?
+  /// شمارهٔ سند در فایل Access (عملیات دریافت/پرداخت)
+  voucher   Int?
+  cashBox   CashBox? @relation(fields: [cashBoxId], references: [id])
+  cashBoxId String?
+  createdAt DateTime @default(now())
+
+  party    Party?  @relation(fields: [partyId], references: [id])
+  partyId  String?
+  cheque   Cheque? @relation(fields: [chequeId], references: [id])
+  chequeId String? @unique
+
+  @@unique([kind, legacyId])
+  @@index([date])
+  @@index([kind])
+  @@index([partyId])
+  @@map("cash_movements")
+}
+
+/// گردش حساب طرف حساب (مانده اول دوره + فاکتورها + دریافت/پرداخت)
+model LedgerEntry {
+  id          String  @id @default(cuid())
+  legacyId    Int?    @unique
+  /// برای ردیف‌های «موجودی اول دوره» تاریخی ثبت نشده، پس null می‌ماند
+  date        String?
+  /// کد نوع سند از فایل Access: ۰=مانده اول دوره، ۲۰=دریافت، ۲۵=پرداخت،
+  /// ۳۰=فاکتور فروش، ۳۱=تخفیف فروش، ۴۰=فاکتور خرید، ۴۱=تخفیف خرید
+  voucherType Int
+  voucher     Int     @default(0)
+  /// به تومان؛ قرارداد فایل Access: منفی = طرف حساب به ما بدهکار است
+  amount      Float
+  description String?
+
+  party   Party  @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId String
+
+  @@index([partyId, date])
+  @@map("ledger_entries")
+}
+
+model Cheque {
+  id          String   @id @default(cuid())
+  legacyId    Int?     @unique
+  number      String?
+  amount      Float
+  /// تاریخ ثبت در سیستم
+  issuedDate  String?
+  /// تاریخ سررسید
+  dueDate     String
+  bankName    String?
+  bankBranch  String?
+  bankAccount String?
+  bookSerial  String?
+  /// کد وضعیت در فایل Access (۲، ۱۳، ۱۵). معنی این کدها در هیچ جدولی
+  /// ثبت نشده، پس از وب قابل تغییر است
+  status      Int?
+  statusNote  String?
+  isSettled   Boolean  @default(false)
+  settledDate String?
+  note        String?
+  /// چک‌های قدیمی فایل Access که جدیدتر از آن‌ها شماره‌گذاری یکسان ندارند
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  party    Party?        @relation(fields: [partyId], references: [id])
+  partyId  String?
+  movement CashMovement?
+
+  @@index([dueDate])
+  @@index([isSettled])
+  @@map("cheques")
+}
+
+model CashBox {
+  id             String         @id @default(cuid())
+  legacyId       Int?           @unique
+  name           String
+  /// موجودی اول دوره به تومان (در فایل Access منفی ذخیره شده و ما مثبت می‌کنیم)
+  openingBalance Float          @default(0)
+  movements      CashMovement[]
+
+  @@map("cash_boxes")
+}
+
+model BankAccount {
+  id             String  @id @default(cuid())
+  legacyId       Int?    @unique
+  name           String
+  branch         String?
+  account        String?
+  sheba          String?
+  cardNumber     String?
+  openingBalance Float   @default(0)
+
+  @@map("bank_accounts")
+}
+
+model Warehouse {
+  id        String          @id @default(cuid())
+  legacyId  Int?            @unique
+  name      String
+  movements StockMovement[]
+
+  @@map("warehouses")
+}
+
+/// لیست قیمت چندسطحی هر کالا (CashList در فایل Access)
+model PriceLevel {
+  id        String         @id @default(cuid())
+  legacyId  Int?           @unique
+  name      String
+  costType  Int            @default(0)
+  isDefault Boolean        @default(false)
+  prices    ProductPrice[]
+
+  @@map("price_levels")
+}
+
+model ProductPrice {
+  id        String     @id @default(cuid())
+  level     PriceLevel @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  levelId   String
+  productId String
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// قیمت به تومان
+  price     Float
+
+  @@unique([levelId, productId])
+  @@map("product_prices")
+}
+
+/// کارتکس انبار — حرکات ورود و خروج هر کالا
+model StockMovement {
+  id            String  @id @default(cuid())
+  legacyId      Int?    @unique
+  date          String
+  /// مثبت = ورود، منفی = خروج (قرارداد فایل Access)
+  quantity      Float
+  unitPrice     Float
+  /// موجودی پس از این حرکت
+  stock         Float
+  /// میانگین موبینگ قیمت
+  averagePrice  Float
+  /// ۰=مانده اول دوره، ۱=ورود (فاکتور خرید)، ۲=خروج (فاکتور فروش)
+  operationType Int
+  /// نام کالا در لحظهٔ ثبت — کاتالوگ Access با کاتالوگ سایت اشتراک نامی
+  /// ندارد، پس برای نمایش باید snapshot داشته باشیم
+  name          String?
+  note          String?
+
+  product      Product?   @relation(fields: [productId], references: [id])
+  productId    String?
+  warehouse    Warehouse? @relation(fields: [warehouseId], references: [id])
+  warehouseId  String?
+  legacyGoodId Int?
+
+  @@index([date])
+  @@index([productId])
+  @@map("stock_movements")
 }

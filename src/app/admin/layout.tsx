@@ -19,11 +19,13 @@ import {
   BadgeDollarSign,
   FileText,
   Receipt,
+  BookOpen,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 const menuItems = [
   { href: "/admin", label: "داشبورد", icon: LayoutDashboard },
+  { href: "/admin/accounting", label: "حسابداری", icon: BookOpen },
   { href: "/admin/products", label: "محصولات", icon: Package },
   { href: "/admin/prices", label: "مدیریت قیمت", icon: BadgeDollarSign },
   { href: "/admin/categories", label: "دسته‌بندی‌ها", icon: FolderTree },
