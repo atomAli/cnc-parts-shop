@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import type { PreInvoice } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
+import { normalizePhone, isValidIranPhone } from "@/lib/phone";
 import { authOptions } from "@/lib/auth";
 import { sendPreInvoiceEmail } from "@/lib/email";
 
@@ -42,7 +43,14 @@ export async function POST(req: NextRequest) {
 
   const session = await getServerSession(authOptions);
   let sessionUserId: string | null = (session?.user as any)?.id || null;
-  const phone = String(customerPhone).trim();
+  // ذخیره همیشه با ارقام انگلیسی استاندارد
+  const phone = normalizePhone(customerPhone);
+  if (!isValidIranPhone(phone)) {
+    return NextResponse.json(
+      { error: "شماره تلفن معتبر نیست. نمونهٔ درست: 09123456789" },
+      { status: 400 }
+    );
+  }
 
   // کاربر مهمان: باید برایش حساب ساخته شود (رمز بدون آدرس)
   let accountCreated = false;

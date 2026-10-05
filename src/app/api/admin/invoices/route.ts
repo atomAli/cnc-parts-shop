@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
+import { normalizePhone, isValidIranPhone } from "@/lib/phone";
 import { Prisma } from "@prisma/client";
 import { computeInvoice, InvoiceLineInput } from "@/lib/invoice-items";
 
@@ -12,6 +13,15 @@ export async function POST(req: NextRequest) {
   const { customerName, customerPhone, address, userId, notes, status } = body;
   const items = Array.isArray(body.items) ? (body.items as InvoiceLineInput[]) : [];
   const finalStatus = status === "DONE" ? "DONE" : "PENDING";
+
+  // ذخیره همیشه با ارقام انگلیسی استاندارد
+  const phone = normalizePhone(customerPhone);
+  if (!isValidIranPhone(phone)) {
+    return NextResponse.json(
+      { error: "شماره تلفن معتبر نیست. نمونهٔ درست: 09123456789" },
+      { status: 400 }
+    );
+  }
 
   if (!customerName?.trim() || !customerPhone?.trim()) {
     return NextResponse.json({ error: "نام و شماره تلفن مشتری الزامی است" }, { status: 400 });
@@ -29,7 +39,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: userId || null,
           customerName: customerName.trim(),
-          customerPhone: customerPhone.trim(),
+          customerPhone: phone,
           address: typeof address === "string" && address.trim() ? address.trim() : null,
           items: lineResult.storedItems as unknown as Prisma.InputJsonValue,
           totalPrice: lineResult.totalPrice,

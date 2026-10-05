@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Printer, ArrowRight } from "lucide-react";
+import { toFaDigits } from "@/lib/phone";
 
 interface PrintItem {
   name: string;
@@ -186,7 +187,7 @@ export default function InvoicePrintPage() {
               </div>
               <div className="min-w-0 flex items-baseline gap-1.5">
                 <span className="text-[10px] text-gray-500 shrink-0">شماره تماس:</span>
-                <span className="font-bold text-sm" dir="ltr">{invoice.customerPhone}</span>
+                <span className="font-bold text-sm" dir="ltr">{toFaDigits(invoice.customerPhone)}</span>
               </div>
             </div>
 

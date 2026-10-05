@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Search, Trash2, User, Receipt, ChevronDown, Check, Printer } from "lucide-react";
 import { isRailOrScrew, getProductMaxLength } from "@/lib/meter-product";
+import { toFaDigits } from "@/lib/phone";
 
 interface Product {
   id: string;
@@ -478,7 +479,7 @@ export default function AdminInvoicesPage() {
                   >
                     <User size={16} className="text-gray-400" />
                     <span className="font-medium">{u.name || "بدون نام"}</span>
-                    <span className="text-xs text-gray-500" dir="ltr">{u.phone || ""}</span>
+                    <span className="text-xs text-gray-500" dir="ltr">{toFaDigits(u.phone || "")}</span>
                     {u.email && <span className="text-xs text-gray-400" dir="ltr">{u.email}</span>}
                   </button>
                 ))}

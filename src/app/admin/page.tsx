@@ -11,6 +11,7 @@ import {
   FileText,
 } from "lucide-react";
 import Link from "next/link";
+import { toFaDigits } from "@/lib/phone";
 
 const toPersianNumber = (n: number) =>
   n.toLocaleString("fa-IR");
@@ -196,7 +197,7 @@ export default function AdminDashboard() {
                   <tr key={inv.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="px-6 py-3">
                       <div className="font-medium text-sm">{inv.customerName}</div>
-                      <div className="text-xs text-gray-500" dir="ltr">{inv.customerPhone}</div>
+                      <div className="text-xs text-gray-500" dir="ltr">{toFaDigits(inv.customerPhone)}</div>
                     </td>
                     <td className="px-6 py-3 text-sm font-bold text-blue-600" dir="ltr">
                       {toPersianNumber(inv.totalPrice)} تومان

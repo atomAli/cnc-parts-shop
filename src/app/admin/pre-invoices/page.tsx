@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RefreshCw, ChevronDown, Phone, User, Printer, Edit3, BellRing, Clock, Globe } from "lucide-react";
+import { toFaDigits, toTelHref } from "@/lib/phone";
 
 interface PreInvoiceItem {
   name: string;
@@ -243,7 +244,7 @@ export default function AdminPreInvoicesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500" dir="ltr">{inv.customerPhone}</div>
+                    <div className="text-xs text-gray-500" dir="ltr">{toFaDigits(inv.customerPhone)}</div>
                   </div>
                 </div>
 
@@ -336,7 +337,7 @@ export default function AdminPreInvoicesPage() {
                   <div className="flex items-center gap-4 text-sm text-gray-500 pt-2">
                     <div className="flex items-center gap-1">
                       <Phone size={14} />
-                      <a href={"tel:+98" + inv.customerPhone.replace(/^0/, "")} className="text-blue-600 hover:underline" dir="ltr">{inv.customerPhone}</a>
+                      <a href={toTelHref(inv.customerPhone)} className="text-blue-600 hover:underline" dir="ltr">{toFaDigits(inv.customerPhone)}</a>
                     </div>
                     {inv.user && <div className="text-xs text-gray-400">کاربر سایت: {inv.user.name}</div>}
                   </div>

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { User, ShoppingCart, LogOut, FileText, ChevronDown, Eye, MapPin } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { toFaDigits } from "@/lib/phone";
 
 interface PreInvoiceItem {
   name: string;
@@ -101,7 +102,7 @@ export default function ProfilePage() {
           </div>
           <div>
             <div className="text-xl font-bold">{session.user?.name || "کاربر"}</div>
-            <div className="text-gray-500" dir="ltr">{(session.user as any)?.phone || ""}</div>
+            <div className="text-gray-500" dir="ltr">{toFaDigits((session.user as any)?.phone || "")}</div>
           </div>
         </div>
         <div className="space-y-3">
