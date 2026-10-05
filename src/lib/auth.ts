@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { normalizePhone } from "@/lib/phone";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,11 +17,18 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // ورود با ارقام فارسی یا انگلیسی هر دو کار می‌کند
+        const phone = normalizePhone(credentials.phone);
+
         const user = await (prisma as any).user.findUnique({
-          where: { phone: credentials.phone },
+          where: { phone },
         });
 
         if (!user) {
+          return null;
+        }
+
+        if ((user as any).isActive === false) {
           return null;
         }
 

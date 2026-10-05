@@ -15,12 +15,20 @@ model User {
   role          Role      @default(USER)
   image         String?
   address       String?
+  // اطلاعات تکمیلی — فقط مدیر پر می‌کند (در فرم ثبت‌نام مشتری نیست)
+  nationalCode  String?
+  companyName   String?
+  province      String?
+  city          String?
+  postalCode    String?
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orders        Order[]
   cartItems     CartItem[]
   preInvoices   PreInvoice[]
 
+  @@index([isActive])
   @@map("users")
 }
 
