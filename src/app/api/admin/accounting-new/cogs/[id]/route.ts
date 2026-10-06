@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
-import { approveAllocation, rejectAllocation, deleteAllocation } from "@/lib/accounting-new";
+import { approveAllocation, rejectAllocation, deleteAllocation, recalculateApprovedCogs } from "@/lib/accounting-new";
 
 // POST — تأیید یا رد پیش‌نویس تخصیص COGS
 export async function POST(
@@ -26,6 +26,19 @@ export async function POST(
     const note = typeof body?.reason === "string" ? body.reason : "";
     const out = await rejectAllocation(id, adminId, note);
     return NextResponse.json({ ok: true, allocation: out });
+  }
+
+  if (action === "recalc") {
+    // محاسبهٔ مجدد بهای تمام‌شده با خریدهای فعلی (برای فاکتورهای تأییدشده)
+    try {
+      const res = await recalculateApprovedCogs({ allocationId: id });
+      return NextResponse.json(res.results?.[0] ?? { ok: true, updated: 0 });
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "محاسبه ناموفق بود" },
+        { status: 400 }
+      );
+    }
   }
 
   return NextResponse.json({ error: "action نامعتبر است" }, { status: 400 });

@@ -116,6 +116,9 @@ type PlannedLine = {
 /** پیش‌نمایش FIFO بدون اعمال تغییر (برای نمایش «در انتظار تأیید») */
 async function previewFifoAlloc(items: any[]): Promise<PlannedLine[]> {
   const out: PlannedLine[] = [];
+  const flags = await meterFlags(
+    items.map((it) => (it && typeof it.productId === "string" ? it.productId : null))
+  );
   for (let i = 0; i < items.length; i++) {
     const it = items[i] ?? {};
     const productId = typeof it.productId === "string" ? it.productId : null;
@@ -123,16 +126,19 @@ async function previewFifoAlloc(items: any[]): Promise<PlannedLine[]> {
     const unitPrice = Number(it.unitPrice ?? it.price ?? 0);
     const lineTotal = Number(it.price ?? 0) * quantity;
     const name = String(it.name ?? "");
+    // کالای متری: نیاز FIFO بر حسب متراژ (متر) است، نه تعداد شاخه
+    const isMeter = productId ? flags.get(productId) === true : false;
+    const need0 = productId ? fifoNeed(it, isMeter) : 0;
 
-    if (!productId || quantity <= 0) {
+    if (!productId || !(need0 > 0)) {
       out.push({
-        index: i, productId, name, quantity, unitPrice, lineTotal,
-        allocatedQty: 0, unitCogs: 0, cogsTotal: 0, batchId: null, missing: quantity,
+        index: i, productId, name, quantity: need0, unitPrice, lineTotal,
+        allocatedQty: 0, unitCogs: 0, cogsTotal: 0, batchId: null, missing: need0,
       });
       continue;
     }
 
-    let need = quantity;
+    let need = need0;
     let weighted = 0; // Σ(qty × unitCost)
     let got = 0;
     let firstBatchId: string | null = null;
@@ -156,7 +162,7 @@ async function previewFifoAlloc(items: any[]): Promise<PlannedLine[]> {
     }
 
     out.push({
-      index: i, productId, name, quantity, unitPrice, lineTotal,
+      index: i, productId, name, quantity: need0, unitPrice, lineTotal,
       allocatedQty: got,
       unitCogs: got > 0 ? weighted / got : 0,
       cogsTotal: weighted,
@@ -226,6 +232,9 @@ export async function approveAllocation(allocationId: string, adminId: string): 
       // ── ۲. تخصیص FIFO قطعی ──
       let totalCogs = 0;
       const confirmed: PlannedLine[] = [];
+      const flags = await meterFlags(
+        items.map((it) => (it && typeof it.productId === "string" ? it.productId : null))
+      );
 
       for (let i = 0; i < items.length; i++) {
         const it = items[i] ?? {};
@@ -234,14 +243,17 @@ export async function approveAllocation(allocationId: string, adminId: string): 
         const unitPrice = Number(it.unitPrice ?? it.price ?? 0);
         const lineTotal = Number(it.price ?? 0) * quantity;
         const name = String(it.name ?? "");
+        // کالای متری: نیاز FIFO بر حسب متراژ (متر) است، نه تعداد شاخه
+        const isMeter = productId ? flags.get(productId) === true : false;
+        const need0 = productId ? fifoNeed(it, isMeter) : 0;
 
-        if (!productId || quantity <= 0) {
-          confirmed.push({ index: i, productId, name, quantity, unitPrice, lineTotal,
-            allocatedQty: 0, unitCogs: 0, cogsTotal: 0, batchId: null, missing: quantity });
+        if (!productId || !(need0 > 0)) {
+          confirmed.push({ index: i, productId, name, quantity: need0, unitPrice, lineTotal,
+            allocatedQty: 0, unitCogs: 0, cogsTotal: 0, batchId: null, missing: need0 });
           continue;
         }
 
-        let need = quantity;
+        let need = need0;
         let weighted = 0;
         let got = 0;
         let firstBatchId: string | null = null;
@@ -278,7 +290,7 @@ export async function approveAllocation(allocationId: string, adminId: string): 
         }
 
         totalCogs += weighted;
-        confirmed.push({ index: i, productId, name, quantity, unitPrice, lineTotal,
+        confirmed.push({ index: i, productId, name, quantity: need0, unitPrice, lineTotal,
           allocatedQty: got, unitCogs: got > 0 ? weighted / got : 0, cogsTotal: weighted,
           batchId: firstBatchId, missing: need, batchUsage: usage });
       }
@@ -341,7 +353,202 @@ export async function rejectAllocation(allocationId: string, adminId: string, re
   });
 }
 
-// ─────────────────────── ۴-ب) حذف تخصیص تأییدشده (توسط مدیر) ──────────────────────
+// ───────────── ۴-ج) محاسبهٔ مجدد بهای تمام‌شده بعد از ثبت خرید ─────────────
+
+/**
+ * نیاز FIFO برای یک قلم فاکتور — کالای متری بر حسب **متراژ (متر)**،
+ * چون بچ‌های خرید هم بر حسب متر ثبت می‌شوند (مطابق «لیست خرید»).
+ * برای کالای متری: متراژ = تعداد × متراژ هر شاخه ÷ ۱۰۰ (اگر متراژ نبود، خودِ تعداد متراژ است).
+ */
+function fifoNeed(it: Record<string, unknown>, isMeter: boolean): number {
+  const q = Number(it?.quantity ?? 0);
+  if (!Number.isFinite(q) || q <= 0) return 0;
+  if (!isMeter) return q;
+  const bl = Number(it?.branchLength ?? it?.baseLength ?? 0);
+  return bl > 0 ? (q * bl) / 100 : q;
+}
+
+/** کالاهای متری؟ — برای تبدیل تعداد به متراژ هنگام FIFO */
+async function meterFlags(ids: (string | null)[]): Promise<Map<string, boolean>> {
+  const unique = [...new Set(ids.filter((x): x is string => !!x))];
+  if (!unique.length) return new Map();
+  const rows = await prisma.product.findMany({
+    where: { id: { in: unique } },
+    select: { id: true, isMeter: true },
+  });
+  return new Map(rows.map((p) => [p.id, p.isMeter === true]));
+}
+
+type RecalcAlloc = {
+  id: string;
+  salesTotal: number;
+  lines: { batchUsage: unknown }[];
+  preInvoice: { invoiceNumber: number | null; items: unknown; totalPrice: number };
+};
+
+/** محاسبهٔ مجدد یک تخصیص تأییدشده داخل تراکنش */
+async function recalcOne(a: RecalcAlloc) {
+  const items = Array.isArray(a.preInvoice.items)
+    ? (a.preInvoice.items as Record<string, unknown>[])
+    : [];
+  const flags = await meterFlags(
+    items.map((it) => (typeof it?.productId === "string" ? it.productId : null))
+  );
+
+  return prisma.$transaction(async (tx) => {
+    // ۱) بازگرداندن مصرف قبلیِ همین تخصیص تا FIFO از اول اجرا شود
+    for (const line of a.lines) {
+      const usage = Array.isArray(line.batchUsage) ? (line.batchUsage as unknown as BatchUsage[]) : [];
+      for (const u of usage) {
+        if (!u?.batchId || !(Number(u.qty) > 0)) continue;
+        await tx.$executeRaw`
+          UPDATE product_purchase_batches
+          SET "remainingQty" = "remainingQty" + ${Number(u.qty)},
+              status = 'ACTIVE',
+              "updatedAt" = now()
+          WHERE id = ${u.batchId}
+        `;
+      }
+    }
+
+    // ۲) اجرای دوبارهٔ FIFO روی اقلام فاکتور
+    const newLines: {
+      allocationId: string;
+      preInvoiceItemIndex: number;
+      productId: string | null;
+      nameSnapshot: string;
+      quantity: number;
+      unitPrice: number;
+      lineTotal: number;
+      allocatedQty: number;
+      unitCogs: number;
+      cogsTotal: number;
+      batchId: string | null;
+      batchUsage: object[];
+    }[] = [];
+    let totalCogs = 0;
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i] ?? {};
+      const productId = typeof it.productId === "string" ? it.productId : null;
+      const rawQty = Number(it.quantity ?? 0);
+      const unitPrice = Number(it.unitPrice ?? it.price ?? 0);
+      const lineTotal = Number(it.price ?? 0) * rawQty;
+      const name = String(it.name ?? "");
+      const isMeter = productId ? flags.get(productId) === true : false;
+      const need = productId ? fifoNeed(it, isMeter) : 0;
+
+      if (!productId || !(need > 0)) {
+        newLines.push({
+          allocationId: a.id, preInvoiceItemIndex: i, productId, nameSnapshot: name,
+          quantity: need, unitPrice, lineTotal, allocatedQty: 0, unitCogs: 0,
+          cogsTotal: 0, batchId: null, batchUsage: [],
+        });
+        continue;
+      }
+
+      let left = need;
+      let weighted = 0;
+      let got = 0;
+      let firstBatchId: string | null = null;
+      const usage: BatchUsage[] = [];
+
+      const batches = await tx.$queryRaw<{ id: string; remainingQty: number; unitCost: number }[]>`
+        SELECT id, "remainingQty", "unitCost"
+        FROM product_purchase_batches
+        WHERE "productId" = ${productId} AND status = 'ACTIVE' AND "remainingQty" > 0
+        ORDER BY date ASC, "createdAt" ASC
+        FOR UPDATE
+      `;
+
+      for (const b of batches) {
+        if (left <= 0) break;
+        const take = Math.min(Number(b.remainingQty), left);
+        if (take <= 0) continue;
+        weighted += take * Number(b.unitCost);
+        left -= take;
+        got += take;
+        if (!firstBatchId) firstBatchId = b.id;
+        usage.push({ batchId: b.id, qty: take, unitCost: Number(b.unitCost) });
+
+        await tx.$executeRaw`
+          UPDATE product_purchase_batches
+          SET "remainingQty" = "remainingQty" - ${take},
+              status = CASE WHEN "remainingQty" - ${take} <= 0.0001 THEN 'CLOSED' ELSE 'ACTIVE' END,
+              "updatedAt" = now()
+          WHERE id = ${b.id}
+        `;
+      }
+
+      totalCogs += weighted;
+      newLines.push({
+        allocationId: a.id, preInvoiceItemIndex: i, productId, nameSnapshot: name,
+        quantity: need, unitPrice, lineTotal, allocatedQty: got,
+        unitCogs: got > 0 ? weighted / got : 0, cogsTotal: weighted,
+        batchId: firstBatchId, batchUsage: usage as unknown as object[],
+      });
+    }
+
+    // ۳) ثبت — فاکتور، سند دفتر و مبلغ فروش دست نمی‌خورند
+    await tx.cogsAllocationLine.deleteMany({ where: { allocationId: a.id } });
+    await tx.cogsAllocationLine.createMany({ data: newLines });
+
+    const salesTotal = Number(a.salesTotal || a.preInvoice.totalPrice || 0);
+    const grossProfit = salesTotal - totalCogs;
+    await tx.cogsAllocation.update({
+      where: { id: a.id },
+      data: { totalCogs, grossProfit },
+    });
+
+    return {
+      allocationId: a.id,
+      invoiceNumber: a.preInvoice.invoiceNumber,
+      totalCogs,
+      grossProfit,
+    };
+  });
+}
+
+/**
+ * بهای تمام‌شدهٔ فاکتورهای «تأیید شده» را با خریدهای فعلی دوباره محاسبه می‌کند.
+ * هر بار که خریدی ثبت/حذف می‌شود صدا زده می‌شود تا فاکتوری که زودتر تأیید شده
+ * (وقتی هنوز خریدی نداشت) صفر نماند.
+ */
+export async function recalculateApprovedCogs(
+  r: { allocationId?: string; productIds?: string[] } = {}
+) {
+  const allocs = await prisma.cogsAllocation.findMany({
+    where: { status: "APPROVED", ...(r.allocationId ? { id: r.allocationId } : {}) },
+    include: {
+      preInvoice: { select: { invoiceNumber: true, items: true, totalPrice: true } },
+      lines: { select: { batchUsage: true, productId: true } },
+    },
+  });
+  if (r.allocationId && !allocs.length) throw new Error("تخصیص تأییدشده پیدا نشد");
+
+  const want = r.productIds?.length ? new Set(r.productIds) : null;
+  const targets = want
+    ? allocs.filter((a) => a.lines.some((l) => l.productId && want.has(l.productId)))
+    : allocs;
+
+  const results = [];
+  for (const a of targets) results.push(await recalcOne(a as RecalcAlloc));
+  return { ok: true as const, updated: results.length, results };
+}
+
+/**
+ * نسخهٔ بی‌صدا: خطا نباید ثبت/حذف خرید را متوقف کند
+ * (در صورت خطا، دکمهٔ «محاسبهٔ بهای تمام‌شده» در تب «تأیید شده» جایگزین است).
+ */
+async function safeRecalcApprovedCogs(r: { allocationId?: string; productIds?: string[] }) {
+  try {
+    await recalculateApprovedCogs(r);
+  } catch {
+    /* رد شد */
+  }
+}
+
+// ─────────────────────── ۴-د) حذف تخصیص تأییدشده (توسط مدیر) ──────────────────────
 /**
  * حذف تخصیص تأییدشده = بازگردانی کامل:
  *   - بازگردانی remainingQty هر بچ دقیقاً همان‌قدر که مصرف شده بود
@@ -791,6 +998,8 @@ export async function syncPurchaseBatches() {
       created++;
     }
   }
+  // خریدهای تازه وارد شده‌اند → بهای تمام‌شدهٔ فاکتورهای تأییدشده دوباره محاسبه شود
+  await safeRecalcApprovedCogs({});
   return { created, skipped, invoices: invoices.length };
 }
 
@@ -1477,7 +1686,7 @@ export async function recordPurchase(data: {
   const total = quantity * unitCost;
   const jDate = toJalali(todayIso());
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const batch = await tx.productPurchaseBatch.create({
       data: {
         productId: data.productId,
@@ -1515,6 +1724,11 @@ export async function recordPurchase(data: {
     }
     return batch;
   });
+
+  // خرید جدید ثبت شد → بهای تمام‌شدهٔ فاکتورهای تأییدشده‌ای که این کالا را فروخته‌اند
+  // همان لحظه دوباره محاسبه می‌شود (فاکتورِ تأییدشدهٔ بدون خرید صفر نماند)
+  await safeRecalcApprovedCogs({ productIds: [data.productId] });
+  return created;
 }
 
 /** حذف خرید دستی (فقط بدون فاکتور خرید) */
@@ -1531,6 +1745,7 @@ export async function deleteManualPurchase(batchId: string) {
     }
     await tx.productPurchaseBatch.delete({ where: { id: batchId } });
   });
+  await safeRecalcApprovedCogs({ productIds: [b.productId] });
   return { ok: true };
 }
 

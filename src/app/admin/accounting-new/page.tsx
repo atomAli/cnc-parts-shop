@@ -431,6 +431,29 @@ export default function AccountingNewPage() {
     }
   }
 
+  // محاسبهٔ مجدد بهای تمام‌شده با خریدهای فعلی (معمولاً خودکار انجام می‌شود)
+  async function recalcAlloc(id: string) {
+    setBusy(`calc:${id}`);
+    try {
+      const res = await fetch(`/api/admin/accounting-new/cogs/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "recalc" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return notify(false, data.error || "محاسبه ناموفق بود");
+      notify(
+        true,
+        `بهای تمام‌شده: ${money(data.totalCogs ?? 0)} — سود: ${money(data.grossProfit ?? 0)}`
+      );
+      await load();
+    } catch {
+      notify(false, "ارتباط با سرور برقرار نشد");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function submitPurchase(productId: string) {
     const f = pForm[productId];
     if (!f) return notify(false, "ابتدا تعداد و قیمت را وارد کنید");
@@ -724,13 +747,22 @@ export default function AccountingNewPage() {
                     <td className="p-3 text-left">{money(a.totalCogs)}</td>
                     <td className="p-3 text-left font-bold text-green-700">{money(a.grossProfit)}</td>
                     <td className="p-3 text-left">
-                      <button
-                        onClick={() => delAlloc(a.id)}
-                        disabled={busy === a.id}
-                        className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
-                      >
-                        {busy === a.id ? "…" : "حذف"}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => recalcAlloc(a.id)}
+                          disabled={busy === `calc:${a.id}`}
+                          className="rounded-lg border border-blue-200 bg-white px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 transition-colors duration-150 disabled:opacity-50"
+                        >
+                          {busy === `calc:${a.id}` ? "…" : "محاسبهٔ بهای تمام‌شده"}
+                        </button>
+                        <button
+                          onClick={() => delAlloc(a.id)}
+                          disabled={busy === a.id}
+                          className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
+                        >
+                          {busy === a.id ? "…" : "حذف"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
