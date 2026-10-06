@@ -739,7 +739,7 @@ export type PurchaseItem = {
  * خریدهای دستی به همان بچ‌ها می‌چسبند، پس «خرید کل» (KPI) خودبه‌خود شاملشان می‌شود.
  */
 export async function getPurchaseList(): Promise<PurchaseItem[]> {
-  // فقط فاکتورهای سایت (نه فاکتورهای قدیمی Access)
+  // فقط فاکتورهای «ارسال شده» سایت (نه قدیمی، نه در جریان)
   const sold = await prisma.$queryRaw<{
     productId: string; qty: number; meters: number;
   }[]>`
@@ -753,6 +753,7 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
     FROM pre_invoices, jsonb_array_elements(items) it
     WHERE it->>'productId' IS NOT NULL
       AND source <> 'ACCESS'
+      AND status = 'COMPLETED'
     GROUP BY 1`;
 
   const bought = await prisma.$queryRaw<{
