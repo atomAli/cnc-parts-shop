@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
+import { toJalali } from "@/lib/accounting-new";
 
-// GET — سوابق کاربر از دیتابیس قدیم (Access):
-//        فاکتورهای فروش + واریزی/دریافتی‌ها، از روی طرف‌حساب متصل به کاربر
+// برچسب نوع سند در دفتر — همان کدهای فایل Access
+const LEDGER_LABEL: Record<number, string> = {
+  0: "مانده اول دوره",
+  20: "دریافتی",
+  25: "واریزی",
+  30: "بدهی / فروش",
+  31: "تخفیف فروش",
+  40: "خرید",
+  41: "تخفیف خرید",
+};
+
+function byDateDesc<T extends { date: string }>(a: T, b: T) {
+  return (b.date || "").localeCompare(a.date || "");
+}
+
+// GET — سوابق کاربر:
+//   فاکتورها   = فاکتورهای فروش قدیم (دیتابیس قدیم) + فاکتورهای ثبت‌شده روی سایت/پنل
+//   واریزی/دریافتی = نقدینگی قدیم (دیتابیس قدیم) + اسناد دفترِ ثبت‌شده روی سایت
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -21,25 +38,82 @@ export async function GET(
 
   const partyId = user.party?.id ?? null;
 
-  const [invoices, movements] = await Promise.all([
+  const [salesInvoices, siteInvoices, cashMovements, newEntries] = await Promise.all([
     partyId
-      ? prisma.salesInvoice.findMany({
-          where: { partyId },
-          orderBy: [{ date: "desc" }, { number: "desc" }],
-        })
+      ? prisma.salesInvoice.findMany({ where: { partyId } })
+      : Promise.resolve([]),
+    prisma.preInvoice.findMany({
+      where: { userId: id, source: { not: "ACCESS" } },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        totalPrice: true,
+        notes: true,
+        status: true,
+        source: true,
+        createdAt: true,
+      },
+    }),
+    partyId
+      ? prisma.cashMovement.findMany({ where: { partyId } })
       : Promise.resolve([]),
     partyId
-      ? prisma.cashMovement.findMany({
-          where: { partyId },
-          orderBy: [{ date: "desc" }, { id: "desc" }],
-        })
+      ? prisma.ledgerEntry.findMany({ where: { partyId, source: "NEW" } })
       : Promise.resolve([]),
   ]);
+
+  const invoices = [
+    ...salesInvoices.map((s) => ({
+      id: s.id,
+      number: s.number,
+      date: s.date || "",
+      total: s.total,
+      discount: s.discount || 0,
+      note: s.note || "",
+      status: s.status,
+      source: "قدیم",
+      kind: "salesInvoice",
+    })),
+    ...siteInvoices.map((i) => ({
+      id: i.id,
+      number: i.invoiceNumber,
+      date: i.createdAt ? toJalali(i.createdAt.toISOString().slice(0, 10)) : "",
+      total: i.totalPrice,
+      discount: 0,
+      note: i.notes || "",
+      status: i.status,
+      source: i.source === "ADMIN" ? "پنل" : "سایت",
+      kind: "preInvoice",
+    })),
+  ].sort((a, b) => byDateDesc(a, b) || b.number - a.number);
+
+  const movements = [
+    ...cashMovements.map((m) => ({
+      id: m.id,
+      date: m.date || "",
+      amount: m.amount,
+      label: m.kind === "PAYMENT" ? "واریزی" : "دریافتی",
+      note: m.note || "",
+      voucher: m.voucher,
+      source: "قدیم",
+      kind: "cashMovement",
+    })),
+    ...newEntries.map((e) => ({
+      id: e.id,
+      date: e.date || "",
+      amount: e.amount,
+      label: LEDGER_LABEL[e.voucherType] || String(e.voucherType),
+      note: e.description || "",
+      voucher: e.voucher,
+      source: "سایت",
+      kind: "ledgerEntry",
+    })),
+  ].sort((a, b) => byDateDesc(a, b));
 
   return NextResponse.json({ party: user.party, invoices, movements });
 }
 
-// DELETE — حذف یک رکورد قدیمی (فقط اگر متعلق به طرف‌حساب همین کاربر باشد)
+// DELETE — حذف یک رکورد (فقط اگر متعلق به همین کاربر باشد)
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -52,9 +126,7 @@ export async function DELETE(
     where: { id },
     select: { party: { select: { id: true } } },
   });
-  const partyId = user?.party?.id;
-  if (!partyId)
-    return NextResponse.json({ error: "این کاربر طرف‌حساب ندارد" }, { status: 400 });
+  const partyId = user?.party?.id ?? null;
 
   const b = await req.json().catch(() => ({}));
   const type = typeof b?.type === "string" ? b.type : "";
@@ -63,22 +135,57 @@ export async function DELETE(
     return NextResponse.json({ error: "رکورد انتخاب نشده" }, { status: 400 });
 
   try {
-    if (type === "invoice") {
-      const found = await prisma.salesInvoice.findUnique({
+    if (type === "salesInvoice" || type === "cashMovement") {
+      if (!partyId)
+        return NextResponse.json({ error: "این کاربر طرف‌حساب ندارد" }, { status: 400 });
+      if (type === "salesInvoice") {
+        const found = await prisma.salesInvoice.findUnique({
+          where: { id: recId },
+          select: { id: true, partyId: true },
+        });
+        if (!found || found.partyId !== partyId)
+          return NextResponse.json({ error: "رکورد یافت نشد" }, { status: 404 });
+        await prisma.salesInvoice.delete({ where: { id: recId } });
+      } else {
+        const found = await prisma.cashMovement.findUnique({
+          where: { id: recId },
+          select: { id: true, partyId: true },
+        });
+        if (!found || found.partyId !== partyId)
+          return NextResponse.json({ error: "رکورد یافت نشد" }, { status: 404 });
+        await prisma.cashMovement.delete({ where: { id: recId } });
+      }
+    } else if (type === "preInvoice") {
+      const found = await prisma.preInvoice.findUnique({
         where: { id: recId },
-        select: { id: true, partyId: true },
+        select: { id: true, userId: true, cogsAllocation: { select: { id: true } } },
+      });
+      if (!found || found.userId !== id)
+        return NextResponse.json({ error: "رکورد یافت نشد" }, { status: 404 });
+      if (found.cogsAllocation)
+        return NextResponse.json(
+          {
+            error:
+              "این فاکتور محاسبهٔ سود/بهای تمام‌شده دارد؛ ابتدا آن را در «حسابداری جدید» حذف کنید.",
+          },
+          { status: 400 }
+        );
+      await prisma.preInvoice.delete({ where: { id: recId } });
+    } else if (type === "ledgerEntry") {
+      if (!partyId)
+        return NextResponse.json({ error: "این کاربر طرف‌حساب ندارد" }, { status: 400 });
+      const found = await prisma.ledgerEntry.findUnique({
+        where: { id: recId },
+        select: { id: true, partyId: true, source: true },
       });
       if (!found || found.partyId !== partyId)
         return NextResponse.json({ error: "رکورد یافت نشد" }, { status: 404 });
-      await prisma.salesInvoice.delete({ where: { id: recId } });
-    } else if (type === "movement") {
-      const found = await prisma.cashMovement.findUnique({
-        where: { id: recId },
-        select: { id: true, partyId: true },
-      });
-      if (!found || found.partyId !== partyId)
-        return NextResponse.json({ error: "رکورد یافت نشد" }, { status: 404 });
-      await prisma.cashMovement.delete({ where: { id: recId } });
+      if (found.source !== "NEW")
+        return NextResponse.json(
+          { error: "اسناد دیتابیس قدیم از اینجا حذف نمی‌شوند" },
+          { status: 400 }
+        );
+      await prisma.ledgerEntry.delete({ where: { id: recId } });
     } else {
       return NextResponse.json({ error: "نوع رکورد نامعتبر است" }, { status: 400 });
     }

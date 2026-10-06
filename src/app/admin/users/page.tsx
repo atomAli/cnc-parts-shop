@@ -55,19 +55,24 @@ interface Detail extends User {
 interface HistoryInvoice {
   id: string;
   number: number;
-  date: string | null;
+  date: string;
   total: number;
   discount: number;
-  note: string | null;
+  note: string;
+  status: string;
+  source: string;
+  kind: string;
 }
 
 interface HistoryMovement {
   id: string;
-  date: string | null;
-  kind: string;
+  date: string;
   amount: number;
+  label: string;
+  note: string;
   voucher: number;
-  note: string | null;
+  source: string;
+  kind: string;
 }
 
 interface History {
@@ -75,11 +80,6 @@ interface History {
   invoices: HistoryInvoice[];
   movements: HistoryMovement[];
 }
-
-const MOVEMENT_KIND: Record<string, string> = {
-  RECEIPT: "دریافتی",
-  PAYMENT: "واریزی",
-};
 
 const EMPTY_FORM = {
   name: "",
@@ -238,11 +238,7 @@ export default function AdminUsersPage() {
     setHistoryDeleting("");
   };
 
-  const deleteHistoryRecord = async (
-    type: "invoice" | "movement",
-    recId: string,
-    label: string
-  ) => {
+  const deleteHistoryRecord = async (type: string, recId: string, label: string) => {
     if (!historyUser) return;
     const ok = window.confirm(
       `رکورد زیر برای همیشه حذف شود؟\n\n${label}\n\nاین رکورد از دیتابیس قدیم پاک می‌شود و قابل بازگشت نیست.`
@@ -644,18 +640,20 @@ export default function AdminUsersPage() {
             ) : (
               <div className="space-y-6 p-6">
                 <p className="text-xs text-gray-500">
-                  این سوابق از دیتابیس قدیم (Access) خوانده می‌شوند: فاکتورهای فروش و واریزی/دریافتی‌های ثبت‌شده برای طرف‌حساب این کاربر.
+                  هر دو منبع: رکوردهای دیتابیس قدیم (Access) و فاکتور/سند ثبت‌شده روی همین سایت.
                 </p>
 
                 {historyMsg && (
                   <p className={`text-sm ${historyMsg.ok ? "text-green-600" : "text-red-600"}`}>{historyMsg.text}</p>
                 )}
 
-                {history && !history.party ? (
+                {history && !history.party && (
                   <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    این کاربر طرف‌حساب ندارد؛ سوابقی از دیتابیس قدیم برایش ثبت نشده است.
+                    این کاربر طرف‌حساب ندارد؛ فقط فاکتورهای ثبت‌شده روی سایت نمایش داده می‌شود.
                   </p>
-                ) : history ? (
+                )}
+
+                {history ? (
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <StatBox label="تعداد فاکتور" value={toPersianNumber(history.invoices.length)} />
@@ -667,7 +665,7 @@ export default function AdminUsersPage() {
                       <StatBox
                         label="مجموع دریافتی"
                         value={formatPrice(
-                          history.movements.filter((m) => m.kind === "RECEIPT").reduce((s, m) => s + (m.amount || 0), 0)
+                          history.movements.filter((m) => m.label === "دریافتی").reduce((s, m) => s + (m.amount || 0), 0)
                         )}
                       />
                     </div>
@@ -685,6 +683,7 @@ export default function AdminUsersPage() {
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">تاریخ</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">مبلغ</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">تخفیف</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">منبع</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">شرح</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">عملیات</th>
                               </tr>
@@ -696,15 +695,26 @@ export default function AdminUsersPage() {
                                   <td className="px-3 py-2 text-sm text-gray-500">{inv.date ? toFaDigits(inv.date) : "-"}</td>
                                   <td className="px-3 py-2 text-sm">{formatPrice(inv.total)}</td>
                                   <td className="px-3 py-2 text-sm text-gray-500">{inv.discount ? formatPrice(inv.discount) : "-"}</td>
+                                  <td className="px-3 py-2">
+                                    <span
+                                      className={`px-2 py-1 rounded text-xs font-medium ${
+                                        inv.source === "قدیم"
+                                          ? "bg-gray-100 text-gray-700"
+                                          : "bg-blue-100 text-blue-700"
+                                      }`}
+                                    >
+                                      {inv.source}
+                                    </span>
+                                  </td>
                                   <td className="px-3 py-2 text-sm text-gray-500">{inv.note || "-"}</td>
                                   <td className="px-3 py-2">
                                     <button
                                       disabled={historyDeleting === inv.id}
                                       onClick={() =>
                                         deleteHistoryRecord(
-                                          "invoice",
+                                          inv.kind,
                                           inv.id,
-                                          `فاکتور فروش #${inv.number}\nتاریخ: ${inv.date || "-"}\nمبلغ: ${formatPrice(inv.total)}`
+                                          `فاکتور فروش #${inv.number}\nتاریخ: ${inv.date || "-"}\nمبلغ: ${formatPrice(inv.total)}\nمنبع: ${inv.source}`
                                         )
                                       }
                                       className="px-2 py-1 text-xs font-medium bg-white border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
@@ -733,6 +743,7 @@ export default function AdminUsersPage() {
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">نوع</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">مبلغ</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">سند</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">منبع</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">شرح</th>
                                 <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">عملیات</th>
                               </tr>
@@ -744,23 +755,38 @@ export default function AdminUsersPage() {
                                   <td className="px-3 py-2 text-sm">
                                     <span
                                       className={`px-2 py-1 rounded text-xs font-medium ${
-                                        m.kind === "RECEIPT" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                                        m.label === "دریافتی"
+                                          ? "bg-green-100 text-green-700"
+                                          : m.label === "واریزی"
+                                          ? "bg-blue-100 text-blue-700"
+                                          : "bg-gray-100 text-gray-700"
                                       }`}
                                     >
-                                      {MOVEMENT_KIND[m.kind] || m.kind}
+                                      {m.label}
                                     </span>
                                   </td>
                                   <td className="px-3 py-2 text-sm">{formatPrice(m.amount)}</td>
                                   <td className="px-3 py-2 text-sm text-gray-500" dir="ltr">{toFaDigits(String(m.voucher))}</td>
+                                  <td className="px-3 py-2">
+                                    <span
+                                      className={`px-2 py-1 rounded text-xs font-medium ${
+                                        m.source === "قدیم"
+                                          ? "bg-gray-100 text-gray-700"
+                                          : "bg-blue-100 text-blue-700"
+                                      }`}
+                                    >
+                                      {m.source}
+                                    </span>
+                                  </td>
                                   <td className="px-3 py-2 text-sm text-gray-500">{m.note || "-"}</td>
                                   <td className="px-3 py-2">
                                     <button
                                       disabled={historyDeleting === m.id}
                                       onClick={() =>
                                         deleteHistoryRecord(
-                                          "movement",
+                                          m.kind,
                                           m.id,
-                                          `${MOVEMENT_KIND[m.kind] || m.kind} ${formatPrice(m.amount)}\nتاریخ: ${m.date || "-"}\nسند: ${m.voucher}`
+                                          `${m.label} ${formatPrice(m.amount)}\nتاریخ: ${m.date || "-"}\nسند: ${m.voucher}\nمنبع: ${m.source}`
                                         )
                                       }
                                       className="px-2 py-1 text-xs font-medium bg-white border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
