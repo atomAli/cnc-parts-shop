@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 import { toFaDigits } from "@/lib/phone";
 import { todayJalali } from "@/lib/jalali";
+import { LEDGER_LABEL } from "@/lib/ledger";
 
 const toPersianNumber = (n: number) => n.toLocaleString("fa-IR");
 const formatPrice = (n: number) => new Intl.NumberFormat("fa-IR").format(Math.round(n)) + " تومان";
@@ -112,52 +113,55 @@ const escHtml = (v: unknown) =>
 const fmtMoney = (n: number) =>
   new Intl.NumberFormat("fa-IR").format(Math.round(Number(n) || 0)) + " تومان";
 
-/** HTML کاملاً مستقل برای پنجرهٔ چاپ — بدون هیچ فایل جانبی */
-function buildStatementHtml(
-  user: User,
-  data: { party: { id: string; name: string } | null; invoices: HistoryInvoice[]; movements: HistoryMovement[] },
-  from: string,
-  to: string
-) {
-  const invoices = data.invoices || [];
-  const movements = data.movements || [];
-  const sumInv = invoices.reduce((s, i) => s + (i.total || 0), 0);
-  const sumReceipt = movements.filter((m) => m.label === "دریافتی").reduce((s, m) => s + (m.amount || 0), 0);
-  const sumPayment = movements.filter((m) => m.label === "واریزی").reduce((s, m) => s + (m.amount || 0), 0);
-  const balance = sumInv - sumReceipt;
+/** سند دفتری برای صورت حساب چاپی — ساختار خروجی /api/admin/users/[id]/statement */
+interface StatementRow {
+  id: string;
+  date: string;
+  voucherType: number;
+  voucher: number;
+  amount: number;
+  description: string | null;
+  source: string;
+  running: number;
+}
 
-  const range = from || to ? `از ${from || "ابتدای تاریخ"} تا ${to || "امروز"}` : "کل دوره";
+interface StatementData {
+  party: { id: string; name: string } | null;
+  noParty?: boolean;
+  rows?: StatementRow[];
+  totals?: { count: number; debit: number; credit: number; balance: number };
+}
+
+/**
+ * HTML کاملاً مستقل برای پنجرهٔ چاپ — بدون هیچ فایل جانبی.
+ * منبع: دفتر کل طرف‌حساب، دقیقاً همان چیزی که تب «حساب افراد» حسابداری جدید نشان می‌دهد.
+ */
+function buildStatementHtml(user: User, data: StatementData, from: string, to: string) {
+  const rows = data.rows || [];
+  const totals = data.totals || { count: 0, debit: 0, credit: 0, balance: 0 };
   const person = data.party?.name || user.name || user.phone || "-";
+  const range = from || to ? `از ${from || "ابتدای تاریخ"} تا ${to || "امروز"}` : "کل دوره";
 
-  const invRows = invoices.length
-    ? invoices
-        .map(
-          (i, idx) => `<tr>
+  const docRows = rows.length
+    ? rows
+        .map((r, idx) => {
+          const kind = `${toFaDigits(String(r.voucherType))} — ${LEDGER_LABEL[r.voucherType] || ""}`;
+          const cls = r.amount < 0 ? "g" : r.amount > 0 ? "r" : "";
+          return `<tr>
         <td class="c">${toFaDigits(String(idx + 1))}</td>
-        <td class="c" dir="ltr">${toFaDigits(String(i.number))}</td>
-        <td class="c">${i.date ? toFaDigits(i.date) : "-"}</td>
-        <td class="n">${fmtMoney(i.total)}</td>
-        <td class="c">${escHtml(i.source)}</td>
-        <td>${escHtml(i.note || "")}</td>
-      </tr>`
-        )
+        <td class="c">${r.date ? toFaDigits(r.date) : "-"}</td>
+        <td>${escHtml(r.description || "")}</td>
+        <td class="c">${escHtml(kind)}</td>
+        <td class="n ${cls}">${fmtMoney(r.amount)}</td>
+        <td class="n">${fmtMoney(r.running)}</td>
+      </tr>`;
+        })
         .join("")
-    : `<tr><td colspan="6" class="empty">رکوردی در این بازه وجود ندارد.</td></tr>`;
-
-  const movRows = movements.length
-    ? movements
-        .map(
-          (m) => `<tr>
-        <td class="c">${m.date ? toFaDigits(m.date) : "-"}</td>
-        <td class="c">${escHtml(m.label)}</td>
-        <td class="n">${fmtMoney(m.amount)}</td>
-        <td class="c" dir="ltr">${toFaDigits(String(m.voucher))}</td>
-        <td class="c">${escHtml(m.source)}</td>
-        <td>${escHtml(m.note || "")}</td>
-      </tr>`
-        )
-        .join("")
-    : `<tr><td colspan="6" class="empty">رکوردی در این بازه وجود ندارد.</td></tr>`;
+    : `<tr><td colspan="6" class="empty">${
+        data.noParty
+          ? "این کاربر در دفتر کل طرف‌حسابی ندارد."
+          : "سندی در این بازه ثبت نشده است."
+      }</td></tr>`;
 
   return `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -178,10 +182,13 @@ function buildStatementHtml(
   td.c { text-align: center; }
   td.n { white-space: nowrap; }
   td.empty { text-align: center; color: #777; }
+  td.g { color: #15803d; }
+  td.r { color: #b91c1c; }
   .totals { width: 70%; margin-top: 10px; border-collapse: collapse; }
   .totals td { border: 1px solid #888; padding: 5px 7px; }
   .totals td.v { text-align: left; white-space: nowrap; }
   .totals tr.t { background: #f3f3f3; font-weight: bold; }
+  .note { font-size: 11px; color: #444; margin-top: 5px; }
   .sign { margin-top: 34px; display: flex; justify-content: space-between; }
   .sign div { width: 45%; border-top: 1px solid #333; padding-top: 5px; text-align: center; font-size: 11px; color: #444; }
   @page { size: A4; margin: 12mm; }
@@ -194,34 +201,30 @@ function buildStatementHtml(
     <p class="sub">مشتری / طرف‌حساب: <b>${escHtml(person)}</b></p>
     <p class="sub">شماره تماس: <span dir="ltr">${escHtml(user.phone ? toFaDigits(user.phone) : "-")}</span></p>
     <p class="sub">بازه: ${escHtml(range)} — تاریخ چاپ: ${escHtml(todayJalali())}</p>
+    <p class="sub">منبع: دفتر کل (همان تب «حساب افراد» در حسابداری جدید)</p>
   </div>
 
-  <h2>فاکتورها (${toFaDigits(String(invoices.length))})</h2>
+  <h2>اسناد دفتر (${toFaDigits(String(totals.count))})</h2>
   <table>
     <thead>
       <tr>
-        <th>#</th><th>شماره</th><th>تاریخ</th><th>مبلغ</th><th>منبع</th><th>شرح</th>
+        <th>#</th><th>تاریخ</th><th>شرح</th><th>نوع سند</th><th>مبلغ</th><th>مانده</th>
       </tr>
     </thead>
-    <tbody>${invRows}</tbody>
-  </table>
-
-  <h2>واریزی و دریافتی‌ها (${toFaDigits(String(movements.length))})</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>تاریخ</th><th>نوع</th><th>مبلغ</th><th>سند</th><th>منبع</th><th>شرح</th>
-      </tr>
-    </thead>
-    <tbody>${movRows}</tbody>
+    <tbody>${docRows}</tbody>
   </table>
 
   <table class="totals">
-    <tr><td>جمع فاکتورها</td><td class="v">${fmtMoney(sumInv)}</td></tr>
-    <tr><td>جمع دریافتی‌ها</td><td class="v">${fmtMoney(sumReceipt)}</td></tr>
-    <tr><td>جمع واریزی‌ها</td><td class="v">${fmtMoney(sumPayment)}</td></tr>
-    <tr class="t"><td>مانده حساب (فاکتور − دریافتی)</td><td class="v">${fmtMoney(balance)}</td></tr>
+    <tr><td>تعداد اسناد</td><td class="v">${toFaDigits(String(totals.count))}</td></tr>
+    <tr><td>جمع اسناد بدهکار (طلب ما از او)</td><td class="v">${fmtMoney(Math.abs(totals.debit))}</td></tr>
+    <tr><td>جمع اسناد بستانکار (طلب او از ما)</td><td class="v">${fmtMoney(totals.credit)}</td></tr>
+    <tr class="t"><td>مانده حساب</td><td class="v">${fmtMoney(totals.balance)}</td></tr>
   </table>
+
+  <p class="note">
+    منفی = طرف حساب بدهکار ماست (طلب ما از او) — مثبت = بستانکار (طلب او از ما).
+    ماندهٔ بالا همان «مانده» تب «حساب افراد» در حسابداری جدید است.
+  </p>
 
   <div class="sign">
     <div>امضای مشتری</div>
@@ -449,8 +452,9 @@ export default function AdminUsersPage() {
   // ---------- صورت حساب / پرینت ----------
   const openStatement = (user: User) => {
     setStmtUser(user);
+    // پیش‌فرض «کل دوره» تا ماندهٔ چاپی دقیقاً با «حساب افراد» یکی باشد
     setStmtFrom("");
-    setStmtTo(todayJalali());
+    setStmtTo("");
     setStmtMsg(null);
   };
 
@@ -484,10 +488,10 @@ export default function AdminUsersPage() {
       if (from) qs.set("from", from);
       if (to) qs.set("to", to);
       const q = qs.toString();
-      const res = await fetch(`/api/admin/users/${stmtUser.id}/history${q ? `?${q}` : ""}`);
+      const res = await fetch(`/api/admin/users/${stmtUser.id}/statement${q ? `?${q}` : ""}`);
       const data = await res.json();
       if (!res.ok) {
-        setStmtMsg({ ok: false, text: data?.error || "خطا در دریافت سوابق" });
+        setStmtMsg({ ok: false, text: data?.error || "خطا در دریافت صورت حساب" });
         return;
       }
       const ok = printHtml(buildStatementHtml(stmtUser, data, from, to));
@@ -1072,6 +1076,10 @@ export default function AdminUsersPage() {
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-600">
                 مشتری: <b>{stmtUser.name || toFaDigits(stmtUser.phone || "-")}</b>
+              </p>
+              <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-2">
+                منبع چاپ: دفتر کل طرف‌حساب — دقیقاً همان‌چیزی که تب «حساب افراد» در
+                حسابداری جدید نشان می‌دهد، پس مانده‌ها با هم سینک است.
               </p>
 
               <div>

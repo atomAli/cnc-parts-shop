@@ -579,6 +579,79 @@ export async function getPartyRecords(partyId: string) {
   });
 }
 
+export type StatementRow = {
+  id: string;
+  date: string;
+  voucherType: number;
+  voucher: number;
+  amount: number;
+  description: string | null;
+  source: string;
+  running: number;
+};
+
+export type PartyStatement = {
+  rows: StatementRow[];
+  totals: { count: number; debit: number; credit: number; balance: number };
+};
+
+/**
+ * صورت حساب یک طرف‌حساب از روی «دفتر کل» — همان منبع تب «حساب افراد»،
+ * پس ماندهٔ این تابع دقیقاً برابر ماندهٔ همان تب است (SUM(ledger_entries.amount)).
+ * سند بدون تاریخ (ماندهٔ اول دوره) در هر بازه لحاظ می‌شود.
+ */
+export async function getPartyStatement(
+  partyId: string,
+  r: DateRange = {}
+): Promise<PartyStatement> {
+  const from = r.from ?? "";
+  const to = r.to ?? "";
+
+  const all = await prisma.ledgerEntry.findMany({
+    where: { partyId },
+    select: {
+      id: true, date: true, voucherType: true, voucher: true,
+      amount: true, description: true, source: true,
+    },
+  });
+
+  // تاریخ‌دارها داخل بازه، سند بدون تاریخ همیشه؛ بعد مرتب‌سازی (بدون تاریخ اول)
+  const sorted = all
+    .filter((x) => {
+      const d = x.date || "";
+      if (!d) return true;
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const ad = a.date || "";
+      const bd = b.date || "";
+      if (ad !== bd) return ad < bd ? -1 : 1;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+
+  let running = 0;
+  let debit = 0;
+  let credit = 0;
+  const rows: StatementRow[] = sorted.map((x) => {
+    running += Number(x.amount);
+    if (x.amount < 0) debit += Number(x.amount);
+    else if (x.amount > 0) credit += Number(x.amount);
+    return { ...x, date: x.date || "", running };
+  });
+
+  return {
+    rows,
+    totals: {
+      count: rows.length,
+      debit,
+      credit,
+      balance: running,
+    },
+  };
+}
+
 // ───────────────────────── ۶) KPI ────────────────────────
 
 export async function computeKpis(r: DateRange) {

@@ -2,17 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { toJalali } from "@/lib/accounting-new";
-
-// برچسب نوع سند در دفتر — همان کدهای فایل Access
-const LEDGER_LABEL: Record<number, string> = {
-  0: "مانده اول دوره",
-  20: "دریافتی",
-  25: "واریزی",
-  30: "بدهی / فروش",
-  31: "تخفیف فروش",
-  40: "خرید",
-  41: "تخفیف خرید",
-};
+import { LEDGER_LABEL } from "@/lib/ledger";
 
 function byDateDesc<T extends { date: string }>(a: T, b: T) {
   return (b.date || "").localeCompare(a.date || "");
