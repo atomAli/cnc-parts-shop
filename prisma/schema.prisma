@@ -555,6 +555,8 @@ model ProductPurchaseBatch {
   purchaseInvoice   PurchaseInvoice? @relation(fields: [purchaseInvoiceId], references: [id])
   ledgerEntryId     String?
   note              String?
+  /// تخصیص این خرید به فاکتورهای فروش: [{ preInvoiceId, qty }]
+  allocations       Json?
   status            String   @default("ACTIVE")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

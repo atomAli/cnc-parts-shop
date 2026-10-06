@@ -980,6 +980,19 @@ export type PurchaseItem = {
   shortage: number;
   avgCost: number | null;
   manualTotal: number;
+  /**
+   * فقط حالت «همه»: فاکتورهای «تأیید شده»‌ای که این کالا را سفارش داشته‌اند —
+   * مقصد تخصیص هنگام ثبت خرید (مدیر باید بگوید هر تعداد برای کدام فاکتور است).
+   */
+  soldByInvoice: {
+    invoiceId: string;
+    invoiceNumber: number;
+    customerName: string;
+    /** همان واحدِ `soldQty` (متر برای کالای متری، عدد برای بقیه) */
+    qty: number;
+    /** فقط کالای متری: تعداد شاخه */
+    branches: number;
+  }[];
   manual: {
     id: string;
     quantity: number;
@@ -987,14 +1000,17 @@ export type PurchaseItem = {
     total: number;
     date: string;
     supplier: { id: string; name: string } | null;
+    /** تخصیص این خرید به فاکتورها: [{ preInvoiceId, qty }] */
+    allocations?: unknown;
   }[];
 };
 
 /**
  * لیست خرید — سه حالت نمایش:
  *  - `ALL` (پیش‌فرض): جمع همهٔ فاکتورهای «تکمیل شده»ٔ سایت
- *  - `SALES`: فقط کالاهای یک فاکتور فروش؛ «فروش رفته» از همان فاکتور است و
- *    «خریداری‌شده» صفر، چون هیچ خریدی به فاکتور فروش وصل نمی‌شود
+ *  - `SALES`: فقط کالاهای یک فاکتور فروش؛ «فروش رفته» از همان فاکتور و
+ *    «خریداری‌شده» = جمع تخصیص‌هایی است که هنگام ثبت خرید به همین فاکتور
+ *    داده شده (ستون `allocations` روی بچ). کمبود همین فاکتور = فروش − تخصیص.
  *  - `PURCHASE`: فقط ردیف‌های یک فاکتور خرید؛ «خریداری‌شده» از همان فاکتور
  *
  * کمبود = فروش رفته − خریداری‌شده. خریدهای دستی به بچ‌ها می‌چسبند، پس
@@ -1014,6 +1030,30 @@ type ManualRow = {
   unitCost: number;
   date: string;
   supplier: { id: string; name: string } | null;
+  allocations?: unknown;
+};
+
+/** مقدار تخصیص‌یافتهٔ یک خرید به یک فاکتور خاص */
+function allocQtyTo(allocs: unknown, invoiceId: string): number {
+  if (!Array.isArray(allocs)) return 0;
+  let sum = 0;
+  for (const raw of allocs) {
+    const a = raw as { preInvoiceId?: unknown; qty?: unknown };
+    if (a && a.preInvoiceId === invoiceId) sum += Number(a.qty || 0);
+  }
+  return sum;
+}
+
+/** جمع فروش هر کالا در هر فاکتور (از اقلام JSON فاکتورهای تأییدشده) */
+type InvSoldRaw = {
+  invoiceId: string;
+  invoiceNumber: number;
+  customerName: string;
+  productId: string;
+  /** تعداد خام آیتم (شاخه/عدد) */
+  count: number;
+  /** متراژ معادل (متر) */
+  meters: number;
 };
 
 export async function getPurchaseList(
@@ -1022,26 +1062,84 @@ export async function getPurchaseList(
   let sold: SoldAgg[] = [];
   let bought: BoughtAgg[] = [];
   let manualRows: ManualRow[] = [];
+  /** فروش هر کالا در هر فاکتور «تأیید شده» (فقط در حالت ALL ساخته می‌شود) */
+  const invSoldRaw: InvSoldRaw[] = [];
 
   if (scope.kind === "SALES") {
     // فقط اقلام همین فاکتور فروش
-    sold = await prisma.$queryRaw<SoldAgg[]>`
-      SELECT it->>'productId' AS "productId",
-             COALESCE(sum((it->>'quantity')::float),0)::float AS qty,
-             COALESCE(sum(
-               CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
-                    THEN (it->>'quantity')::float * (it->>'branchLength')::float / 100.0
-                    ELSE (it->>'quantity')::float END
-             ),0)::float AS meters,
-             COALESCE(
-               sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
-                        THEN (it->>'quantity')::float * (it->>'branchLength')::float END)
-               / nullif(sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
-                                 THEN (it->>'quantity')::float END), 0),
-             0)::float AS "branchLen"
-      FROM pre_invoices p, jsonb_array_elements(p.items) it
-      WHERE p.id = ${scope.invoiceId} AND it->>'productId' IS NOT NULL
-      GROUP BY 1`;
+    const [invSold, allocAgg, stockAgg, mrows] = await Promise.all([
+      prisma.$queryRaw<SoldAgg[]>`
+        SELECT it->>'productId' AS "productId",
+               COALESCE(sum((it->>'quantity')::float),0)::float AS qty,
+               COALESCE(sum(
+                 CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                      THEN (it->>'quantity')::float * (it->>'branchLength')::float / 100.0
+                      ELSE (it->>'quantity')::float END
+               ),0)::float AS meters,
+               COALESCE(
+                 sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                          THEN (it->>'quantity')::float * (it->>'branchLength')::float END)
+                 / nullif(sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                                   THEN (it->>'quantity')::float END), 0),
+               0)::float AS "branchLen"
+        FROM pre_invoices p, jsonb_array_elements(p.items) it
+        WHERE p.id = ${scope.invoiceId} AND it->>'productId' IS NOT NULL
+        GROUP BY 1`,
+      // خریدهایی که هنگام ثبت به همین فاکتور تخصیص داده شده‌اند
+      prisma.$queryRaw<{ productId: string; qty: number; cost: number }[]>`
+        SELECT b."productId",
+               COALESCE(sum((a->>'qty')::float),0)::float              AS qty,
+               COALESCE(sum((a->>'qty')::float * b."unitCost"),0)::float AS cost
+        FROM product_purchase_batches b
+        LEFT JOIN LATERAL jsonb_array_elements(COALESCE(b.allocations, '[]'::jsonb)) a ON TRUE
+        WHERE a->>'preInvoiceId' = ${scope.invoiceId}
+        GROUP BY 1`,
+      // وضعیت انبار (کل کالا، مستقل از فاکتور)
+      prisma.$queryRaw<{ productId: string; remaining: number; manual: number }[]>`
+        SELECT "productId",
+               COALESCE(sum("remainingQty"),0)::float                            AS remaining,
+               COALESCE(sum(quantity) FILTER (WHERE "purchaseInvoiceId" IS NULL),0)::float AS manual
+        FROM product_purchase_batches
+        GROUP BY "productId"`,
+      prisma.productPurchaseBatch.findMany({
+        where: { purchaseInvoiceId: null },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          productId: true,
+          quantity: true,
+          unitCost: true,
+          date: true,
+          allocations: true,
+          supplier: { select: { id: true, name: true } },
+        },
+      }),
+    ]);
+    sold = invSold;
+    const allocMap = new Map(allocAgg.map((r) => [r.productId, r]));
+    const stockMap = new Map(stockAgg.map((r) => [r.productId, r]));
+    bought = invSold.map((s) => ({
+      productId: s.productId,
+      qty: Number(allocMap.get(s.productId)?.qty ?? 0),
+      remaining: Number(stockMap.get(s.productId)?.remaining ?? 0),
+      cost: Number(allocMap.get(s.productId)?.cost ?? 0),
+      manual: Number(stockMap.get(s.productId)?.manual ?? 0),
+    }));
+    manualRows = mrows
+      .map((r): ManualRow | null => {
+        const a = allocQtyTo(r.allocations, scope.invoiceId);
+        if (!(a > 0)) return null;
+        return {
+          id: r.id,
+          productId: r.productId,
+          quantity: a,
+          unitCost: r.unitCost,
+          date: r.date,
+          supplier: r.supplier,
+          allocations: r.allocations,
+        };
+      })
+      .filter((r): r is ManualRow => r !== null);
   } else if (scope.kind === "PURCHASE") {
     // فقط ردیف‌های همین فاکتور خرید
     const [lines, invBatches] = await Promise.all([
@@ -1066,7 +1164,7 @@ export async function getPurchaseList(
       manual: 0,
     }));
   } else {
-    const [s, b] = await Promise.all([
+    const [s, b, approvedInvs, mrows] = await Promise.all([
       // فقط فاکتورهای «تکمیل شده»ٔ سایت (نه قدیمی، نه در جریان)
       prisma.$queryRaw<SoldAgg[]>`
         SELECT it->>'productId' AS "productId",
@@ -1095,21 +1193,49 @@ export async function getPurchaseList(
                COALESCE(sum(quantity) FILTER (WHERE "purchaseInvoiceId" IS NULL),0)::float AS manual
         FROM product_purchase_batches
         GROUP BY "productId"`,
+      // فاکتورهای «تأیید شده» — مقصد تخصیص خرید هنگام ثبت
+      prisma.preInvoice.findMany({
+        where: { cogsAllocation: { status: "APPROVED" } },
+        select: { id: true, invoiceNumber: true, customerName: true, items: true },
+      }),
+      prisma.productPurchaseBatch.findMany({
+        where: { purchaseInvoiceId: null },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          productId: true,
+          quantity: true,
+          unitCost: true,
+          date: true,
+          allocations: true,
+          supplier: { select: { id: true, name: true } },
+        },
+      }),
     ]);
     sold = s;
     bought = b;
-    manualRows = await prisma.productPurchaseBatch.findMany({
-      where: { purchaseInvoiceId: null },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        productId: true,
-        quantity: true,
-        unitCost: true,
-        date: true,
-        supplier: { select: { id: true, name: true } },
-      },
-    });
+    manualRows = mrows;
+
+    // جمع فروش هر کالا در هر فاکتور تأییدشده (برای فرم «تخصیص به فاکتور»)
+    for (const inv of approvedInvs) {
+      const items = inv.items as unknown;
+      if (!Array.isArray(items)) continue;
+      for (const raw of items) {
+        const it = raw as { productId?: unknown; quantity?: unknown; branchLength?: unknown };
+        if (!it || typeof it.productId !== "string" || !it.productId) continue;
+        const qty = Number(it.quantity || 0);
+        if (!Number.isFinite(qty) || qty === 0) continue;
+        const bl = Number(it.branchLength || 0);
+        invSoldRaw.push({
+          invoiceId: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          customerName: inv.customerName,
+          productId: it.productId,
+          count: qty,
+          meters: bl > 0 ? (qty * bl) / 100 : qty,
+        });
+      }
+    }
   }
 
   const sMap = new Map(sold.map((r) => [r.productId, r]));
@@ -1135,9 +1261,34 @@ export async function getPurchaseList(
       total: m.quantity * m.unitCost,
       date: m.date,
       supplier: m.supplier,
+      allocations: m.allocations,
     });
     manualMap.set(m.productId, arr);
   }
+
+  // مقصد تخصیص خرید: هر کالا با فاکتورهای تأییدشده‌ای که آن را سفارش داشته‌اند
+  const invByProduct = new Map<string, PurchaseItem["soldByInvoice"]>();
+  for (const r of invSoldRaw) {
+    const isM = prodMap.get(r.productId)?.isMeter === true;
+    const qty = isM ? r.meters : r.count;
+    const branches = isM ? r.count : 0;
+    const arr = invByProduct.get(r.productId) ?? [];
+    const hit = arr.find((x) => x.invoiceId === r.invoiceId);
+    if (hit) {
+      hit.qty += qty;
+      hit.branches += branches;
+    } else {
+      arr.push({
+        invoiceId: r.invoiceId,
+        invoiceNumber: r.invoiceNumber,
+        customerName: r.customerName,
+        qty,
+        branches,
+      });
+    }
+    invByProduct.set(r.productId, arr);
+  }
+  for (const arr of invByProduct.values()) arr.sort((a, b) => b.invoiceNumber - a.invoiceNumber);
 
   const rows: PurchaseItem[] = ids.map((productId) => {
     const prod = prodMap.get(productId);
@@ -1162,6 +1313,7 @@ export async function getPurchaseList(
       shortage: Math.max(0, soldQty - purchased),
       avgCost: purchased > 0 && cost > 0 ? cost / purchased : null,
       manualTotal: Number(b?.manual ?? 0),
+      soldByInvoice: invByProduct.get(productId) ?? [],
       manual: manualMap.get(productId) ?? [],
     };
   });
@@ -1249,6 +1401,12 @@ export async function recordPurchase(data: {
   /** فقط کالای متری — قانون فاکتور فروش: متراژ = تعداد شاخه × متراژ هر شاخه / ۱۰۰ */
   branchCount?: number;
   branchLength?: number;
+  /**
+   * تخصیص همین خرید به فاکتورهای فروش: `[{ preInvoiceId, qty }]` —
+   * جمعش باید دقیقاً برابر `quantity` باشد و فقط فاکتورهای «تأیید شده» مجاز‌اند.
+   * برای کالاهایی که در فاکتور تأییدشده هستند ثبت بدون تخصیص ممکن نیست.
+   */
+  allocations?: { preInvoiceId: string; qty: number }[];
 }) {
   const unitCost = Number(data.unitCost);
   if (!(unitCost >= 0)) throw new Error("قیمت نامعتبر است");
@@ -1278,6 +1436,43 @@ export async function recordPurchase(data: {
     quantity = Math.round(quantity);
   }
 
+  // ── تخصیص خرید به فاکتورهای فروش ─────────────────────────────────
+  const allocMap = new Map<string, number>();
+  for (const a of data.allocations ?? []) {
+    const pid = String(a?.preInvoiceId ?? "");
+    const q = Number(a?.qty);
+    if (!pid) throw new Error("فاکتور مقصد تخصیص را انتخاب کنید");
+    if (!Number.isFinite(q) || q < 0) throw new Error("تعداد تخصیص نامعتبر است");
+    if (q > 0) allocMap.set(pid, (allocMap.get(pid) ?? 0) + q);
+  }
+  const allocs = [...allocMap.entries()].map(([preInvoiceId, qty]) => ({ preInvoiceId, qty }));
+  const num = (v: number) => String(Math.round(v * 10000) / 10000);
+
+  if (allocs.length) {
+    const allocSum = allocs.reduce((s, a) => s + a.qty, 0);
+    if (Math.abs(allocSum - quantity) > 0.0001)
+      throw new Error(
+        `جمع تخصیص (${num(allocSum)}) باید برابر تعداد خرید (${num(quantity)}) باشد`
+      );
+    const ids = allocs.map((a) => a.preInvoiceId);
+    const okCount = await prisma.preInvoice.count({
+      where: { id: { in: ids }, cogsAllocation: { status: "APPROVED" } },
+    });
+    if (okCount !== ids.length) throw new Error("فقط فاکتورهای «تأیید شده» قابل انتخاب‌اند");
+  } else {
+    // کالایی که در فاکتور تأییدشده هست بدون تخصیص قابل ثبت نیست
+    const need = await prisma.$queryRaw<{ n: number }[]>`
+      SELECT count(*)::int AS n
+      FROM pre_invoices p, jsonb_array_elements(p.items) it
+      WHERE it->>'productId' = ${data.productId}
+        AND EXISTS (SELECT 1 FROM cogs_allocations a
+                    WHERE a."preInvoiceId" = p.id AND a.status = 'APPROVED')`;
+    if (Number(need[0]?.n ?? 0) > 0)
+      throw new Error(
+        "این کالا در فاکتور «تأیید شده» هست؛ باید مشخص کنید هر تعداد برای کدام فاکتور است"
+      );
+  }
+
   // خرید = ما بدهکاریم → مبلغ مثبت در حساب تأمین‌کننده (نوع ۴۰، مطابق دفتر قدیمی)
   const total = quantity * unitCost;
   const jDate = toJalali(todayIso());
@@ -1294,6 +1489,7 @@ export async function recordPurchase(data: {
         reference: null,
         purchaseInvoiceId: null,
         note: data.note?.trim() || "خرید دستی از لیست خرید",
+        allocations: allocs.length ? (allocs as unknown as Prisma.InputJsonValue) : undefined,
         status: "ACTIVE",
       },
       include: { supplier: { select: { id: true, name: true } } },

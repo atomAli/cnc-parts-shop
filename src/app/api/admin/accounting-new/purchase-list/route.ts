@@ -46,6 +46,12 @@ export async function POST(req: NextRequest) {
       note: typeof body?.note === "string" ? body.note : null,
       branchCount: body?.branchCount != null ? Number(body.branchCount) : undefined,
       branchLength: body?.branchLength != null ? Number(body.branchLength) : undefined,
+      allocations: Array.isArray(body?.allocations)
+        ? body.allocations.map((a: { preInvoiceId?: unknown; qty?: unknown }) => ({
+            preInvoiceId: String(a?.preInvoiceId ?? ""),
+            qty: Number(a?.qty),
+          }))
+        : undefined,
     });
     return NextResponse.json({ ok: true, row });
   } catch (e) {

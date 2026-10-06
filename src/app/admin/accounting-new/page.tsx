@@ -67,6 +67,14 @@ type PurchaseItem = {
   shortage: number;
   avgCost: number | null;
   manualTotal: number;
+  /** فاکتورهای «تأیید شده»‌ای که این کالا را سفارش داشته‌اند — مقصد تخصیص خرید */
+  soldByInvoice: {
+    invoiceId: string;
+    invoiceNumber: number;
+    customerName: string;
+    qty: number;
+    branches: number;
+  }[];
   manual: {
     id: string;
     quantity: number;
@@ -74,6 +82,8 @@ type PurchaseItem = {
     total: number;
     date: string;
     supplier: { id: string; name: string } | null;
+    /** تخصیص این خرید به فاکتورها: [{ preInvoiceId, qty }] */
+    allocations?: unknown;
   }[];
 };
 
@@ -148,7 +158,16 @@ export default function AccountingNewPage() {
   const [pForm, setPForm] = useState<
     Record<
       string,
-      { quantity: string; unitCost: string; supplierId: string; supplierQuery: string; branchCount: string; branchLength: string }
+      {
+        quantity: string;
+        unitCost: string;
+        supplierId: string;
+        supplierQuery: string;
+        branchCount: string;
+        branchLength: string;
+        /** تخصیص تعداد خرید به هر فاکتور: { [invoiceId]: "19" } */
+        alloc?: Record<string, string>;
+      }
     >
   >({});
 
@@ -348,13 +367,36 @@ export default function AccountingNewPage() {
     const f = pForm[productId];
     if (!f) return notify(false, "ابتدا تعداد و قیمت را وارد کنید");
     if (!f.supplierId) return notify(false, "تأمین‌کننده را از لیست جستجو انتخاب کنید");
-    const isMeter = plist.find((x) => x.productId === productId)?.isMeter === true;
+    const item = plist.find((x) => x.productId === productId);
+    const isMeter = item?.isMeter === true;
     if (isMeter) {
       if (!f.branchCount || Number(f.branchCount) <= 0) return notify(false, "تعداد شاخه را درست وارد کنید");
       if (!f.branchLength || Number(f.branchLength) <= 0) return notify(false, "متراژ هر شاخه را درست وارد کنید");
     } else if (!f.quantity || Number(f.quantity) <= 0) {
       return notify(false, "تعداد درست وارد کنید");
     }
+    const u = isMeter ? "سانتی‌متر" : "عدد";
+    const q = (v: number) => money(isMeter ? v * 100 : v);
+    // همان محاسبهٔ سرور: متری = شاخه × متراژ ÷ ۱۰۰ ؛ غیر متری = عدد صحیح
+    const buyQty = isMeter
+      ? (Number(f.branchCount) * Number(f.branchLength)) / 100
+      : Math.round(Number(f.quantity));
+
+    // تخصیص اجباری برای فاکتورهای «تأیید شده»‌ای که این کالا را سفارش داشته‌اند
+    const targets = item?.soldByInvoice ?? [];
+    const allocList = targets.map((s) => ({
+      preInvoiceId: s.invoiceId,
+      qty: Number(f.alloc?.[s.invoiceId] ?? (targets.length === 1 ? String(buyQty) : "0")) || 0,
+    }));
+    if (targets.length) {
+      const sum = allocList.reduce((s, a) => s + a.qty, 0);
+      if (Math.abs(sum - buyQty) > 0.0001)
+        return notify(
+          false,
+          `جمع تخصیص (${q(sum)} ${u}) باید برابر تعداد خرید (${q(buyQty)} ${u}) باشد`
+        );
+    }
+
     setBusy("__buy");
     try {
       const res = await fetch("/api/admin/accounting-new/purchase-list", {
@@ -363,10 +405,11 @@ export default function AccountingNewPage() {
         body: JSON.stringify({
           productId,
           supplierId: f.supplierId,
-          quantity: isMeter ? Number(f.branchCount) * Number(f.branchLength) / 100 : Number(f.quantity),
+          quantity: buyQty,
           unitCost: Number(f.unitCost || 0),
           branchCount: isMeter ? Number(f.branchCount) : undefined,
           branchLength: isMeter ? Number(f.branchLength) : undefined,
+          allocations: allocList,
         }),
       });
       const data = await res.json();
@@ -381,6 +424,7 @@ export default function AccountingNewPage() {
           supplierQuery: f.supplierQuery,
           branchCount: "",
           branchLength: f.branchLength,
+          alloc: {},
         },
       });
       await load();
@@ -584,6 +628,11 @@ export default function AccountingNewPage() {
             <br />
             فهرست فروش‌ها <b>دقیقاً فاکتورهای تب «تأیید شده»</b> است؛ هر فاکتوری که تأیید شود
             همین‌جا هم می‌آید و فاکتورهای تأییدنشده در منو نیستند.
+            <br />
+            هنگام ثبت خرید برای کالایی که چند فاکتور دارد، <b>باید</b> مشخص کنید هر تعداد برای کدام
+            فاکتور است (مثلاً ۲۰ خرید = ۱ برای ارجمندی + ۱۹ برای مستر ماشین) و جمع تخصیص دقیقاً
+            باید برابر تعداد خرید باشد. این تخصیص‌ها در نمای همان فاکتور در ستون «خریداری‌شده»
+            می‌نشینند و کمبود همان فاکتور کم می‌شود.
             حالت <b>«همه»</b> جمع کل فاکتورهای «تکمیل شده»ٔ سایت است (فاکتورهای قدیمی و در جریان
             حساب نمی‌شوند). «کمبود» یعنی هنوز نخریده‌اید و هر خریدی که ثبت کنید هم کمبود را کم
             می‌کند و هم به «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه ×
@@ -675,6 +724,7 @@ export default function AccountingNewPage() {
                       supplierQuery: "",
                       branchCount: conv.count > 0 ? String(conv.count) : "",
                       branchLength: it.isMeter ? String(branchLenCm) : "",
+                      alloc: {},
                     };
                     const suppliers = parties.filter((pp) => pp.kind === "SUPPLIER");
                     // مقادیر داخلی بر حسب «متر» ثبت می‌شوند؛ برای دقتِ نمایش ×۱۰۰ → سانتی‌متر
@@ -683,6 +733,19 @@ export default function AccountingNewPage() {
                     const meterFrom = Number(f.branchCount) > 0 && Number(f.branchLength) > 0
                       ? (Number(f.branchCount) * Number(f.branchLength)) / 100
                       : 0;
+
+                    // تخصیص تعداد خرید به فاکتورهای تأییدشده‌ای که این کالا را سفارش داشته‌اند
+                    const allocTargets = plistScope === "" ? it.soldByInvoice : [];
+                    const buyQty = it.isMeter
+                      ? (Number(f.branchCount) * Number(f.branchLength)) / 100
+                      : Math.round(Number(f.quantity));
+                    const allocVal = (id: string) =>
+                      f.alloc?.[id] ?? (allocTargets.length === 1 && buyQty > 0 ? String(buyQty) : "");
+                    const allocSum = allocTargets.reduce(
+                      (s, t) => s + (Number(allocVal(t.invoiceId)) || 0),
+                      0
+                    );
+                    const allocOk = buyQty > 0 && Math.abs(allocSum - buyQty) < 0.0001;
                     return (
                       <Fragment key={it.productId}>
                         <tr
@@ -757,6 +820,7 @@ export default function AccountingNewPage() {
 
                               {/* ثبت خرید — فقط در حالت «همه» (در نمای فاکتور خریدی ثبت نمی‌شود) */}
                               {plistScope === "" && (
+                              <>
                               <div className="flex flex-wrap gap-3 items-end">
                                 {it.isMeter ? (
                                   <>
@@ -880,13 +944,63 @@ export default function AccountingNewPage() {
                                   {busy === "__buy" ? "…" : "ثبت خرید"}
                                 </button>
                               </div>
+
+                              {/* تخصیص تعداد به فاکتور (الزامی برای کالاهای فاکتور تأییدشده) */}
+                              {allocTargets.length > 0 && (
+                                <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                  <div className="mb-2 text-xs font-bold text-blue-800">
+                                    این خرید برای کدام فاکتور است؟ — جمع باید دقیقاً برابر تعداد خرید باشد
+                                  </div>
+                                  <div className="flex flex-wrap gap-3 items-end">
+                                    {allocTargets.map((t) => (
+                                      <div key={t.invoiceId} className="w-[230px]">
+                                        <label className="block text-[11px] text-blue-700 mb-1">
+                                          #{toFaDigits(String(t.invoiceNumber))} — {t.customerName}
+                                        </label>
+                                        <input
+                                          type="number"
+                                          min={0}
+                                          step="any"
+                                          value={allocVal(t.invoiceId)}
+                                          onChange={(e) =>
+                                            setPForm({
+                                              ...pForm,
+                                              [it.productId]: {
+                                                ...f,
+                                                alloc: {
+                                                  ...(f.alloc ?? {}),
+                                                  [t.invoiceId]: e.target.value,
+                                                },
+                                              },
+                                            })
+                                          }
+                                          className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                        />
+                                        <div className="mt-1 text-[11px] text-blue-700">
+                                          سفارش این فاکتور: {q(t.qty)} {u}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div
+                                    className={`mt-2 text-xs font-bold ${allocOk ? "text-green-700" : "text-red-700"}`}
+                                  >
+                                    جمع تخصیص: {q(allocSum)} {u} از {q(buyQty)} {u}{" "}
+                                    {allocOk ? "✓" : "✗"}
+                                  </div>
+                                </div>
+                              )}
+
+                              </>
                               )}
 
                               {/* جمع این خرید */}
                               {it.manual.length > 0 && (
                                 <div className="mt-4">
                                   <div className="text-xs font-bold text-gray-600 mb-2">
-                                    خریدهای ثبت‌شده این کالا — جمع:{" "}
+                                    {plistScope.startsWith("s:")
+                                      ? "تخصیص‌یافته به این فاکتور — جمع: "
+                                      : "خریدهای ثبت‌شده این کالا — جمع: "}
                                     <span className="text-blue-700">{money(it.manualTotal)} تومان</span>
                                   </div>
                                   <table className="w-full text-xs bg-white rounded-lg border border-gray-200">
@@ -894,7 +1008,27 @@ export default function AccountingNewPage() {
                                       {it.manual.map((m) => (
                                         <tr key={m.id} className="border-t border-gray-100 first:border-t-0">
                                           <td className="p-2 text-gray-500">{toFaDigits(m.date)}</td>
-                                          <td className="p-2">{m.supplier?.name ?? "—"}</td>
+                                          <td className="p-2">
+                                            {m.supplier?.name ?? "—"}
+                                            {Array.isArray(m.allocations) && m.allocations.length > 0 && (
+                                              <div className="text-[11px] text-blue-700">
+                                                {m.allocations
+                                                  .map((raw) => {
+                                                    const a = raw as { preInvoiceId?: unknown; qty?: unknown };
+                                                    const t = it.soldByInvoice.find(
+                                                      (x) => x.invoiceId === a?.preInvoiceId
+                                                    );
+                                                    return t
+                                                      ? `${q(Number(a?.qty || 0))} برای #${toFaDigits(
+                                                          String(t.invoiceNumber)
+                                                        )} ${t.customerName}`
+                                                      : "";
+                                                  })
+                                                  .filter(Boolean)
+                                                  .join(" · ")}
+                                              </div>
+                                            )}
+                                          </td>
                                           <td className="p-2 text-left">
                                             {q(m.quantity)} {u}
                                           </td>
