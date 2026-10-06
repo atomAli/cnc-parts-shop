@@ -236,6 +236,33 @@ export default function AccountingNewPage() {
     }
   }
 
+  async function delRec(r: RecRow) {
+    const label = `${r.date || "بدون تاریخ"} — ${r.description || "-"} — ${money(r.amount)}`;
+    if (
+      !confirm(
+        `این سند از دفتر کل حذف شود؟\n\n${label}\n\nحذف دائمی است و ماندهٔ «حساب افراد» را تغییر می‌دهد.`
+      )
+    )
+      return;
+    setBusy(r.id);
+    try {
+      const res = await fetch("/api/admin/accounting-new/records", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: r.id, partyId: openParty }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) return notify(false, d.error || "حذف ناموفق بود");
+      notify(true, "سند حذف شد");
+      if (openParty) await fetchRecords(openParty);
+      await load();
+    } catch {
+      notify(false, "ارتباط با سرور برقرار نشد");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function delAlloc(id: string) {
     if (!confirm("تخصیص تأییدشده حذف شود؟ سند دفتر و بهای تمام‌شده پاک و بچ‌ها بازگردانده می‌شود.")) return;
     setBusy(id);
@@ -904,6 +931,7 @@ export default function AccountingNewPage() {
                                             <th className="p-2 text-right">نوع</th>
                                             <th className="p-2 text-left">مبلغ</th>
                                             <th className="p-2 text-left">منبع</th>
+                                            <th className="p-2 text-left"></th>
                                           </tr>
                                         </thead>
                                         <tbody>
@@ -922,6 +950,15 @@ export default function AccountingNewPage() {
                                               </td>
                                               <td className="p-2 text-left text-gray-500">
                                                 {r.source === "ACCESS" ? "قدیمی" : "جدید"}
+                                              </td>
+                                              <td className="p-2 text-left">
+                                                <button
+                                                  onClick={() => delRec(r)}
+                                                  disabled={busy === r.id}
+                                                  className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
+                                                >
+                                                  {busy === r.id ? "…" : "حذف"}
+                                                </button>
                                               </td>
                                             </tr>
                                           ))}
@@ -951,7 +988,7 @@ export default function AccountingNewPage() {
                 </table>
                 <div className="p-3 text-[11px] text-gray-500 bg-gray-50 border-t border-gray-200">
                   منفی = طرف حساب بدهکار ماست (طلب ما از او) — مثبت = بستانکار (طلب او از ما).
-                  روی هر ردیف بزنید تا برای همان شخص دریافت یا بدهی ثبت کنید.
+                  روی هر ردیف بزنید تا برای همان شخص دریافت یا بدهی ثبت کنید یا سندی را حذف کنید.
                 </div>
               </>
             );
