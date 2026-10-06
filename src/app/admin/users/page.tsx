@@ -52,6 +52,35 @@ interface Detail extends User {
   updatedAt: string;
 }
 
+interface HistoryInvoice {
+  id: string;
+  number: number;
+  date: string | null;
+  total: number;
+  discount: number;
+  note: string | null;
+}
+
+interface HistoryMovement {
+  id: string;
+  date: string | null;
+  kind: string;
+  amount: number;
+  voucher: number;
+  note: string | null;
+}
+
+interface History {
+  party: { id: string; name: string } | null;
+  invoices: HistoryInvoice[];
+  movements: HistoryMovement[];
+}
+
+const MOVEMENT_KIND: Record<string, string> = {
+  RECEIPT: "دریافتی",
+  PAYMENT: "واریزی",
+};
+
 const EMPTY_FORM = {
   name: "",
   phone: "",
@@ -91,6 +120,13 @@ export default function AdminUsersPage() {
   const [newPassword, setNewPassword] = useState("");
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // --- سوابق کاربر (دیتابیس قدیم) ---
+  const [historyUser, setHistoryUser] = useState<User | null>(null);
+  const [history, setHistory] = useState<History | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyDeleting, setHistoryDeleting] = useState("");
+  const [historyMsg, setHistoryMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   // debounce جستجو — دیتابیس آلمان است، هر حرف یک کوئری ۱۰۰ms طول می‌کشد
   useEffect(() => {
@@ -165,6 +201,74 @@ export default function AdminUsersPage() {
   const closeDetail = () => {
     setDetail(null);
     setInvoices([]);
+  };
+
+  const loadHistory = async (uid: string) => {
+    setHistoryLoading(true);
+    setHistoryMsg(null);
+    setHistory(null);
+    try {
+      const res = await fetch(`/api/admin/users/${uid}/history`);
+      const data = await res.json();
+      if (!res.ok) {
+        setHistoryMsg({ ok: false, text: data?.error || "خطا در دریافت سوابق" });
+        return;
+      }
+      setHistory({
+        party: data.party || null,
+        invoices: data.invoices || [],
+        movements: data.movements || [],
+      });
+    } catch {
+      setHistoryMsg({ ok: false, text: "ارتباط با سرور برقرار نشد" });
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const openHistory = (user: User) => {
+    setHistoryUser(user);
+    loadHistory(user.id);
+  };
+
+  const closeHistory = () => {
+    setHistoryUser(null);
+    setHistory(null);
+    setHistoryMsg(null);
+    setHistoryDeleting("");
+  };
+
+  const deleteHistoryRecord = async (
+    type: "invoice" | "movement",
+    recId: string,
+    label: string
+  ) => {
+    if (!historyUser) return;
+    const ok = window.confirm(
+      `رکورد زیر برای همیشه حذف شود؟\n\n${label}\n\nاین رکورد از دیتابیس قدیم پاک می‌شود و قابل بازگشت نیست.`
+    );
+    if (!ok) return;
+
+    setHistoryDeleting(recId);
+    setHistoryMsg(null);
+    try {
+      const res = await fetch(`/api/admin/users/${historyUser.id}/history`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, id: recId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setHistoryMsg({ ok: false, text: data?.error || "حذف ناموفق بود" });
+        return;
+      }
+      setHistoryMsg({ ok: true, text: "رکورد حذف شد" });
+      await loadHistory(historyUser.id);
+    } catch {
+      setHistoryMsg({ ok: false, text: "ارتباط با سرور برقرار نشد" });
+    } finally {
+      setHistoryDeleting("");
+    }
   };
 
   const setField = (key: keyof typeof EMPTY_FORM, value: string) =>
@@ -286,12 +390,20 @@ export default function AdminUsersPage() {
                     <td className="px-6 py-4 text-sm text-gray-500">{toPersianNumber(user.invoiceCount)}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{formatDate(user.createdAt)}</td>
                     <td className="px-6 py-4">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openDetail(user.id); }}
-                        className="px-3 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-150"
-                      >
-                        ویرایش
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openDetail(user.id); }}
+                          className="px-3 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-150"
+                        >
+                          ویرایش
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openHistory(user); }}
+                          className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          سوابق
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -503,6 +615,172 @@ export default function AdminUsersPage() {
                     className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-150 disabled:opacity-50"
                   >
                     {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ---------- مودال سوابق کاربر (دیتابیس قدیم) ---------- */}
+      {historyUser && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4">
+          <div className="fixed inset-0 bg-black/50" onClick={closeHistory} />
+          <div className="relative z-10 bg-white rounded-xl w-full max-w-4xl my-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h2 className="font-bold">
+                سوابق کاربر — {historyUser.name || toFaDigits(historyUser.phone || "")}
+              </h2>
+              <button onClick={closeHistory} className="p-1 rounded hover:bg-gray-100" aria-label="بستن">
+                <X size={18} />
+              </button>
+            </div>
+
+            {historyLoading ? (
+              <div className="flex items-center justify-center gap-2 py-16 text-gray-500">
+                <Loader2 size={18} className="animate-spin" /> در حال بارگذاری...
+              </div>
+            ) : (
+              <div className="space-y-6 p-6">
+                <p className="text-xs text-gray-500">
+                  این سوابق از دیتابیس قدیم (Access) خوانده می‌شوند: فاکتورهای فروش و واریزی/دریافتی‌های ثبت‌شده برای طرف‌حساب این کاربر.
+                </p>
+
+                {historyMsg && (
+                  <p className={`text-sm ${historyMsg.ok ? "text-green-600" : "text-red-600"}`}>{historyMsg.text}</p>
+                )}
+
+                {history && !history.party ? (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    این کاربر طرف‌حساب ندارد؛ سوابقی از دیتابیس قدیم برایش ثبت نشده است.
+                  </p>
+                ) : history ? (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <StatBox label="تعداد فاکتور" value={toPersianNumber(history.invoices.length)} />
+                      <StatBox
+                        label="مجموع فاکتور"
+                        value={formatPrice(history.invoices.reduce((s, i) => s + (i.total || 0), 0))}
+                      />
+                      <StatBox label="تعداد واریزی/دریافتی" value={toPersianNumber(history.movements.length)} />
+                      <StatBox
+                        label="مجموع دریافتی"
+                        value={formatPrice(
+                          history.movements.filter((m) => m.kind === "RECEIPT").reduce((s, m) => s + (m.amount || 0), 0)
+                        )}
+                      />
+                    </div>
+
+                    {/* فاکتورها */}
+                    <Section title={`فاکتورها (${toPersianNumber(history.invoices.length)})`}>
+                      {history.invoices.length === 0 ? (
+                        <p className="text-sm text-gray-500">فاکتوری ثبت نشده است.</p>
+                      ) : (
+                        <div className="border rounded-lg overflow-hidden">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="bg-gray-50 border-b">
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">شماره</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">تاریخ</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">مبلغ</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">تخفیف</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">شرح</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">عملیات</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {history.invoices.map((inv) => (
+                                <tr key={inv.id} className="border-b">
+                                  <td className="px-3 py-2 text-sm" dir="ltr">#{inv.number}</td>
+                                  <td className="px-3 py-2 text-sm text-gray-500">{inv.date ? toFaDigits(inv.date) : "-"}</td>
+                                  <td className="px-3 py-2 text-sm">{formatPrice(inv.total)}</td>
+                                  <td className="px-3 py-2 text-sm text-gray-500">{inv.discount ? formatPrice(inv.discount) : "-"}</td>
+                                  <td className="px-3 py-2 text-sm text-gray-500">{inv.note || "-"}</td>
+                                  <td className="px-3 py-2">
+                                    <button
+                                      disabled={historyDeleting === inv.id}
+                                      onClick={() =>
+                                        deleteHistoryRecord(
+                                          "invoice",
+                                          inv.id,
+                                          `فاکتور فروش #${inv.number}\nتاریخ: ${inv.date || "-"}\nمبلغ: ${formatPrice(inv.total)}`
+                                        )
+                                      }
+                                      className="px-2 py-1 text-xs font-medium bg-white border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
+                                    >
+                                      {historyDeleting === inv.id ? "..." : "حذف"}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </Section>
+
+                    {/* واریزی و دریافتی‌ها */}
+                    <Section title={`واریزی و دریافتی‌ها (${toPersianNumber(history.movements.length)})`}>
+                      {history.movements.length === 0 ? (
+                        <p className="text-sm text-gray-500">واریزی یا دریافتی ثبت نشده است.</p>
+                      ) : (
+                        <div className="border rounded-lg overflow-hidden">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="bg-gray-50 border-b">
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">تاریخ</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">نوع</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">مبلغ</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">سند</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">شرح</th>
+                                <th className="text-right px-3 py-2 text-xs font-medium text-gray-600">عملیات</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {history.movements.map((m) => (
+                                <tr key={m.id} className="border-b">
+                                  <td className="px-3 py-2 text-sm text-gray-500">{m.date ? toFaDigits(m.date) : "-"}</td>
+                                  <td className="px-3 py-2 text-sm">
+                                    <span
+                                      className={`px-2 py-1 rounded text-xs font-medium ${
+                                        m.kind === "RECEIPT" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                                      }`}
+                                    >
+                                      {MOVEMENT_KIND[m.kind] || m.kind}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 text-sm">{formatPrice(m.amount)}</td>
+                                  <td className="px-3 py-2 text-sm text-gray-500" dir="ltr">{toFaDigits(String(m.voucher))}</td>
+                                  <td className="px-3 py-2 text-sm text-gray-500">{m.note || "-"}</td>
+                                  <td className="px-3 py-2">
+                                    <button
+                                      disabled={historyDeleting === m.id}
+                                      onClick={() =>
+                                        deleteHistoryRecord(
+                                          "movement",
+                                          m.id,
+                                          `${MOVEMENT_KIND[m.kind] || m.kind} ${formatPrice(m.amount)}\nتاریخ: ${m.date || "-"}\nسند: ${m.voucher}`
+                                        )
+                                      }
+                                      className="px-2 py-1 text-xs font-medium bg-white border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
+                                    >
+                                      {historyDeleting === m.id ? "..." : "حذف"}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </Section>
+                  </>
+                ) : null}
+
+                <div className="flex justify-end border-t pt-4">
+                  <button onClick={closeHistory} className="px-5 py-2 text-sm font-medium border rounded-lg hover:bg-gray-50">
+                    بستن
                   </button>
                 </div>
               </div>
