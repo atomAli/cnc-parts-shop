@@ -201,6 +201,8 @@ export default function AccountingNewPage() {
       {
         quantity: string;
         unitCost: string;
+        /** فقط کالای متری: قیمت «پایانی» کل خرید از فروشنده (قیمت هر متر خودکار ساخته می‌شود) */
+        totalPrice: string;
         supplierId: string;
         supplierQuery: string;
         branchCount: string;
@@ -448,6 +450,14 @@ export default function AccountingNewPage() {
       ? (Number(f.branchCount) * Number(f.branchLength)) / 100
       : Math.round(Number(f.quantity));
 
+    // کالای متری: «قیمت پایانی» کل خرید را می‌گیریم و قیمت هر متر را خودمان می‌سازیم
+    const unitCost = isMeter
+      ? Number(f.totalPrice || 0) > 0 && buyQty > 0
+        ? Math.round((Number(f.totalPrice) / buyQty) * 10000) / 10000
+        : 0
+      : Number(f.unitCost || 0);
+    if (isMeter && !(unitCost > 0)) return notify(false, "قیمت کل خرید را وارد کنید");
+
     // تخصیص اجباری برای فاکتورهای «تأیید شده»‌ای که این کالا را سفارش داشته‌اند
     const targets = item?.soldByInvoice ?? [];
     const allocList = targets.map((s) => ({
@@ -472,7 +482,7 @@ export default function AccountingNewPage() {
           productId,
           supplierId: f.supplierId,
           quantity: buyQty,
-          unitCost: Number(f.unitCost || 0),
+          unitCost,
           branchCount: isMeter ? Number(f.branchCount) : undefined,
           branchLength: isMeter ? Number(f.branchLength) : undefined,
           allocations: allocList,
@@ -485,7 +495,8 @@ export default function AccountingNewPage() {
         ...pForm,
         [productId]: {
           quantity: "",
-          unitCost: f.unitCost,
+          unitCost: isMeter ? "" : f.unitCost,
+          totalPrice: "",
           supplierId: f.supplierId,
           supplierQuery: f.supplierQuery,
           branchCount: "",
@@ -832,6 +843,7 @@ export default function AccountingNewPage() {
                     const f = pForm[it.productId] ?? {
                       quantity: it.shortage > 0 ? String(it.shortage) : "",
                       unitCost: it.avgCost != null ? String(Math.round(it.avgCost)) : "",
+                      totalPrice: "",
                       supplierId: "",
                       supplierQuery: "",
                       branchCount: conv.count > 0 ? String(conv.count) : "",
@@ -998,20 +1010,48 @@ export default function AccountingNewPage() {
                                     />
                                   </div>
                                 )}
-                                <div className="w-[160px]">
+                                <div className="w-[170px]">
                                   <label className="block text-[11px] text-gray-500 mb-1">
-                                    {it.isMeter ? "قیمت هر متر (تومان)" : "قیمت واحد (تومان)"}
+                                    {it.isMeter ? "قیمت کل خرید (تومان)" : "قیمت واحد (تومان)"}
                                   </label>
                                   <input
                                     type="number"
                                     min={0}
-                                    value={f.unitCost}
+                                    value={it.isMeter ? f.totalPrice ?? "" : f.unitCost}
                                     onChange={(e) =>
-                                      setPForm({ ...pForm, [it.productId]: { ...f, unitCost: e.target.value } })
+                                      setPForm({
+                                        ...pForm,
+                                        [it.productId]: it.isMeter
+                                          ? { ...f, totalPrice: e.target.value }
+                                          : { ...f, unitCost: e.target.value },
+                                      })
                                     }
-                                    placeholder={it.avgCost != null ? String(Math.round(it.avgCost)) : "0"}
+                                    placeholder={
+                                      it.isMeter
+                                        ? it.avgCost != null && meterFrom > 0
+                                          ? String(Math.round(it.avgCost * meterFrom))
+                                          : "0"
+                                        : it.avgCost != null
+                                          ? String(Math.round(it.avgCost))
+                                          : "0"
+                                    }
                                     className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
                                   />
+                                  {it.isMeter && (
+                                    <div className="mt-1 text-[11px] text-gray-500">
+                                      {meterFrom > 0 && Number(f.totalPrice) > 0 ? (
+                                        <>
+                                          هر متر:{" "}
+                                          <b className="text-blue-700">
+                                            {money(Number(f.totalPrice) / meterFrom)}
+                                          </b>{" "}
+                                          تومان
+                                        </>
+                                      ) : (
+                                        "قیمت پایانی فروشنده را بنویسید"
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="flex-1 min-w-[200px]">
                                   <label className="block text-[11px] text-gray-500 mb-1">تأمین‌کننده</label>
