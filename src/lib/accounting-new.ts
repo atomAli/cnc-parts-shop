@@ -1533,3 +1533,264 @@ export async function deleteManualPurchase(batchId: string) {
   });
   return { ok: true };
 }
+
+// ──────────────── ۱۲) تب «فاکتور فروش» — فاکتورِ روزانهٔ خرید ────────────────
+
+type AllocRef = { preInvoiceId: string; qty: number };
+
+function readAllocs(v: unknown): AllocRef[] {
+  if (!Array.isArray(v)) return [];
+  const out: AllocRef[] = [];
+  for (const raw of v) {
+    const a = raw as { preInvoiceId?: unknown; qty?: unknown };
+    const pid = a && typeof a.preInvoiceId === "string" ? a.preInvoiceId : "";
+    const q = Number(a?.qty);
+    if (pid && Number.isFinite(q) && q > 0) out.push({ preInvoiceId: pid, qty: q });
+  }
+  return out;
+}
+
+export type PendingPurchaseGroup = {
+  date: string;
+  supplierId: string;
+  supplierName: string;
+  total: number;
+  items: {
+    batchId: string;
+    productId: string | null;
+    name: string;
+    /** کالای متری: بر حسب متر (نمایش سانتی‌متر) */
+    isMeter: boolean;
+    quantity: number;
+    unitCost: number;
+    total: number;
+    allocations: AllocRef[];
+  }[];
+};
+
+export type PurchaseInvoiceRow = {
+  id: string;
+  number: number;
+  date: string;
+  total: number;
+  status: string;
+  /** null یعنی فاکتور ساخته‌شده توسط همین بخش (قابل حذف) */
+  legacyId: number | null;
+  note: string | null;
+  partyName: string | null;
+  lines: {
+    position: number;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+    productId: string | null;
+    isMeter: boolean;
+  }[];
+  /** تخصیص‌هایی که هنگام ثبت خرید روی بچ‌های این فاکتور ثبت شده */
+  allocations: (AllocRef & { productId: string | null })[];
+};
+
+/**
+ * تب «فاکتور فروش»: خریدهایی که هنوز فاکتور نشده‌اند، گروه‌بندی‌شده
+ * «هر روز + هر تأمین‌کننده» + فهرست فاکتورهای خرید ثبت‌شده (قدیمی و ساخته‌شده).
+ */
+export async function getPurchaseInvoiceBoard(): Promise<{
+  pending: PendingPurchaseGroup[];
+  invoices: PurchaseInvoiceRow[];
+}> {
+  const [batches, invoices] = await Promise.all([
+    prisma.productPurchaseBatch.findMany({
+      where: { purchaseInvoiceId: null },
+      orderBy: [{ date: "desc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        date: true,
+        productId: true,
+        quantity: true,
+        unitCost: true,
+        allocations: true,
+        product: { select: { name: true, isMeter: true } },
+        supplier: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.purchaseInvoice.findMany({
+      orderBy: [{ date: "desc" }, { number: "desc" }],
+      take: 120,
+      select: {
+        id: true,
+        number: true,
+        date: true,
+        total: true,
+        status: true,
+        legacyId: true,
+        note: true,
+        party: { select: { name: true } },
+        lines: {
+          orderBy: { position: "asc" },
+          select: { position: true, name: true, quantity: true, unitPrice: true, total: true, productId: true },
+        },
+      },
+    }),
+  ]);
+
+  // گروه‌بندی خریدهای بدون فاکتور: هر روز + هر تأمین‌کننده = یک فاکتور
+  const map = new Map<string, PendingPurchaseGroup>();
+  for (const b of batches) {
+    const key = `${b.date}|${b.supplier.id}`;
+    const g =
+      map.get(key) ??
+      { date: b.date, supplierId: b.supplier.id, supplierName: b.supplier.name, total: 0, items: [] };
+    const lineTotal = Number(b.quantity) * Number(b.unitCost);
+    g.total += lineTotal;
+    g.items.push({
+      batchId: b.id,
+      productId: b.productId,
+      name: b.product.name,
+      isMeter: b.product.isMeter === true,
+      quantity: Number(b.quantity),
+      unitCost: Number(b.unitCost),
+      total: lineTotal,
+      allocations: readAllocs(b.allocations),
+    });
+    map.set(key, g);
+  }
+  const pending = [...map.values()].sort((a, b) =>
+    a.date < b.date ? 1 : a.date > b.date ? -1 : a.supplierName.localeCompare(b.supplierName, "fa")
+  );
+
+  // تخصیص‌های ثبت‌شده روی بچ‌های هر فاکتور (برای نمایش در جزئیات)
+  const invIds = invoices.map((i) => i.id);
+  const linked = invIds.length
+    ? await prisma.productPurchaseBatch.findMany({
+        where: { purchaseInvoiceId: { in: invIds } },
+        select: { purchaseInvoiceId: true, productId: true, allocations: true },
+      })
+    : [];
+  const allocByInv = new Map<string, (AllocRef & { productId: string | null })[]>();
+  for (const b of linked) {
+    if (!b.purchaseInvoiceId) continue;
+    for (const a of readAllocs(b.allocations)) {
+      const arr = allocByInv.get(b.purchaseInvoiceId) ?? [];
+      arr.push({ productId: b.productId, ...a });
+      allocByInv.set(b.purchaseInvoiceId, arr);
+    }
+  }
+
+  // کالای متری؟ (برای نمایش سانتی‌متر در خطوط فاکتور)
+  const linePids = [
+    ...new Set(
+      invoices.flatMap((i) => i.lines.map((l) => l.productId).filter((p): p is string => !!p))
+    ),
+  ];
+  const lineProds = linePids.length
+    ? await prisma.product.findMany({ where: { id: { in: linePids } }, select: { id: true, isMeter: true } })
+    : [];
+  const isMeterMap = new Map(lineProds.map((p) => [p.id, p.isMeter === true]));
+
+  return {
+    pending,
+    invoices: invoices.map((i) => ({
+      id: i.id,
+      number: i.number,
+      date: i.date,
+      total: i.total,
+      status: i.status,
+      legacyId: i.legacyId,
+      note: i.note,
+      partyName: i.party?.name ?? null,
+      lines: i.lines.map((l) => ({
+        ...l,
+        isMeter: l.productId ? isMeterMap.get(l.productId) === true : false,
+      })),
+      allocations: allocByInv.get(i.id) ?? [],
+    })),
+  };
+}
+
+/**
+ * ساخت «فاکتور خرید» برای خریدهای یک روزِ یک تأمین‌کننده:
+ * بچ‌ها به فاکتور وصل می‌شوند تا «خرید کل» (KPI) دوباره‌حسابی نشود —
+ * سند دفتر (نوع ۴۰) قبلاً هنگام ثبت خرید خورده و دوباره ساخته نمی‌شود.
+ */
+export async function createDailyPurchaseInvoice(r: { date: string; supplierId: string }) {
+  const date = String(r.date ?? "").trim();
+  const supplierId = String(r.supplierId ?? "").trim();
+  if (!/^\d{4}\/\d{2}\/\d{2}$/.test(date)) throw new Error("تاریخ نامعتبر است");
+  if (!supplierId) throw new Error("تأمین‌کننده را انتخاب کنید");
+
+  const [supplier, batches] = await Promise.all([
+    prisma.party.findUnique({ where: { id: supplierId }, select: { id: true, name: true } }),
+    prisma.productPurchaseBatch.findMany({
+      where: { purchaseInvoiceId: null, date, supplierId },
+      select: { id: true, productId: true, quantity: true, unitCost: true, product: { select: { name: true } } },
+    }),
+  ]);
+  if (!supplier) throw new Error("تأمین‌کننده پیدا نشد");
+  if (!batches.length) throw new Error("خریدی برای این روز و تأمین‌کننده پیدا نشد");
+
+  // خط فاکتور: یک ردیف برای هر کالا (جمع خریدهای همان روز)
+  const groups = new Map<
+    string,
+    { name: string; productId: string | null; quantity: number; total: number }
+  >();
+  for (const b of batches) {
+    const key = b.productId ?? `n:${b.product.name}`;
+    const g = groups.get(key) ?? { name: b.product.name, productId: b.productId, quantity: 0, total: 0 };
+    g.quantity += Number(b.quantity);
+    g.total += Number(b.quantity) * Number(b.unitCost);
+    groups.set(key, g);
+  }
+  const lines = [...groups.values()].filter((g) => g.quantity > 0 || g.total > 0);
+  const total = lines.reduce((s, l) => s + l.total, 0);
+
+  const maxNo = await prisma.purchaseInvoice.aggregate({ _max: { number: true } });
+  const number = (maxNo._max.number ?? 0) + 1;
+
+  return prisma.$transaction(async (tx) => {
+    const inv = await tx.purchaseInvoice.create({
+      data: {
+        number,
+        date,
+        partyId: supplierId,
+        total,
+        status: "DONE",
+        note: `ساخته‌شده خودکار از خریدهای ${date} (${supplier.name})`,
+        lines: {
+          create: lines.map((l, i) => ({
+            position: i + 1,
+            name: l.name,
+            quantity: l.quantity,
+            unitPrice: l.quantity > 0 ? l.total / l.quantity : 0,
+            total: l.total,
+            productId: l.productId,
+          })),
+        },
+      },
+      select: { id: true, number: true, date: true, total: true },
+    });
+    await tx.productPurchaseBatch.updateMany({
+      where: { id: { in: batches.map((b) => b.id) } },
+      data: { purchaseInvoiceId: inv.id },
+    });
+    return inv;
+  });
+}
+
+/** حذف فاکتور ساخته‌شده در همین تب (فقط ساخته‌شده، نه فاکتورهای قدیمی Access) */
+export async function deleteDailyPurchaseInvoice(id: string) {
+  const inv = await prisma.purchaseInvoice.findUnique({
+    where: { id },
+    select: { id: true, legacyId: true, number: true },
+  });
+  if (!inv) throw new Error("فاکتور پیدا نشد");
+  if (inv.legacyId != null) throw new Error("فقط فاکتورهای ساخته‌شده در همین تب قابل حذف‌اند");
+  await prisma.$transaction(async (tx) => {
+    await tx.productPurchaseBatch.updateMany({
+      where: { purchaseInvoiceId: id },
+      data: { purchaseInvoiceId: null },
+    });
+    await tx.purchaseInvoice.delete({ where: { id } });
+  });
+  return { ok: true };
+}

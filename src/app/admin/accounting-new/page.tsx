@@ -121,6 +121,45 @@ type PurchaseInvoiceOpt = {
   party: { name: string } | null;
 };
 
+/** تب «فاکتور فروش» — خریدهای بدون فاکتور، گروه‌بندی‌شده «هر روز + هر تأمین‌کننده» */
+type AllocRef = { preInvoiceId: string; qty: number };
+type PendingInv = {
+  date: string;
+  supplierId: string;
+  supplierName: string;
+  total: number;
+  items: {
+    batchId: string;
+    productId: string | null;
+    name: string;
+    isMeter: boolean;
+    quantity: number;
+    unitCost: number;
+    total: number;
+    allocations: AllocRef[];
+  }[];
+};
+type PInvoice = {
+  id: string;
+  number: number;
+  date: string;
+  total: number;
+  status: string;
+  legacyId: number | null;
+  note: string | null;
+  partyName: string | null;
+  lines: {
+    position: number;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+    productId: string | null;
+    isMeter: boolean;
+  }[];
+  allocations: (AllocRef & { productId: string | null })[];
+};
+
 type Party = {
   id: string;
   name: string;
@@ -134,6 +173,7 @@ type Party = {
 const TABS = [
   { id: "approved", label: "تأیید شده" },
   { id: "purchase", label: "لیست خرید" },
+  { id: "invoices", label: "فاکتور فروش" },
   { id: "parties", label: "حساب افراد" },
   { id: "batches", label: "آمار خرید کالا" },
 ] as const;
@@ -228,6 +268,32 @@ export default function AccountingNewPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // تب «فاکتور فروش»
+  const [pendings, setPendings] = useState<PendingInv[]>([]);
+  const [pinvs, setPInvs] = useState<PInvoice[]>([]);
+  const [invLoading, setInvLoading] = useState(false);
+  const [expandedInv, setExpandedInv] = useState<string | null>(null);
+
+  const loadInvoices = useCallback(async () => {
+    setInvLoading(true);
+    try {
+      const res = await fetch("/api/admin/accounting-new/purchase-invoices");
+      if (res.ok) {
+        const d = await res.json();
+        setPendings(Array.isArray(d.pending) ? d.pending : []);
+        setPInvs(Array.isArray(d.invoices) ? d.invoices : []);
+      }
+    } catch {
+      // بی‌صدا؛ رندر خالی نشان داده می‌شود
+    } finally {
+      setInvLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === "invoices") loadInvoices();
+  }, [tab, loadInvoices]);
 
   async function fetchRecords(partyId: string) {
     setRecLoading(true);
@@ -458,6 +524,52 @@ export default function AccountingNewPage() {
       setBusy(null);
     }
   }
+
+  // تب «فاکتور فروش» — ساخت فاکتور خرید برای یک روزِ یک تأمین‌کننده
+  async function makeInvoice(date: string, supplierId: string) {
+    if (!confirm(`فاکتور خرید این روز ساخته شود؟\n${date}`)) return;
+    setBusy(`inv:${date}:${supplierId}`);
+    try {
+      const res = await fetch("/api/admin/accounting-new/purchase-invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, supplierId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return notify(false, data.error || "ساخت فاکتور ناموفق بود");
+      notify(true, `فاکتور خرید شمارهٔ ${toFaDigits(String(data.invoice?.number ?? ""))} ساخته شد`);
+      await Promise.all([loadInvoices(), load()]);
+    } catch {
+      notify(false, "ارتباط با سرور برقرار نشد");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function delInvoice(id: string) {
+    if (!confirm("این فاکتور حذف شود؟ خریدهایش دوباره «بدون فاکتور» می‌شوند.")) return;
+    setBusy(id);
+    try {
+      const res = await fetch(`/api/admin/accounting-new/purchase-invoices/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return notify(false, data.error || "حذف ناموفق بود");
+      notify(true, "فاکتور حذف شد");
+      setExpandedInv(null);
+      await Promise.all([loadInvoices(), load()]);
+    } catch {
+      notify(false, "ارتباط با سرور برقرار نشد");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const allocText = (a: AllocRef) => {
+    const s = saleOpts.find((x) => x.id === a.preInvoiceId);
+    const n = s ? toFaDigits(String(s.invoiceNumber)) : "؟";
+    return `${money(a.qty)} برای #${n}${s?.customerName ? " " + s.customerName : ""}`;
+  };
+  const qtyShow = (v: number, isMeter: boolean) => (isMeter ? money(Number(v) * 100) : money(v));
+  const qtyUnit = (isMeter: boolean) => (isMeter ? "سانتی‌متر" : "عدد");
 
   const kpiCard = (
     label: string,
@@ -1075,6 +1187,178 @@ export default function AccountingNewPage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* فاکتور فروش — ساخت فاکتور خرید از خریدهای روزانه */}
+      {!loading && tab === "invoices" && (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 text-xs leading-6 text-gray-600">
+            خریدهایی که هنوز فاکتور ندارند اینجا جمع می‌شوند: <b>هر روز + هر تأمین‌کننده = یک فاکتور</b>. با
+            «ساخت فاکتور»، فاکتورِ خرید ساخته می‌شود و خریدهای همان روز به آن وصل می‌شوند؛ «خرید کل» (KPI)
+            تغییری نمی‌کند و سند جدیدی به دفتر زده نمی‌شود. فاکتورهای ساخته‌شده در همین بخش قابل حذف‌اند؛
+            فاکتورهای قدیمی قابل حذف نیستند.
+          </div>
+
+          {/* خریدهای بدون فاکتور */}
+          <div>
+            <h2 className="mb-2 text-sm font-bold text-gray-700">
+              خریدهای بدون فاکتور{" "}
+              {invLoading && pendings.length === 0 && (
+                <span className="font-normal text-gray-400">(در حال بارگذاری…)</span>
+              )}
+            </h2>
+            {!invLoading && pendings.length === 0 && (
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-500">
+                همهٔ خریدها فاکتور شده‌اند.
+              </div>
+            )}
+            <div className="space-y-3">
+              {pendings.map((p) => {
+                const bk = `inv:${p.date}:${p.supplierId}`;
+                return (
+                  <div key={`${p.date}|${p.supplierId}`} className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-sm font-bold text-gray-800">
+                        {toFaDigits(p.date)}
+                        <span className="mx-2 text-gray-300">—</span>
+                        {p.supplierName}
+                        <span className="mr-2 text-xs font-normal text-gray-500">
+                          {toFaDigits(String(p.items.length))} قلم
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-blue-700">{money(p.total)} تومان</span>
+                        <button
+                          type="button"
+                          onClick={() => makeInvoice(p.date, p.supplierId)}
+                          disabled={busy === bk}
+                          className="rounded-lg bg-blue-700 px-3 py-1.5 text-sm text-white transition-colors duration-150 hover:bg-blue-800 disabled:opacity-50"
+                        >
+                          {busy === bk ? "…" : "ساخت فاکتور"}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3 overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead className="text-gray-400">
+                          <tr>
+                            <th className="p-1 text-right font-normal">کالا</th>
+                            <th className="p-1 text-left font-normal">تعداد</th>
+                            <th className="p-1 text-left font-normal">قیمت واحد</th>
+                            <th className="p-1 text-left font-normal">جمع</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {p.items.map((it) => (
+                            <tr key={it.batchId} className="border-t border-gray-100">
+                              <td className="p-1">
+                                {it.name}
+                                {it.allocations.length > 0 && (
+                                  <div className="text-[11px] text-blue-700">
+                                    تخصیص: {it.allocations.map(allocText).join(" · ")}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-1 text-left">
+                                {qtyShow(it.quantity, it.isMeter)} {qtyUnit(it.isMeter)}
+                              </td>
+                              <td className="p-1 text-left">{money(it.unitCost)}</td>
+                              <td className="p-1 text-left">{money(it.total)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* فاکتورها */}
+          <div>
+            <h2 className="mb-2 text-sm font-bold text-gray-700">فاکتورها (از جدید به قدیم)</h2>
+            <div className="space-y-2">
+              {pinvs.map((v) => {
+                const open = expandedInv === v.id;
+                const isNew = v.legacyId == null;
+                return (
+                  <div key={v.id} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedInv(open ? null : v.id)}
+                      className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-right transition-colors duration-150 hover:bg-gray-50"
+                    >
+                      <div className="text-sm">
+                        <span className="font-bold">#{toFaDigits(String(v.number))}</span>
+                        <span className="mx-2 text-gray-300">—</span>
+                        {toFaDigits(v.date)}
+                        <span className="mx-2 text-gray-300">—</span>
+                        {v.partyName ?? "بدون تأمین‌کننده"}
+                        {isNew && (
+                          <span className="mr-2 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
+                            ساخته‌شده
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="text-gray-500">{toFaDigits(String(v.lines.length))} قلم</span>
+                        <span className="font-bold text-blue-700">{money(v.total)} تومان</span>
+                        <span className="text-gray-400">{open ? "▾" : "▸"}</span>
+                      </div>
+                    </button>
+                    {open && (
+                      <div className="border-t border-gray-100 p-4">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead className="text-gray-400">
+                              <tr>
+                                <th className="p-1 text-right font-normal">کالا</th>
+                                <th className="p-1 text-left font-normal">تعداد</th>
+                                <th className="p-1 text-left font-normal">قیمت واحد</th>
+                                <th className="p-1 text-left font-normal">جمع</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {v.lines.map((l) => (
+                                <tr key={`${v.id}-${l.position}`} className="border-t border-gray-100">
+                                  <td className="p-1">{l.name}</td>
+                                  <td className="p-1 text-left">
+                                    {qtyShow(l.quantity, l.isMeter)} {qtyUnit(l.isMeter)}
+                                  </td>
+                                  <td className="p-1 text-left">{money(l.unitPrice)}</td>
+                                  <td className="p-1 text-left">{money(l.total)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        {v.note && <div className="mt-2 text-[11px] text-gray-400">{v.note}</div>}
+                        {v.allocations.length > 0 && (
+                          <div className="mt-1 text-[11px] text-blue-700">
+                            تخصیص‌ها: {v.allocations.map(allocText).join(" · ")}
+                          </div>
+                        )}
+                        {isNew && (
+                          <div className="mt-3">
+                            <button
+                              type="button"
+                              onClick={() => delInvoice(v.id)}
+                              disabled={busy === v.id}
+                              className="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition-colors duration-150 hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {busy === v.id ? "…" : "حذف فاکتور"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
