@@ -15,6 +15,7 @@ const INVOICE_STATUS: Record<string, string> = {
   CONTACTED: "تماس گرفته شده",
   DONE: "انجام شده",
   PROCESSING: "در حال انجام",
+  CANCELLED: "لغو شده",
 };
 
 interface User {

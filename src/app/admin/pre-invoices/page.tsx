@@ -33,11 +33,20 @@ interface PreInvoice {
   user?: { name: string | null; phone: string | null } | null;
 }
 
-const STATUS_OPTIONS = ["PENDING", "CONTACTED", "DONE"];
+const STATUS_OPTIONS = ["PENDING", "CONTACTED", "DONE", "CANCELLED"];
+
+// دکمه‌های «تغییر وضعیت» داخل فاکتور — لغو شده فقط از مسیر حسابداری ساخته می‌شود
+const EDITABLE_STATUSES = ["PENDING", "CONTACTED", "DONE"];
 
 interface InvoiceStats {
   total: number;
-  byStatus: { PENDING: number; PROCESSING: number; CONTACTED: number; DONE: number };
+  byStatus: {
+    PENDING: number;
+    PROCESSING: number;
+    CONTACTED: number;
+    DONE: number;
+    CANCELLED: number;
+  };
   fromWebsite: number;
   recent: Array<{
     id: string;
@@ -60,6 +69,7 @@ const STATUS_LABELS: Record<string, string> = {
   PROCESSING: "در حال پردازش",
   CONTACTED: "تماس گرفته شد",
   DONE: "تکمیل شده",
+  CANCELLED: "لغو شده",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -67,6 +77,7 @@ const STATUS_COLORS: Record<string, string> = {
   PROCESSING: "bg-blue-100 text-blue-700",
   CONTACTED: "bg-green-100 text-green-700",
   DONE: "bg-gray-100 text-gray-600",
+  CANCELLED: "bg-red-100 text-red-700",
 };
 
 function formatPrice(price: number) {
@@ -199,11 +210,36 @@ export default function AdminPreInvoicesPage() {
         </button>
         {STATUS_OPTIONS.map((s) => {
           const count = stats?.byStatus[s as keyof typeof stats.byStatus] ?? 0;
+          const isCancelled = s === "CANCELLED";
           return (
-            <button key={s} onClick={() => setFilter(s)} className={"flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors " + (filter === s ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors " +
+                (filter === s
+                  ? isCancelled
+                    ? "bg-red-600 text-white"
+                    : "bg-blue-600 text-white"
+                  : isCancelled
+                  ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+              }
+            >
               {STATUS_LABELS[s]}
               {stats && (
-                <span className={"px-1.5 py-0.5 rounded-full text-[10px] font-bold " + (filter === s ? "bg-white/25 text-white" : count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500")}>
+                <span
+                  className={
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-bold " +
+                    (filter === s
+                      ? "bg-white/25 text-white"
+                      : count > 0
+                      ? isCancelled
+                        ? "bg-red-100 text-red-700"
+                        : "bg-blue-100 text-blue-700"
+                      : "bg-gray-200 text-gray-500")
+                  }
+                >
                   {toFa(count)}
                 </span>
               )}
@@ -323,7 +359,7 @@ export default function AdminPreInvoicesPage() {
 
                   <div className="flex items-center gap-3 pt-2 border-t border-gray-100 flex-wrap">
                     <span className="text-sm text-gray-600">تغییر وضعیت:</span>
-                    {STATUS_OPTIONS.map((s) => (
+                    {EDITABLE_STATUSES.map((s) => (
                       <button
                         key={s}
                         onClick={() => updateStatus(inv.id, s)}
@@ -332,6 +368,11 @@ export default function AdminPreInvoicesPage() {
                         {STATUS_LABELS[s]}
                       </button>
                     ))}
+                    {inv.status === "CANCELLED" && (
+                      <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-100 text-red-700">
+                        این فاکتور لغو شده است
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 text-sm text-gray-500 pt-2">

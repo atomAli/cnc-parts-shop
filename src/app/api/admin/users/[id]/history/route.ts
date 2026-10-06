@@ -58,12 +58,15 @@ export async function GET(
 
   const partyId = user.party?.id ?? null;
 
-  const [salesInvoices, siteInvoices, cashMovements, newEntries] = await Promise.all([
+  const [salesInvoices, userInvoices, cashMovements, newEntries] = await Promise.all([
     partyId
       ? prisma.salesInvoice.findMany({ where: { partyId } })
       : Promise.resolve([]),
     prisma.preInvoice.findMany({
-      where: { userId: id, source: { not: "ACCESS" } },
+      // هر فاکتوری که متعلق به این کاربر است: یا userId او، یا شماره‌ای که با تلفن او یکی است
+      where: user.phone
+        ? { OR: [{ userId: id }, { customerPhone: user.phone }] }
+        : { userId: id },
       select: {
         id: true,
         invoiceNumber: true,
@@ -82,6 +85,10 @@ export async function GET(
       : Promise.resolve([]),
   ]);
 
+  // جلوگیری از تکرار: شماره‌هایی که از روی طرف‌حساب آمده‌اند قبلاً گرفته شده‌اند
+  const seenNumbers = new Set(salesInvoices.map((s) => s.number));
+  const extraInvoices = userInvoices.filter((i) => !seenNumbers.has(i.invoiceNumber));
+
   const invoices = [
     ...salesInvoices.map((s) => ({
       id: s.id,
@@ -94,7 +101,7 @@ export async function GET(
       source: "قدیم",
       kind: "salesInvoice",
     })),
-    ...siteInvoices.map((i) => ({
+    ...extraInvoices.map((i) => ({
       id: i.id,
       number: i.invoiceNumber,
       date: i.createdAt ? toJalali(i.createdAt.toISOString().slice(0, 10)) : "",
@@ -102,7 +109,8 @@ export async function GET(
       discount: 0,
       note: i.notes || "",
       status: i.status,
-      source: i.source === "ADMIN" ? "پنل" : "سایت",
+      source:
+        i.source === "ACCESS" ? "قدیم" : i.source === "ADMIN" ? "پنل" : "سایت",
       kind: "preInvoice",
     })),
   ].filter((x) => inRange(x.date)).sort((a, b) => byDateDesc(a, b) || b.number - a.number);

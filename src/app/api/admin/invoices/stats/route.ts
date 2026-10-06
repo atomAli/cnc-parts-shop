@@ -6,14 +6,15 @@ export async function GET() {
   const session = await requireAdmin();
   if (!session) return unauthorized();
 
-  const [total, pending, contacted, processing, done, completed, fromWebsite, recent] = await Promise.all([
+  const [total, pending, contacted, processing, done, completed, cancelled, fromWebsite, recent] = await Promise.all([
     prisma.preInvoice.count(),
     prisma.preInvoice.count({ where: { status: "PENDING" } }),
     prisma.preInvoice.count({ where: { status: "CONTACTED" } }),
     prisma.preInvoice.count({ where: { status: "PROCESSING" } }),
-      prisma.preInvoice.count({ where: { status: "DONE" } }),
-      prisma.preInvoice.count({ where: { status: "COMPLETED" } }),
-      prisma.preInvoice.count({ where: { source: "WEBSITE" } }),
+    prisma.preInvoice.count({ where: { status: "DONE" } }),
+    prisma.preInvoice.count({ where: { status: "COMPLETED" } }),
+    prisma.preInvoice.count({ where: { status: "CANCELLED" } }),
+    prisma.preInvoice.count({ where: { source: "WEBSITE" } }),
     prisma.preInvoice.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
@@ -32,7 +33,14 @@ export async function GET() {
 
   return NextResponse.json({
     total,
-    byStatus: { PENDING: pending, PROCESSING: processing, CONTACTED: contacted, DONE: done, COMPLETED: completed },
+    byStatus: {
+      PENDING: pending,
+      PROCESSING: processing,
+      CONTACTED: contacted,
+      DONE: done,
+      COMPLETED: completed,
+      CANCELLED: cancelled,
+    },
     fromWebsite,
     recent,
   });

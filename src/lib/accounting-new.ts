@@ -347,7 +347,8 @@ export async function rejectAllocation(allocationId: string, adminId: string, re
  *   - بازگردانی remainingQty هر بچ دقیقاً همان‌قدر که مصرف شده بود
  *   - حذف سند دفتر فروش (نوع ۳۰)
  *   - حذف خطوط و خود تخصیص
- * فاکتور COMPLETED می‌ماند؛ فقط اثر حسابداری‌اش پاک می‌شود.
+ *   - وضعیت فاکتور به «لغو شده» (CANCELLED) می‌رود تا در مدیریت فاکتورها
+ *     در بخش قرمز «لغو شده» دیده شود و از KPI فروش خارج گردد
  */
 export async function deleteAllocation(
   allocationId: string
@@ -383,6 +384,14 @@ export async function deleteAllocation(
 
       await tx.cogsAllocationLine.deleteMany({ where: { allocationId } });
       await tx.cogsAllocation.delete({ where: { id: allocationId } });
+
+      // فاکتور به «لغو شده» می‌رود تا در مدیریت فاکتورها بخش قرمز لغو شده پیدا شود
+      if (alloc.preInvoiceId) {
+        await tx.preInvoice.updateMany({
+          where: { id: alloc.preInvoiceId },
+          data: { status: "CANCELLED" },
+        });
+      }
     });
     return { ok: true };
   } catch (e) {
