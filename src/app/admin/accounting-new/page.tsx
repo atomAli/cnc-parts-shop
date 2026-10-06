@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -63,6 +63,25 @@ type Receipt = {
   preInvoice?: { invoiceNumber: number | null } | null;
 };
 
+type PurchaseItem = {
+  productId: string;
+  name: string;
+  soldQty: number;
+  purchasedQty: number;
+  remainingQty: number;
+  shortage: number;
+  avgCost: number | null;
+  manualTotal: number;
+  manual: {
+    id: string;
+    quantity: number;
+    unitCost: number;
+    total: number;
+    date: string;
+    supplier: { id: string; name: string } | null;
+  }[];
+};
+
 type Kpis = {
   sales: number;
   salesCount: number;
@@ -83,21 +102,20 @@ type Party = {
 };
 
 const TABS = [
-  { id: "pending", label: "در انتظار تأیید" },
   { id: "approved", label: "تأیید شده" },
+  { id: "purchase", label: "لیست خرید" },
   { id: "parties", label: "حساب افراد" },
   { id: "receipts", label: "دریافت‌ها" },
-  { id: "batches", label: "لیست خرید کالاها" },
+  { id: "batches", label: "آمار خرید کالا" },
 ] as const;
 
 const money = (n: number) => toFaDigits(Math.round(Number(n || 0)).toLocaleString("en-US"));
 
 export default function AccountingNewPage() {
-  const [tab, setTab] = useState<string>("pending");
+  const [tab, setTab] = useState<string>("approved");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [kpis, setKpis] = useState<Kpis | null>(null);
-  const [pending, setPending] = useState<Alloc[]>([]);
   const [approved, setApproved] = useState<Alloc[]>([]);
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -106,6 +124,12 @@ export default function AccountingNewPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  // لیست خرید
+  const [plist, setPlist] = useState<PurchaseItem[]>([]);
+  const [pForm, setPForm] = useState<
+    Record<string, { quantity: string; unitCost: string; supplierId: string }>
+  >({});
 
   // فرم دریافت
   const [rForm, setRForm] = useState({
@@ -129,16 +153,17 @@ export default function AccountingNewPage() {
       if (to) q.set("to", to);
       const qs = q.toString();
 
-      const [main, rec, bat, par] = await Promise.all([
+      const [main, rec, bat, par, pl] = await Promise.all([
         fetch(`/api/admin/accounting-new${qs ? "?" + qs : ""}`).then((r) => r.json()),
         fetch(`/api/admin/accounting-new/receipts${qs ? "?" + qs : ""}`).then((r) => r.json()),
         fetch(`/api/admin/accounting-new/batches`).then((r) => r.json()),
         fetch(`/api/admin/accounting-new/parties`).then((r) => r.json().catch(() => ({ rows: [] }))),
+        fetch(`/api/admin/accounting-new/purchase-list`).then((r) => r.json().catch(() => ({ rows: [] }))),
       ]);
 
       if (main.kpis) setKpis(main.kpis);
-      if (main.pending) setPending(main.pending);
       if (main.approved) setApproved(main.approved);
+      if (Array.isArray(pl?.rows)) setPlist(pl.rows);
       if (rec.rows) setReceipts(rec.rows);
       if (bat.rows) setBatches(bat.rows);
       const pr = par?.rows ?? par?.parties ?? [];
@@ -154,25 +179,6 @@ export default function AccountingNewPage() {
     load();
   }, [load]);
 
-  async function act(id: string, action: "approve" | "reject") {
-    if (action === "reject" && !confirm("این پیش‌نویس رد شود؟")) return;
-    if (action === "approve" && !confirm("تأیید نهایی؟ دفتر و بهای تمام‌شده ثبت می‌شود.")) return;
-    setBusy(id);
-    try {
-      const res = await fetch(`/api/admin/accounting-new/cogs/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(action === "reject" ? { action, reason: "رد توسط مدیر" } : { action }),
-      });
-      const data = await res.json();
-      if (!res.ok) notify(false, data.error || "خطا");
-      else notify(true, action === "approve" ? "تأیید و ثبت شد" : "رد شد");
-      await load();
-    } finally {
-      setBusy(null);
-    }
-  }
-
   async function delAlloc(id: string) {
     if (!confirm("تخصیص تأییدشده حذف شود؟ سند دفتر و بهای تمام‌شده پاک و بچ‌ها بازگردانده می‌شود.")) return;
     setBusy(id);
@@ -181,6 +187,47 @@ export default function AccountingNewPage() {
       const data = await res.json();
       if (!res.ok) notify(false, data.error || "خطا در حذف");
       else notify(true, "تخصیص حذف شد");
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function submitPurchase(productId: string) {
+    const f = pForm[productId];
+    if (!f) return notify(false, "ابتدا تعداد و قیمت را وارد کنید");
+    if (!f.quantity || Number(f.quantity) <= 0) return notify(false, "تعداد درست وارد کنید");
+    if (!f.supplierId) return notify(false, "تأمین‌کننده را انتخاب کنید");
+    setBusy("__buy");
+    try {
+      const res = await fetch("/api/admin/accounting-new/purchase-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          supplierId: f.supplierId,
+          quantity: Number(f.quantity),
+          unitCost: Number(f.unitCost || 0),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) return notify(false, data.error || "خطا در ثبت خرید");
+      notify(true, "خرید ثبت شد");
+      setPForm({ ...pForm, [productId]: { quantity: "", unitCost: f.unitCost, supplierId: f.supplierId } });
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function delManual(batchId: string) {
+    if (!confirm("این خرید دستی حذف شود؟")) return;
+    setBusy(batchId);
+    try {
+      const res = await fetch(`/api/admin/accounting-new/purchase-list/${batchId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) notify(false, data.error || "خطا در حذف");
+      else notify(true, "حذف شد");
       await load();
     } finally {
       setBusy(null);
@@ -332,148 +379,11 @@ export default function AccountingNewPage() {
             }`}
           >
             {t.label}
-            {t.id === "pending" && pending.length > 0 && (
-              <span
-                className={`mr-2 rounded-full px-1.5 text-[11px] ${
-                  tab === t.id ? "bg-white text-blue-700" : "bg-amber-100 text-amber-700"
-                }`}
-              >
-                {toFaDigits(String(pending.length))}
-              </span>
-            )}
           </button>
         ))}
       </div>
 
       {loading && <div className="text-sm text-gray-500 py-8 text-center">در حال بارگذاری…</div>}
-
-      {/* در انتظار تأیید */}
-      {!loading && tab === "pending" && (
-        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-          {pending.length === 0 ? (
-            <div className="p-6 text-center text-sm text-gray-500">
-              موردی در انتظار تأیید نیست.
-              <br />
-              <span className="text-[11px] text-gray-400">
-                فاکتورها بعد از «ارسال شده» اینجا ظاهر می‌شوند و تا تأیید شما هیچ سندی ثبت نمی‌شود.
-              </span>
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500 text-xs">
-                <tr>
-                  <th className="p-3 text-right">شماره فاکتور</th>
-                  <th className="p-3 text-right">مشتری</th>
-                  <th className="p-3 text-left">مبلغ فروش</th>
-                  <th className="p-3 text-left">بهای تمام‌شده</th>
-                  <th className="p-3 text-left">سود ناخالص</th>
-                  <th className="p-3 text-center">موجودی بچ</th>
-                  <th className="p-3 text-center">عملیات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pending.map((a) => {
-                  const missing = a.lines.filter((l) => l.allocatedQty < l.quantity);
-                  return (
-                    <tr key={a.id} className="border-t border-gray-100 align-top">
-                      <td className="p-3">
-                        <div className="font-medium">
-                          {toFaDigits(String(a.preInvoice.invoiceNumber ?? "—"))}
-                        </div>
-                        <button
-                          onClick={() => setExpanded(expanded === a.id ? null : a.id)}
-                          className="text-[11px] text-blue-700 hover:underline"
-                        >
-                          {expanded === a.id ? "بستن" : `اقلام (${toFaDigits(String(a.lines.length))})`}
-                        </button>
-                      </td>
-                      <td className="p-3">
-                        <div>{a.preInvoice.customerName}</div>
-                        <div className="text-[11px] text-gray-400">
-                          {toFaDigits(a.preInvoice.customerPhone || "")}
-                        </div>
-                      </td>
-                      <td className="p-3 text-left">{money(a.salesTotal)}</td>
-                      <td className="p-3 text-left">{money(a.totalCogs)}</td>
-                      <td
-                        className={`p-3 text-left font-bold ${
-                          a.grossProfit >= 0 ? "text-green-700" : "text-red-700"
-                        }`}
-                      >
-                        {money(a.grossProfit)}
-                      </td>
-                      <td className="p-3 text-center">
-                        {missing.length === 0 ? (
-                          <span className="text-green-700 text-xs">کامل</span>
-                        ) : (
-                          <span className="text-red-700 text-xs">
-                            {toFaDigits(String(missing.length))} قلم کمبود
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3 text-center whitespace-nowrap">
-                        <button
-                          disabled={busy === a.id}
-                          onClick={() => act(a.id, "approve")}
-                          className="rounded-lg bg-green-700 text-white px-3 py-1 text-xs hover:bg-green-800 transition-colors duration-150 disabled:opacity-50"
-                        >
-                          تأیید
-                        </button>
-                        <button
-                          disabled={busy === a.id}
-                          onClick={() => act(a.id, "reject")}
-                          className="rounded-lg bg-gray-100 text-gray-700 px-3 py-1 text-xs hover:bg-gray-200 transition-colors duration-150 disabled:opacity-50 mr-2"
-                        >
-                          رد
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {/* جزئیات اقلام */}
-      {!loading && tab === "pending" && expanded && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <div className="text-sm font-bold mb-2">اقلام فاکتور و تخصیص FIFO</div>
-          <table className="w-full text-xs">
-            <thead className="text-gray-500">
-              <tr>
-                <th className="p-2 text-right">کالا</th>
-                <th className="p-2 text-left">تعداد</th>
-                <th className="p-2 text-left">قیمت فروش</th>
-                <th className="p-2 text-left">تخصیص‌یافته</th>
-                <th className="p-2 text-left">بهای واحد</th>
-                <th className="p-2 text-left">بهای تمام‌شده</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(pending.find((x) => x.id === expanded)?.lines ?? []).map((l) => (
-                <tr key={l.id} className="border-t border-gray-100">
-                  <td className="p-2">{l.nameSnapshot}</td>
-                  <td className="p-2 text-left">{toFaDigits(String(l.quantity))}</td>
-                  <td className="p-2 text-left">{money(l.unitPrice)}</td>
-                  <td className="p-2 text-left">
-                    {l.allocatedQty < l.quantity ? (
-                      <span className="text-red-700">
-                        {toFaDigits(String(l.allocatedQty))} / {toFaDigits(String(l.quantity))}
-                      </span>
-                    ) : (
-                      toFaDigits(String(l.allocatedQty))
-                    )}
-                  </td>
-                  <td className="p-2 text-left">{money(l.unitCogs)}</td>
-                  <td className="p-2 text-left">{money(l.cogsTotal)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {/* تأیید شده */}
       {!loading && tab === "approved" && (
@@ -517,6 +427,178 @@ export default function AccountingNewPage() {
                 ))}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {/* لیست خرید */}
+      {!loading && tab === "purchase" && (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-600 leading-6">
+            کالاهایی که در فاکتور فروش آمده‌اند. «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید
+            هم کمبود را کم می‌کند و هم به «خرید کل» بالای صفحه می‌پیوندد.
+          </div>
+
+          {plist.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
+              کالایی در فاکتور فروش نیست.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-500 text-xs">
+                  <tr>
+                    <th className="p-3 text-right">کالا</th>
+                    <th className="p-3 text-left">فروش رفته</th>
+                    <th className="p-3 text-left">خریداری‌شده</th>
+                    <th className="p-3 text-left">در انبار</th>
+                    <th className="p-3 text-left">کمبود</th>
+                    <th className="p-3 text-left">خرید ثبت‌شده</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plist.map((it) => {
+                    const open = expanded === it.productId;
+                    const f = pForm[it.productId] ?? {
+                      quantity: it.shortage > 0 ? String(it.shortage) : "",
+                      unitCost: it.avgCost != null ? String(Math.round(it.avgCost)) : "",
+                      supplierId: "",
+                    };
+                    const suppliers = parties.filter((pp) => pp.kind === "SUPPLIER");
+                    return (
+                      <Fragment key={it.productId}>
+                        <tr
+                          onClick={() => setExpanded(open ? null : it.productId)}
+                          className={
+                            "border-t border-gray-100 cursor-pointer transition-colors duration-150 " +
+                            (open ? "bg-blue-50" : "hover:bg-gray-50")
+                          }
+                        >
+                          <td className="p-3">{it.name}</td>
+                          <td className="p-3 text-left text-gray-600">{money(it.soldQty)}</td>
+                          <td className="p-3 text-left text-gray-500">{money(it.purchasedQty)}</td>
+                          <td className="p-3 text-left text-gray-500">{money(it.remainingQty)}</td>
+                          <td className="p-3 text-left">
+                            {it.shortage > 0 ? (
+                              <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
+                                {money(it.shortage)}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-left text-xs text-gray-500">
+                            {it.manualTotal > 0 ? money(it.manualTotal) : "—"}
+                          </td>
+                        </tr>
+
+                        {open && (
+                          <tr className="bg-gray-50 border-t border-gray-200">
+                            <td colSpan={6} className="p-4">
+                              {/* فیلد کمبود */}
+                              <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2">
+                                <span className="text-xs text-gray-500">کمبود این کالا</span>
+                                <span className="text-lg font-bold text-red-700">
+                                  {money(it.shortage)}
+                                </span>
+                                <span className="text-xs text-gray-500">عدد</span>
+                              </div>
+
+                              {/* ثبت خرید — دقیقاً زیر فیلد کمبود */}
+                              <div className="flex flex-wrap gap-3 items-end">
+                                <div className="w-[110px]">
+                                  <label className="block text-[11px] text-gray-500 mb-1">تعداد</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={f.quantity}
+                                    onChange={(e) =>
+                                      setPForm({ ...pForm, [it.productId]: { ...f, quantity: e.target.value } })
+                                    }
+                                    className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                  />
+                                </div>
+                                <div className="w-[160px]">
+                                  <label className="block text-[11px] text-gray-500 mb-1">
+                                    قیمت واحد (تومان)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={f.unitCost}
+                                    onChange={(e) =>
+                                      setPForm({ ...pForm, [it.productId]: { ...f, unitCost: e.target.value } })
+                                    }
+                                    placeholder={it.avgCost != null ? String(Math.round(it.avgCost)) : "0"}
+                                    className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-[180px]">
+                                  <label className="block text-[11px] text-gray-500 mb-1">تأمین‌کننده</label>
+                                  <select
+                                    value={f.supplierId}
+                                    onChange={(e) =>
+                                      setPForm({ ...pForm, [it.productId]: { ...f, supplierId: e.target.value } })
+                                    }
+                                    className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                  >
+                                    <option value="">— انتخاب کنید —</option>
+                                    {suppliers.map((sp) => (
+                                      <option key={sp.id} value={sp.id}>
+                                        {sp.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <button
+                                  onClick={() => submitPurchase(it.productId)}
+                                  disabled={busy === "__buy"}
+                                  className="rounded-lg bg-blue-700 px-4 py-1.5 text-sm text-white hover:bg-blue-800 transition-colors duration-150 disabled:opacity-50"
+                                >
+                                  {busy === "__buy" ? "…" : "ثبت خرید"}
+                                </button>
+                              </div>
+
+                              {/* جمع این خرید */}
+                              {it.manual.length > 0 && (
+                                <div className="mt-4">
+                                  <div className="text-xs font-bold text-gray-600 mb-2">
+                                    خریدهای ثبت‌شده این کالا — جمع:{" "}
+                                    <span className="text-blue-700">{money(it.manualTotal)} تومان</span>
+                                  </div>
+                                  <table className="w-full text-xs bg-white rounded-lg border border-gray-200">
+                                    <tbody>
+                                      {it.manual.map((m) => (
+                                        <tr key={m.id} className="border-t border-gray-100 first:border-t-0">
+                                          <td className="p-2 text-gray-500">{toFaDigits(m.date)}</td>
+                                          <td className="p-2">{m.supplier?.name ?? "—"}</td>
+                                          <td className="p-2 text-left">{money(m.quantity)} عدد</td>
+                                          <td className="p-2 text-left">{money(m.unitCost)}</td>
+                                          <td className="p-2 text-left font-bold">{money(m.total)} تومان</td>
+                                          <td className="p-2 text-left">
+                                            <button
+                                              onClick={() => delManual(m.id)}
+                                              disabled={busy === m.id}
+                                              className="rounded-lg border border-red-200 bg-white px-2 py-0.5 text-[11px] text-red-700 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
+                                            >
+                                              {busy === m.id ? "…" : "حذف"}
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

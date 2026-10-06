@@ -430,8 +430,11 @@ export async function createReceipt(data: {
 // ───────────────────────── ۶) KPI ────────────────────────
 
 export async function computeKpis(r: DateRange) {
+  // بازهٔ شمسی برای ستون‌های شمسی (بچ‌ها) و معادل میلادی برای DateTime ها
   const f = r.from ?? "0001-01-01";
   const t = r.to ?? "9999-12-31";
+  const fG = r.from ? jalaliToIso(r.from) ?? "0001-01-01" : "0001-01-01";
+  const tG = r.to ? jalaliToIso(r.to) ?? "9999-12-31" : "9999-12-31";
 
   // فروش = فاکتورهایی که تخصیصشان APPROVED شده
   const salesRows = await prisma.$queryRaw<{ total: number; n: number }[]>`
@@ -439,10 +442,10 @@ export async function computeKpis(r: DateRange) {
     FROM pre_invoices p
     JOIN cogs_allocations a ON a."preInvoiceId" = p.id
     WHERE a.status = 'APPROVED'
-      AND to_char(a."approvedAt", 'YYYY-MM-DD') BETWEEN ${f} AND ${t}
+      AND to_char(a."approvedAt", 'YYYY-MM-DD') BETWEEN ${fG} AND ${tG}
   `;
 
-  // خرید = بچ‌های ثبت‌شده از فاکتورهای خرید
+  // خرید = بچ‌های ثبت‌شده از فاکتورهای خرید + خریدهای دستی از تب «لیست خرید»
   const purchases = await prisma.$queryRaw<{ total: number; n: number }[]>`
     SELECT COALESCE(sum(b.quantity * b."unitCost"),0)::float AS total, count(*)::int AS n
     FROM product_purchase_batches b
@@ -454,7 +457,7 @@ export async function computeKpis(r: DateRange) {
     SELECT COALESCE(sum(a."totalCogs"),0)::float AS total
     FROM cogs_allocations a
     WHERE a.status = 'APPROVED'
-      AND to_char(a."approvedAt", 'YYYY-MM-DD') BETWEEN ${f} AND ${t}
+      AND to_char(a."approvedAt", 'YYYY-MM-DD') BETWEEN ${fG} AND ${tG}
   `;
 
   const salesTotal = Number(salesRows[0]?.total ?? 0);
@@ -472,6 +475,23 @@ export async function computeKpis(r: DateRange) {
 }
 
 // ───────────────────────── کمکی ────────────────────────
+
+/**
+ * شمسی (YYYY/MM/DD) به میلادی — با همان `j2g` که پشتوانهٔ `toJalali` است.
+ * برای مرز KPI ها استفاده می‌شود تا تاریخ میلادی ستون approvedAt با بازهٔ شمسی مقایسه شود.
+ */
+export function jalaliToIso(j: string): string | null {
+  const m = /^(\d{4})\/(\d{2})\/(\d{2})$/.exec(j.trim());
+  if (!m) return null;
+  const jy = Number(m[1]);
+  const jm = Number(m[2]);
+  const jd = Number(m[3]);
+  if (jm < 1 || jm > 12 || jd < 1 || jd > 31) return null;
+  const g = j2g(jy, jm, jd);
+  if (!(g.gy > 0) || g.gm < 1 || g.gm > 12 || g.gd < 1 || g.gd > 31) return null;
+  return `${g.gy}-${p2(g.gm)}-${p2(g.gd)}`;
+}
+
 
 /** میلادی به شمسی ثابت‌عرض — با همان الگوریتم تأییدشدهٔ convert-access-invoices */
 const DIV = (a: number, b: number) => Math.trunc(a / b);
@@ -601,7 +621,242 @@ export async function syncPurchaseBatches() {
  * بعد از تغییر وضعیت فاکتور — اگر COMPLETED شد، پیش‌نویس تخصیص COGS می‌سازد.
  * (هیچ سند قطعی نمی‌زند؛ منتظر تأیید مدیر می‌ماند)
  */
-export async function onPreInvoiceStatusChanged(preInvoiceId: string, status: string) {
+export async function onPreInvoiceStatusChanged(
+  preInvoiceId: string,
+  status: string,
+  adminId?: string
+) {
   if (status !== "COMPLETED") return null;
-  return createPendingAllocation(preInvoiceId);
+
+  // اگر قبلاً تأیید شده باشد همان را برمی‌گرداند (idempotent)
+  const existing = await prisma.cogsAllocation.findUnique({
+    where: { preInvoiceId },
+    include: { lines: true },
+  });
+  if (existing?.status === "APPROVED") return existing;
+
+  if (!existing) await createPendingAllocation(preInvoiceId);
+
+  const owner = adminId ?? (await systemAdminId());
+  const res = await approveAllocation(existing?.id ?? (await requireAllocationId(preInvoiceId)), owner);
+  if (!res.ok) throw new Error(res.error || "تأیید خودکار ناموفق بود");
+
+  return prisma.cogsAllocation.findUnique({
+    where: { preInvoiceId },
+    include: { lines: true },
+  });
+}
+
+/**
+ * همگام‌سازی: هر فاکتور COMPLETED که تخصیص ندارد یا تخصیصش در انتظار است
+ * را خودکار تأیید می‌کند — چون فرآیند تأیید دستی حذف شده است.
+ */
+export async function backfillAutoApprove(): Promise<number> {
+  let n = 0;
+
+  const missing = await prisma.preInvoice.findMany({
+    where: { status: "COMPLETED", cogsAllocation: null },
+    select: { id: true },
+    take: 50,
+  });
+  for (const m of missing) {
+    try {
+      await onPreInvoiceStatusChanged(m.id, "COMPLETED");
+      n++;
+    } catch {
+      /* رد شد */
+    }
+  }
+
+  const pending = await prisma.cogsAllocation.findMany({
+    where: { status: "PENDING_APPROVAL" },
+    select: { preInvoiceId: true },
+    take: 50,
+  });
+  for (const p of pending) {
+    try {
+      await onPreInvoiceStatusChanged(p.preInvoiceId, "COMPLETED");
+      n++;
+    } catch {
+      /* رد شد */
+    }
+  }
+
+  return n;
+}
+
+async function requireAllocationId(preInvoiceId: string): Promise<string> {
+  const a = await prisma.cogsAllocation.findUnique({
+    where: { preInvoiceId },
+    select: { id: true },
+  });
+  if (!a) throw new Error("پیش‌نویس تخصیص ساخته نشد");
+  return a.id;
+}
+
+/** شناسهٔ کاربر مدیر — برای ستون‌های approvedById/rejectedById */
+async function systemAdminId(): Promise<string> {
+  const rows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM users WHERE role = 'ADMIN' ORDER BY "createdAt" ASC LIMIT 1`;
+  if (!rows[0]?.id) throw new Error("کاربر مدیر پیدا نشد");
+  return rows[0].id;
+}
+
+// ───────────────────────── ۹) لیست خرید ────────────────────────
+
+function todayIso(): string {
+  const n = new Date();
+  const p = (v: number) => String(v).padStart(2, "0");
+  return `${n.getUTCFullYear()}-${p(n.getUTCMonth() + 1)}-${p(n.getUTCDate())}`;
+}
+
+export type PurchaseItem = {
+  productId: string;
+  name: string;
+  soldQty: number;
+  purchasedQty: number;
+  remainingQty: number;
+  shortage: number;
+  avgCost: number | null;
+  manualTotal: number;
+  manual: {
+    id: string;
+    quantity: number;
+    unitCost: number;
+    total: number;
+    date: string;
+    supplier: { id: string; name: string } | null;
+  }[];
+};
+
+/**
+ * لیست خرید = کالاهایی که در فاکتور فروش آمده‌اند.
+ * کمبود = تعداد فروخته‌شده − تعداد خریداری‌شده (از فاکتور خرید + خریدهای دستی).
+ * خریدهای دستی به همان بچ‌ها می‌چسبند، پس «خرید کل» (KPI) خودبه‌خود شاملشان می‌شود.
+ */
+export async function getPurchaseList(): Promise<PurchaseItem[]> {
+  const sold = await prisma.$queryRaw<{ productId: string; qty: number }[]>`
+    SELECT it->>'productId' AS "productId",
+           COALESCE(sum((it->>'quantity')::float),0)::float AS qty
+    FROM pre_invoices, jsonb_array_elements(items) it
+    WHERE it->>'productId' IS NOT NULL
+    GROUP BY 1`;
+
+  const bought = await prisma.$queryRaw<{
+    productId: string; qty: number; remaining: number; cost: number; manual: number;
+  }[]>`
+    SELECT "productId",
+           COALESCE(sum(quantity),0)::float              AS qty,
+           COALESCE(sum("remainingQty"),0)::float        AS remaining,
+           COALESCE(sum(quantity * "unitCost"),0)::float AS cost,
+           COALESCE(sum(quantity) FILTER (WHERE "purchaseInvoiceId" IS NULL),0)::float AS manual
+    FROM product_purchase_batches
+    GROUP BY "productId"`;
+
+  const bMap = new Map(bought.map((b) => [b.productId, b]));
+
+  const ids = sold.map((r) => r.productId);
+  const products = ids.length
+    ? await prisma.product.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, name: true },
+      })
+    : [];
+  const nameMap = new Map(products.map((p) => [p.id, p.name]));
+
+  const manualRows = await prisma.productPurchaseBatch.findMany({
+    where: { purchaseInvoiceId: null },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      productId: true,
+      quantity: true,
+      unitCost: true,
+      date: true,
+      supplier: { select: { id: true, name: true } },
+    },
+  });
+  const manualMap = new Map<string, PurchaseItem["manual"]>();
+  for (const m of manualRows) {
+    const arr = manualMap.get(m.productId) ?? [];
+    arr.push({
+      id: m.id,
+      quantity: m.quantity,
+      unitCost: m.unitCost,
+      total: m.quantity * m.unitCost,
+      date: m.date,
+      supplier: m.supplier,
+    });
+    manualMap.set(m.productId, arr);
+  }
+
+  const rows: PurchaseItem[] = sold.map((r) => {
+    const b = bMap.get(r.productId);
+    const purchased = Number(b?.qty ?? 0);
+    const soldQty = Number(r.qty ?? 0);
+    const cost = Number(b?.cost ?? 0);
+    return {
+      productId: r.productId,
+      name: nameMap.get(r.productId) ?? "—",
+      soldQty,
+      purchasedQty: purchased,
+      remainingQty: Number(b?.remaining ?? 0),
+      shortage: Math.max(0, soldQty - purchased),
+      avgCost: purchased > 0 ? cost / purchased : null,
+      manualTotal: Number(b?.manual ?? 0),
+      manual: manualMap.get(r.productId) ?? [],
+    };
+  });
+
+  rows.sort((a, b) => b.shortage - a.shortage || b.soldQty - a.soldQty);
+  return rows;
+}
+
+/** ثبت خرید دستی از تب «لیست خرید» — ساخت یک بچ بدون فاکتور خرید */
+export async function recordPurchase(data: {
+  productId: string;
+  supplierId: string;
+  quantity: number;
+  unitCost: number;
+  note?: string | null;
+}) {
+  const quantity = Number(data.quantity);
+  const unitCost = Number(data.unitCost);
+  if (!(quantity > 0)) throw new Error("تعداد باید بزرگ‌تر از صفر باشد");
+  if (!(unitCost >= 0)) throw new Error("قیمت نامعتبر است");
+
+  const [product, supplier] = await Promise.all([
+    prisma.product.findUnique({ where: { id: data.productId }, select: { id: true } }),
+    prisma.party.findUnique({ where: { id: data.supplierId }, select: { id: true, kind: true } }),
+  ]);
+  if (!product) throw new Error("کالا پیدا نشد");
+  if (!supplier) throw new Error("تأمین‌کننده پیدا نشد");
+
+  return prisma.productPurchaseBatch.create({
+    data: {
+      productId: data.productId,
+      supplierId: data.supplierId,
+      quantity,
+      unitCost,
+      remainingQty: quantity,
+      date: toJalali(todayIso()),
+      reference: null,
+      purchaseInvoiceId: null,
+      note: data.note?.trim() || "خرید دستی از لیست خرید",
+      status: "ACTIVE",
+    },
+    include: { supplier: { select: { id: true, name: true } } },
+  });
+}
+
+/** حذف خرید دستی (فقط بدون فاکتور خرید) */
+export async function deleteManualPurchase(batchId: string) {
+  const b = await prisma.productPurchaseBatch.findUnique({ where: { id: batchId } });
+  if (!b) throw new Error("رکورد پیدا نشد");
+  if (b.purchaseInvoiceId) throw new Error("این رکورد از فاکتور خرید ساخته شده و قابل حذف نیست");
+  if (b.remainingQty < b.quantity - 0.0001) {
+    throw new Error("بخشی از این خرید مصرف شده؛ قابل حذف نیست");
+  }
+  await prisma.productPurchaseBatch.delete({ where: { id: batchId } });
+  return { ok: true };
 }

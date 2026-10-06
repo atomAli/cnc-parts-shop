@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
-import { computeKpis, parseRange } from "@/lib/accounting-new";
+import { backfillAutoApprove, computeKpis, parseRange } from "@/lib/accounting-new";
 
 // GET — داشبورد حسابداری جدید: KPI + پیش‌نویس‌های در انتظار تأیید
 export async function GET(req: NextRequest) {
   const admin = await requireAdmin();
   if (!admin) return unauthorized();
+
+  // فرآیند تأیید دستی حذف شده — هر رکورد جامانده همین‌جا خودکار تأیید می‌شود
+  try {
+    await backfillAutoApprove();
+  } catch {
+    /* در صورت خطا، خروجی فعلی همچنان برمی‌گردد */
+  }
 
   const range = parseRange(req.nextUrl.searchParams);
   const kpis = await computeKpis(range);

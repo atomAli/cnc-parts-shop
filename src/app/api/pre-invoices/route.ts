@@ -196,11 +196,14 @@ export async function PATCH(req: NextRequest) {
     data: { status },
   });
 
-  // حسابداری جدید: با رفتن به «تکمیل شده»، پیش‌نویس تخصیص بهای تمام‌شده ساخته می‌شود
-  // (هیچ سند قطعی نمی‌خورد تا مدیر تأیید کند)
+  // حسابداری جدید: با رفتن به «ارسال شده»، فوراً تخصیص بهای تمام‌شده + سند دفتر ثبت می‌شود
   let cogsAllocation = null;
   try {
-    cogsAllocation = await onPreInvoiceStatusChanged(preInvoice.id, status);
+    cogsAllocation = await onPreInvoiceStatusChanged(
+      preInvoice.id,
+      status,
+      (session.user as any)?.id
+    );
   } catch {
     cogsAllocation = null;
   }
