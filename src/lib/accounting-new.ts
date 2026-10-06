@@ -713,7 +713,11 @@ function todayIso(): string {
 export type PurchaseItem = {
   productId: string;
   name: string;
+  /** کالای متری: مقادیر بر حسب متر است؛ غیر متری: بر حسب عدد */
+  isMeter: boolean;
   soldQty: number;
+  /** فقط کالای متری: تعداد شاخه فروخته‌شده */
+  soldBranches: number;
   purchasedQty: number;
   remainingQty: number;
   shortage: number;
@@ -735,11 +739,20 @@ export type PurchaseItem = {
  * خریدهای دستی به همان بچ‌ها می‌چسبند، پس «خرید کل» (KPI) خودبه‌خود شاملشان می‌شود.
  */
 export async function getPurchaseList(): Promise<PurchaseItem[]> {
-  const sold = await prisma.$queryRaw<{ productId: string; qty: number }[]>`
+  // فقط فاکتورهای سایت (نه فاکتورهای قدیمی Access)
+  const sold = await prisma.$queryRaw<{
+    productId: string; qty: number; meters: number;
+  }[]>`
     SELECT it->>'productId' AS "productId",
-           COALESCE(sum((it->>'quantity')::float),0)::float AS qty
+           COALESCE(sum((it->>'quantity')::float),0)::float AS qty,
+           COALESCE(sum(
+             CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                  THEN (it->>'quantity')::float * (it->>'branchLength')::float / 100.0
+                  ELSE (it->>'quantity')::float END
+           ),0)::float AS meters
     FROM pre_invoices, jsonb_array_elements(items) it
     WHERE it->>'productId' IS NOT NULL
+      AND source <> 'ACCESS'
     GROUP BY 1`;
 
   const bought = await prisma.$queryRaw<{
@@ -759,10 +772,10 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
   const products = ids.length
     ? await prisma.product.findMany({
         where: { id: { in: ids } },
-        select: { id: true, name: true },
+        select: { id: true, name: true, isMeter: true },
       })
     : [];
-  const nameMap = new Map(products.map((p) => [p.id, p.name]));
+  const prodMap = new Map(products.map((p) => [p.id, p]));
 
   const manualRows = await prisma.productPurchaseBatch.findMany({
     where: { purchaseInvoiceId: null },
@@ -791,14 +804,20 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
   }
 
   const rows: PurchaseItem[] = sold.map((r) => {
+    const prod = prodMap.get(r.productId);
+    const isMeter = prod?.isMeter === true;
     const b = bMap.get(r.productId);
     const purchased = Number(b?.qty ?? 0);
-    const soldQty = Number(r.qty ?? 0);
+    // کالای متری: فروش بر حسب متراژ (متر) — غیر متری: بر حسب عدد
+    const soldQty = isMeter ? Number(r.meters ?? 0) : Number(r.qty ?? 0);
+    const soldBranches = isMeter ? Number(r.qty ?? 0) : 0;
     const cost = Number(b?.cost ?? 0);
     return {
       productId: r.productId,
-      name: nameMap.get(r.productId) ?? "—",
+      name: prod?.name ?? "—",
+      isMeter,
       soldQty,
+      soldBranches,
       purchasedQty: purchased,
       remainingQty: Number(b?.remaining ?? 0),
       shortage: Math.max(0, soldQty - purchased),
@@ -819,18 +838,37 @@ export async function recordPurchase(data: {
   quantity: number;
   unitCost: number;
   note?: string | null;
+  /** فقط کالای متری — قانون فاکتور فروش: متراژ = تعداد شاخه × متراژ هر شاخه / ۱۰۰ */
+  branchCount?: number;
+  branchLength?: number;
 }) {
-  const quantity = Number(data.quantity);
   const unitCost = Number(data.unitCost);
-  if (!(quantity > 0)) throw new Error("تعداد باید بزرگ‌تر از صفر باشد");
   if (!(unitCost >= 0)) throw new Error("قیمت نامعتبر است");
 
   const [product, supplier] = await Promise.all([
-    prisma.product.findUnique({ where: { id: data.productId }, select: { id: true } }),
+    prisma.product.findUnique({ where: { id: data.productId }, select: { id: true, isMeter: true } }),
     prisma.party.findUnique({ where: { id: data.supplierId }, select: { id: true, kind: true } }),
   ]);
   if (!product) throw new Error("کالا پیدا نشد");
   if (!supplier) throw new Error("تأمین‌کننده پیدا نشد");
+
+  let quantity = Number(data.quantity);
+
+  if (product.isMeter) {
+    // قانون تعداد و متراژ: تعداد شاخه × متراژ هر شاخه (cm) ÷ ۱۰۰ = متر
+    const hasBranch = data.branchCount != null && data.branchLength != null;
+    if (hasBranch) {
+      const bc = Number(data.branchCount);
+      const bl = Number(data.branchLength);
+      if (!Number.isFinite(bc) || bc <= 0) throw new Error("تعداد شاخه باید بزرگ‌تر از صفر باشد");
+      if (!Number.isFinite(bl) || bl <= 0) throw new Error("متراژ هر شاخه نامعتبر است");
+      quantity = (bc * bl) / 100;
+    }
+    if (!(quantity > 0)) throw new Error("متراژ باید بزرگ‌تر از صفر باشد");
+  } else {
+    if (!(quantity > 0)) throw new Error("تعداد باید بزرگ‌تر از صفر باشد");
+    quantity = Math.round(quantity);
+  }
 
   return prisma.productPurchaseBatch.create({
     data: {

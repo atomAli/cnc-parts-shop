@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { getProductMaxLength } from "@/lib/meter-product";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -66,7 +67,9 @@ type Receipt = {
 type PurchaseItem = {
   productId: string;
   name: string;
+  isMeter: boolean;
   soldQty: number;
+  soldBranches: number;
   purchasedQty: number;
   remainingQty: number;
   shortage: number;
@@ -128,7 +131,10 @@ export default function AccountingNewPage() {
   // لیست خرید
   const [plist, setPlist] = useState<PurchaseItem[]>([]);
   const [pForm, setPForm] = useState<
-    Record<string, { quantity: string; unitCost: string; supplierId: string }>
+    Record<
+      string,
+      { quantity: string; unitCost: string; supplierId: string; branchCount: string; branchLength: string }
+    >
   >({});
 
   // فرم دریافت
@@ -196,8 +202,14 @@ export default function AccountingNewPage() {
   async function submitPurchase(productId: string) {
     const f = pForm[productId];
     if (!f) return notify(false, "ابتدا تعداد و قیمت را وارد کنید");
-    if (!f.quantity || Number(f.quantity) <= 0) return notify(false, "تعداد درست وارد کنید");
     if (!f.supplierId) return notify(false, "تأمین‌کننده را انتخاب کنید");
+    const isMeter = plist.find((x) => x.productId === productId)?.isMeter === true;
+    if (isMeter) {
+      if (!f.branchCount || Number(f.branchCount) <= 0) return notify(false, "تعداد شاخه را درست وارد کنید");
+      if (!f.branchLength || Number(f.branchLength) <= 0) return notify(false, "متراژ هر شاخه را درست وارد کنید");
+    } else if (!f.quantity || Number(f.quantity) <= 0) {
+      return notify(false, "تعداد درست وارد کنید");
+    }
     setBusy("__buy");
     try {
       const res = await fetch("/api/admin/accounting-new/purchase-list", {
@@ -206,14 +218,25 @@ export default function AccountingNewPage() {
         body: JSON.stringify({
           productId,
           supplierId: f.supplierId,
-          quantity: Number(f.quantity),
+          quantity: isMeter ? Number(f.branchCount) * Number(f.branchLength) / 100 : Number(f.quantity),
           unitCost: Number(f.unitCost || 0),
+          branchCount: isMeter ? Number(f.branchCount) : undefined,
+          branchLength: isMeter ? Number(f.branchLength) : undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) return notify(false, data.error || "خطا در ثبت خرید");
       notify(true, "خرید ثبت شد");
-      setPForm({ ...pForm, [productId]: { quantity: "", unitCost: f.unitCost, supplierId: f.supplierId } });
+      setPForm({
+        ...pForm,
+        [productId]: {
+          quantity: "",
+          unitCost: f.unitCost,
+          supplierId: f.supplierId,
+          branchCount: "",
+          branchLength: f.branchLength,
+        },
+      });
       await load();
     } finally {
       setBusy(null);
@@ -435,8 +458,9 @@ export default function AccountingNewPage() {
       {!loading && tab === "purchase" && (
         <div className="space-y-3">
           <div className="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-600 leading-6">
-            کالاهایی که در فاکتور فروش آمده‌اند. «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید
-            هم کمبود را کم می‌کند و هم به «خرید کل» بالای صفحه می‌پیوندد.
+            فقط کالاهایی که در <b>فاکتورهای سایت</b> آمده‌اند (فاکتورهای قدیمی حساب نمی‌شوند).
+            «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید هم کمبود را کم می‌کند و هم به
+            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰.
           </div>
 
           {plist.length === 0 ? (
@@ -449,7 +473,7 @@ export default function AccountingNewPage() {
                 <thead className="bg-gray-50 text-gray-500 text-xs">
                   <tr>
                     <th className="p-3 text-right">کالا</th>
-                    <th className="p-3 text-left">فروش رفته</th>
+                    <th className="p-3 text-left">فروش رفته (عدد / متر)</th>
                     <th className="p-3 text-left">خریداری‌شده</th>
                     <th className="p-3 text-left">در انبار</th>
                     <th className="p-3 text-left">کمبود</th>
@@ -463,8 +487,16 @@ export default function AccountingNewPage() {
                       quantity: it.shortage > 0 ? String(it.shortage) : "",
                       unitCost: it.avgCost != null ? String(Math.round(it.avgCost)) : "",
                       supplierId: "",
+                      branchCount: "",
+                      branchLength: it.isMeter
+                        ? String(getProductMaxLength({ name: it.name, isMeter: true }))
+                        : "",
                     };
                     const suppliers = parties.filter((pp) => pp.kind === "SUPPLIER");
+                    const u = it.isMeter ? "متر" : "عدد";
+                    const meterFrom = Number(f.branchCount) > 0 && Number(f.branchLength) > 0
+                      ? (Number(f.branchCount) * Number(f.branchLength)) / 100
+                      : 0;
                     return (
                       <Fragment key={it.productId}>
                         <tr
@@ -474,14 +506,32 @@ export default function AccountingNewPage() {
                             (open ? "bg-blue-50" : "hover:bg-gray-50")
                           }
                         >
-                          <td className="p-3">{it.name}</td>
-                          <td className="p-3 text-left text-gray-600">{money(it.soldQty)}</td>
-                          <td className="p-3 text-left text-gray-500">{money(it.purchasedQty)}</td>
-                          <td className="p-3 text-left text-gray-500">{money(it.remainingQty)}</td>
+                          <td className="p-3">
+                            {it.name}
+                            {it.isMeter && (
+                              <span className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                                متری
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-left text-gray-600">
+                            {money(it.soldQty)} <span className="text-[11px] text-gray-400">{u}</span>
+                            {it.isMeter && it.soldBranches > 0 && (
+                              <div className="text-[11px] text-amber-700">
+                                {money(it.soldBranches)} شاخه
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3 text-left text-gray-500">
+                            {money(it.purchasedQty)} <span className="text-[11px] text-gray-400">{u}</span>
+                          </td>
+                          <td className="p-3 text-left text-gray-500">
+                            {money(it.remainingQty)} <span className="text-[11px] text-gray-400">{u}</span>
+                          </td>
                           <td className="p-3 text-left">
                             {it.shortage > 0 ? (
                               <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
-                                {money(it.shortage)}
+                                {money(it.shortage)} {u}
                               </span>
                             ) : (
                               <span className="text-xs text-gray-400">—</span>
@@ -501,26 +551,64 @@ export default function AccountingNewPage() {
                                 <span className="text-lg font-bold text-red-700">
                                   {money(it.shortage)}
                                 </span>
-                                <span className="text-xs text-gray-500">عدد</span>
+                                <span className="text-xs text-gray-500">{u}</span>
                               </div>
 
                               {/* ثبت خرید — دقیقاً زیر فیلد کمبود */}
                               <div className="flex flex-wrap gap-3 items-end">
-                                <div className="w-[110px]">
-                                  <label className="block text-[11px] text-gray-500 mb-1">تعداد</label>
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    value={f.quantity}
-                                    onChange={(e) =>
-                                      setPForm({ ...pForm, [it.productId]: { ...f, quantity: e.target.value } })
-                                    }
-                                    className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                                  />
-                                </div>
+                                {it.isMeter ? (
+                                  <>
+                                    <div className="w-[110px]">
+                                      <label className="block text-[11px] text-gray-500 mb-1">تعداد شاخه</label>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={f.branchCount}
+                                        onChange={(e) =>
+                                          setPForm({ ...pForm, [it.productId]: { ...f, branchCount: e.target.value } })
+                                        }
+                                        placeholder={it.soldBranches > 0 ? String(it.soldBranches) : "1"}
+                                        className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                      />
+                                    </div>
+                                    <div className="w-[150px]">
+                                      <label className="block text-[11px] text-gray-500 mb-1">
+                                        متراژ هر شاخه (سانتی‌متر)
+                                      </label>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={f.branchLength}
+                                        onChange={(e) =>
+                                          setPForm({ ...pForm, [it.productId]: { ...f, branchLength: e.target.value } })
+                                        }
+                                        className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                      />
+                                    </div>
+                                    <div className="w-[120px]">
+                                      <label className="block text-[11px] text-gray-500 mb-1">متراژ کل (متر)</label>
+                                      <div className="border border-dashed border-gray-300 rounded-lg px-2 py-1.5 text-sm bg-white text-blue-700 font-bold">
+                                        {meterFrom > 0 ? money(meterFrom) : "—"}
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="w-[110px]">
+                                    <label className="block text-[11px] text-gray-500 mb-1">تعداد</label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      value={f.quantity}
+                                      onChange={(e) =>
+                                        setPForm({ ...pForm, [it.productId]: { ...f, quantity: e.target.value } })
+                                      }
+                                      className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                    />
+                                  </div>
+                                )}
                                 <div className="w-[160px]">
                                   <label className="block text-[11px] text-gray-500 mb-1">
-                                    قیمت واحد (تومان)
+                                    {it.isMeter ? "قیمت هر متر (تومان)" : "قیمت واحد (تومان)"}
                                   </label>
                                   <input
                                     type="number"
@@ -572,7 +660,9 @@ export default function AccountingNewPage() {
                                         <tr key={m.id} className="border-t border-gray-100 first:border-t-0">
                                           <td className="p-2 text-gray-500">{toFaDigits(m.date)}</td>
                                           <td className="p-2">{m.supplier?.name ?? "—"}</td>
-                                          <td className="p-2 text-left">{money(m.quantity)} عدد</td>
+                                          <td className="p-2 text-left">
+                                            {money(m.quantity)} {it.isMeter ? "متر" : "عدد"}
+                                          </td>
                                           <td className="p-2 text-left">{money(m.unitCost)}</td>
                                           <td className="p-2 text-left font-bold">{money(m.total)} تومان</td>
                                           <td className="p-2 text-left">

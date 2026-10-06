@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
       quantity: Number(body?.quantity),
       unitCost: Number(body?.unitCost),
       note: typeof body?.note === "string" ? body.note : null,
+      branchCount: body?.branchCount != null ? Number(body.branchCount) : undefined,
+      branchLength: body?.branchLength != null ? Number(body.branchLength) : undefined,
     });
     return NextResponse.json({ ok: true, row });
   } catch (e) {
