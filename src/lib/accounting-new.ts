@@ -563,12 +563,26 @@ export async function computeKpis(r: DateRange) {
     `,
   ]);
 
-  // خرید = بچ‌های ثبت‌شده از فاکتورهای خرید + خریدهای دستی از تب «لیست خرید»
-  const purchases = await prisma.$queryRaw<{ total: number; n: number }[]>`
-    SELECT COALESCE(sum(b.quantity * b."unitCost"),0)::float AS total, count(*)::int AS n
-    FROM product_purchase_batches b
-    WHERE b.date BETWEEN ${f} AND ${t}
-  `;
+  // خرید کل = فاکتورهای خرید (همان رقمِ حسابداری قدیم)
+  //          + خریدهای دستی ثبت‌شده از تب «لیست خرید»
+  const [legacyPurchases, manualPurchases] = await Promise.all([
+    prisma.purchaseInvoice.aggregate({
+      _sum: { total: true },
+      _count: true,
+      where: {
+        AND: [
+          r.from ? { date: { gte: r.from } } : {},
+          r.to ? { date: { lte: r.to } } : {},
+        ],
+      },
+    }),
+    prisma.$queryRaw<{ total: number; n: number }[]>`
+      SELECT COALESCE(sum(b.quantity * b."unitCost"),0)::float AS total, count(*)::int AS n
+      FROM product_purchase_batches b
+      WHERE b."purchaseInvoiceId" IS NULL
+        AND b.date BETWEEN ${f} AND ${t}
+    `,
+  ]);
 
   // بهای تمام‌شده = جمع COGS فاکتورهای تأییدشده
   const cogs = await prisma.$queryRaw<{ total: number }[]>`
@@ -582,14 +596,17 @@ export async function computeKpis(r: DateRange) {
     Number(legacySales._sum.total ?? 0) + Number(siteSales[0]?.total ?? 0);
   const salesCount =
     Number(legacySales._count ?? 0) + Number(siteSales[0]?.n ?? 0);
-  const purchaseTotal = Number(purchases[0]?.total ?? 0);
+  const purchaseTotal =
+    Number(legacyPurchases._sum.total ?? 0) + Number(manualPurchases[0]?.total ?? 0);
+  const purchaseCount =
+    Number(legacyPurchases._count ?? 0) + Number(manualPurchases[0]?.n ?? 0);
   const cogsTotal = Number(cogs[0]?.total ?? 0);
 
   return {
     sales: salesTotal,
     salesCount,
     purchases: purchaseTotal,
-    purchaseCount: Number(purchases[0]?.n ?? 0),
+    purchaseCount,
     cogs: cogsTotal,
     // سود = فروش کل − خرید کل (مثل «سود ناخالص» حسابداری قدیم)
     profit: salesTotal - purchaseTotal,

@@ -131,7 +131,7 @@ export default function AccountingNewPage() {
   const [pForm, setPForm] = useState<
     Record<
       string,
-      { quantity: string; unitCost: string; supplierId: string; branchCount: string; branchLength: string }
+      { quantity: string; unitCost: string; supplierId: string; supplierQuery: string; branchCount: string; branchLength: string }
     >
   >({});
 
@@ -253,7 +253,7 @@ export default function AccountingNewPage() {
   async function submitPurchase(productId: string) {
     const f = pForm[productId];
     if (!f) return notify(false, "ابتدا تعداد و قیمت را وارد کنید");
-    if (!f.supplierId) return notify(false, "تأمین‌کننده را انتخاب کنید");
+    if (!f.supplierId) return notify(false, "تأمین‌کننده را از لیست جستجو انتخاب کنید");
     const isMeter = plist.find((x) => x.productId === productId)?.isMeter === true;
     if (isMeter) {
       if (!f.branchCount || Number(f.branchCount) <= 0) return notify(false, "تعداد شاخه را درست وارد کنید");
@@ -284,6 +284,7 @@ export default function AccountingNewPage() {
           quantity: "",
           unitCost: f.unitCost,
           supplierId: f.supplierId,
+          supplierQuery: f.supplierQuery,
           branchCount: "",
           branchLength: f.branchLength,
         },
@@ -515,6 +516,7 @@ export default function AccountingNewPage() {
                       quantity: it.shortage > 0 ? String(it.shortage) : "",
                       unitCost: it.avgCost != null ? String(Math.round(it.avgCost)) : "",
                       supplierId: "",
+                      supplierQuery: "",
                       branchCount: "",
                       branchLength: it.isMeter
                         ? String(getProductMaxLength({ name: it.name, isMeter: true }))
@@ -649,22 +651,54 @@ export default function AccountingNewPage() {
                                     className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
                                   />
                                 </div>
-                                <div className="flex-1 min-w-[180px]">
+                                <div className="flex-1 min-w-[200px]">
                                   <label className="block text-[11px] text-gray-500 mb-1">تأمین‌کننده</label>
-                                  <select
-                                    value={f.supplierId}
+                                  <input
+                                    value={f.supplierQuery}
                                     onChange={(e) =>
-                                      setPForm({ ...pForm, [it.productId]: { ...f, supplierId: e.target.value } })
+                                      setPForm({
+                                        ...pForm,
+                                        [it.productId]: { ...f, supplierQuery: e.target.value, supplierId: "" },
+                                      })
                                     }
+                                    placeholder="جستجو کنید…"
                                     className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                                  >
-                                    <option value="">— انتخاب کنید —</option>
-                                    {suppliers.map((sp) => (
-                                      <option key={sp.id} value={sp.id}>
-                                        {sp.name}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  />
+                                  {!f.supplierId && f.supplierQuery.trim() && (
+                                    <ul className="mt-1 max-h-40 overflow-auto rounded-lg border border-gray-200 bg-white text-sm">
+                                      {(() => {
+                                        const q = f.supplierQuery.trim();
+                                        const hits = suppliers.filter((sp) => sp.name.includes(q));
+                                        if (hits.length === 0)
+                                          return (
+                                            <li className="px-2 py-1.5 text-gray-400">موردی پیدا نشد</li>
+                                          );
+                                        return hits.map((sp) => (
+                                          <li key={sp.id}>
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                setPForm({
+                                                  ...pForm,
+                                                  [it.productId]: {
+                                                    ...f,
+                                                    supplierId: sp.id,
+                                                    supplierQuery: sp.name,
+                                                  },
+                                                })
+                                              }
+                                              className="w-full text-right px-2 py-1.5 hover:bg-gray-100 transition-colors duration-150"
+                                            >
+                                              {sp.name}
+                                            </button>
+                                          </li>
+                                        ));
+                                      })()}
+                                    </ul>
+                                  )}
+                                  {f.supplierId && (
+                                    <div className="mt-1 text-[11px] text-green-700">✓ انتخاب شد</div>
+                                  )}
                                 </div>
                                 <button
                                   onClick={() => submitPurchase(it.productId)}
