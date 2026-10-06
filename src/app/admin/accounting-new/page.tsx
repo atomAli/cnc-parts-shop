@@ -54,16 +54,6 @@ type Batch = {
   purchaseInvoice?: { number: number; date: string } | null;
 };
 
-type Receipt = {
-  id: string;
-  amount: number;
-  date: string;
-  method: string;
-  note: string | null;
-  party: { id: string; name: string };
-  preInvoice?: { invoiceNumber: number | null } | null;
-};
-
 type PurchaseItem = {
   productId: string;
   name: string;
@@ -117,7 +107,6 @@ const TABS = [
   { id: "approved", label: "تأیید شده" },
   { id: "purchase", label: "لیست خرید" },
   { id: "parties", label: "حساب افراد" },
-  { id: "receipts", label: "دریافت‌ها" },
   { id: "batches", label: "آمار خرید کالا" },
 ] as const;
 
@@ -129,7 +118,6 @@ export default function AccountingNewPage() {
   const [to, setTo] = useState("");
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [approved, setApproved] = useState<Alloc[]>([]);
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [parties, setParties] = useState<Party[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,15 +133,6 @@ export default function AccountingNewPage() {
       { quantity: string; unitCost: string; supplierId: string; branchCount: string; branchLength: string }
     >
   >({});
-
-  // فرم دریافت
-  const [rForm, setRForm] = useState({
-    partyId: "",
-    amount: "",
-    date: "",
-    method: "CASH",
-    note: "",
-  });
 
   // رکورد دستی روی طرف‌حساب (باز شدن ردیف در «حساب افراد»)
   const [openParty, setOpenParty] = useState<string | null>(null);
@@ -175,9 +154,8 @@ export default function AccountingNewPage() {
       if (to) q.set("to", to);
       const qs = q.toString();
 
-      const [main, rec, bat, par, pl] = await Promise.all([
+      const [main, bat, par, pl] = await Promise.all([
         fetch(`/api/admin/accounting-new${qs ? "?" + qs : ""}`).then((r) => r.json()),
-        fetch(`/api/admin/accounting-new/receipts${qs ? "?" + qs : ""}`).then((r) => r.json()),
         fetch(`/api/admin/accounting-new/batches`).then((r) => r.json()),
         fetch(`/api/admin/accounting-new/parties`).then((r) => r.json().catch(() => ({ rows: [] }))),
         fetch(`/api/admin/accounting-new/purchase-list`).then((r) => r.json().catch(() => ({ rows: [] }))),
@@ -186,7 +164,6 @@ export default function AccountingNewPage() {
       if (main.kpis) setKpis(main.kpis);
       if (main.approved) setApproved(main.approved);
       if (Array.isArray(pl?.rows)) setPlist(pl.rows);
-      if (rec.rows) setReceipts(rec.rows);
       if (bat.rows) setBatches(bat.rows);
       const pr = par?.rows ?? par?.parties ?? [];
       if (Array.isArray(pr)) setParties(pr);
@@ -336,30 +313,6 @@ export default function AccountingNewPage() {
       const res = await fetch("/api/admin/accounting-new/sync-batches", { method: "POST" });
       const data = await res.json();
       notify(res.ok, res.ok ? `ساخته‌شده: ${money(data.created)} — ردشده: ${money(data.skipped)}` : data.error);
-      await load();
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function submitReceipt() {
-    if (!rForm.partyId) return notify(false, "طرف حساب را انتخاب کنید");
-    if (!rForm.amount || Number(rForm.amount) <= 0) return notify(false, "مبلغ درست وارد کنید");
-    setBusy("__receipt");
-    try {
-      const res = await fetch("/api/admin/accounting-new/receipts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...rForm,
-          amount: Number(rForm.amount),
-          preInvoiceId: null,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) return notify(false, data.error || "خطا");
-      notify(true, "دریافت ثبت شد");
-      setRForm({ partyId: "", amount: "", date: "", method: "CASH", note: "" });
       await load();
     } finally {
       setBusy(null);
@@ -968,112 +921,6 @@ export default function AccountingNewPage() {
               </>
             );
           })()}
-        </div>
-      )}
-
-      {/* دریافت‌ها */}
-      {!loading && tab === "receipts" && (
-        <div className="space-y-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="text-sm font-bold mb-3">ثبت دریافت (قابل تکرار، چند مرحله‌ای)</div>
-            <div className="flex flex-wrap gap-3 items-end">
-              <div className="flex-1 min-w-[180px]">
-                <label className="block text-[11px] text-gray-500 mb-1">مشتری</label>
-                <select
-                  value={rForm.partyId}
-                  onChange={(e) => setRForm({ ...rForm, partyId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                >
-                  <option value="">— انتخاب —</option>
-                  {parties.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                      {p.phone ? ` — ${toFaDigits(p.phone)}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[11px] text-gray-500 mb-1">مبلغ (تومان)</label>
-                <input
-                  value={rForm.amount}
-                  onChange={(e) => setRForm({ ...rForm, amount: e.target.value })}
-                  inputMode="numeric"
-                  placeholder="0"
-                  className="w-40 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-gray-500 mb-1">تاریخ</label>
-                <input
-                  value={rForm.date}
-                  onChange={(e) => setRForm({ ...rForm, date: e.target.value })}
-                  placeholder="۱۴۰۵/۰۷/۱۴"
-                  className="w-32 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-gray-500 mb-1">روش</label>
-                <select
-                  value={rForm.method}
-                  onChange={(e) => setRForm({ ...rForm, method: e.target.value })}
-                  className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                >
-                  <option value="CASH">نقدی</option>
-                  <option value="TRANSFER">انتقال</option>
-                  <option value="CHEQUE">چک</option>
-                  <option value="OTHER">سایر</option>
-                </select>
-              </div>
-              <div className="flex-1 min-w-[150px]">
-                <label className="block text-[11px] text-gray-500 mb-1">یادداشت</label>
-                <input
-                  value={rForm.note}
-                  onChange={(e) => setRForm({ ...rForm, note: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                />
-              </div>
-              <button
-                onClick={submitReceipt}
-                disabled={busy === "__receipt"}
-                className="rounded-lg bg-blue-700 text-white px-4 py-1.5 text-sm hover:bg-blue-800 transition-colors duration-150 disabled:opacity-50"
-              >
-                ثبت دریافت
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-            <div className="p-3 text-sm font-bold border-b border-gray-100">
-              دریافت‌های ثبت‌شده ({toFaDigits(String(receipts.length))})
-            </div>
-            {receipts.length === 0 ? (
-              <div className="p-6 text-center text-sm text-gray-500">دریافتی ثبت نشده است.</div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-xs">
-                  <tr>
-                    <th className="p-3 text-right">تاریخ</th>
-                    <th className="p-3 text-right">مشتری</th>
-                    <th className="p-3 text-left">مبلغ</th>
-                    <th className="p-3 text-right">روش</th>
-                    <th className="p-3 text-right">یادداشت</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {receipts.map((r) => (
-                    <tr key={r.id} className="border-t border-gray-100">
-                      <td className="p-3 text-xs">{toFaDigits(r.date)}</td>
-                      <td className="p-3">{r.party?.name}</td>
-                      <td className="p-3 text-left font-medium">{money(r.amount)}</td>
-                      <td className="p-3 text-xs">{r.method}</td>
-                      <td className="p-3 text-xs text-gray-500">{r.note || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
         </div>
       )}
 
