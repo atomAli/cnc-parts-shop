@@ -60,6 +60,8 @@ type PurchaseItem = {
   isMeter: boolean;
   soldQty: number;
   soldBranches: number;
+  /** طول واقعی هر شاخه (سانتی‌متر) از فاکتورها؛ صفر یعنی از فیلد استاندارد کالا */
+  soldBranchLenCm: number;
   purchasedQty: number;
   remainingQty: number;
   shortage: number;
@@ -512,7 +514,7 @@ export default function AccountingNewPage() {
             فقط کالاهایی که در <b>فاکتورهای «تکمیل شده»ٔ سایت</b> آمده‌اند — فاکتورهای قدیمی و
             فاکتورهای در جریان حساب نمی‌شوند.
             «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید هم کمبود را کم می‌کند و هم به
-            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰؛ مقادیر برای دقتِ بیشتر بر حسب <b>سانتی‌متر</b> نمایش داده می‌شوند (قیمت همچنان «هر متر» است) و کمبود کامل نوشته می‌شود (مثلاً «۳۲۰۰ سانتی‌متر = ۸ شاخهٔ ۴ متری») که همان تعداد به‌صورت پیش‌فرض در فرم خرید می‌نشیند.
+            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰؛ مقادیر برای دقتِ بیشتر بر حسب <b>سانتی‌متر</b> نمایش داده می‌شوند (قیمت همچنان «هر متر» است) و کمبود دقیقاً با همان شاخه‌های فاکتور نوشته می‌شود (مثلاً «۳۰۰ سانتی‌متر = ۲ شاخهٔ ۱۵۰ سانتی‌متر») که همان تعداد به‌صورت پیش‌فرض در فرم خرید می‌نشیند.
           </div>
 
           {plist.length === 0 ? (
@@ -535,16 +537,26 @@ export default function AccountingNewPage() {
                 <tbody>
                   {plist.map((it) => {
                     const open = expanded === it.productId;
-                    // کالای متری: کمبود را کامل می‌نویسیم — «۳۲ متر = ۸ شاخهٔ ۴ متری»
+                    // کالای متری: کمبود را کامل می‌نویسیم — «۳۰۰ سانتی‌متر = ۲ شاخهٔ ۱۵۰ سانتی‌متر»
+                    // طول شاخه از خود فاکتورها می‌آید؛ فقط اگر فاکторی نداشت سراغ استاندارد کالا می‌رویم
                     const branchLenCm = it.isMeter
-                      ? getProductMaxLength({ name: it.name, isMeter: true })
+                      ? it.soldBranchLenCm > 0
+                        ? it.soldBranchLenCm
+                        : getProductMaxLength({ name: it.name, isMeter: true })
                       : 0;
+                    const lenLabel = (cm: number) =>
+                      cm > 0 && cm % 100 === 0
+                        ? `${money(cm / 100)} متر`
+                        : `${money(cm)} سانتی‌متر`;
                     const conv = it.isMeter
                       ? metersToBranches(it.shortage, branchLenCm)
                       : { count: 0, exact: false, lengthM: 0 };
+                    const purConv = it.isMeter
+                      ? metersToBranches(it.purchasedQty, branchLenCm)
+                      : { count: 0, exact: false, lengthM: 0 };
                     const branchText =
                       conv.count > 0
-                        ? `${conv.exact ? "=" : "≈"} ${money(conv.count)} شاخهٔ ${money(conv.lengthM)} متری`
+                        ? `${conv.exact ? "=" : "≈"} ${money(conv.count)} شاخهٔ ${lenLabel(branchLenCm)}`
                         : "";
                     const f = pForm[it.productId] ?? {
                       quantity: it.shortage > 0 ? String(it.shortage) : "",
@@ -582,12 +594,17 @@ export default function AccountingNewPage() {
                             {q(it.soldQty)} <span className="text-[11px] text-gray-400">{u}</span>
                             {it.isMeter && it.soldBranches > 0 && (
                               <div className="text-[11px] text-amber-700">
-                                {money(it.soldBranches)} شاخه
+                                {money(it.soldBranches)} شاخه × {lenLabel(branchLenCm)}
                               </div>
                             )}
                           </td>
                           <td className="p-3 text-left text-gray-500">
                             {q(it.purchasedQty)} <span className="text-[11px] text-gray-400">{u}</span>
+                            {it.isMeter && purConv.count > 0 && (
+                              <div className="text-[11px] text-amber-700">
+                                {money(purConv.count)} شاخه × {lenLabel(branchLenCm)}
+                              </div>
+                            )}
                           </td>
                           <td className="p-3 text-left text-gray-500">
                             {q(it.remainingQty)} <span className="text-[11px] text-gray-400">{u}</span>

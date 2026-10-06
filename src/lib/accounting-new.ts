@@ -969,6 +969,12 @@ export type PurchaseItem = {
   soldQty: number;
   /** فقط کالای متری: تعداد شاخه فروخته‌شده */
   soldBranches: number;
+  /**
+   * فقط کالای متری: طول واقعی هر شاخه (سانتی‌متر) از روی خود فاکتورها —
+   * میانگین وزنی `branchLength` آیتم‌ها. اگر فاکتوری این فیلد را نداشت → ۰
+   * و رابط کاربری به حداکثر طول استاندارد کالا برمی‌گردد.
+   */
+  soldBranchLenCm: number;
   purchasedQty: number;
   remainingQty: number;
   shortage: number;
@@ -992,7 +998,7 @@ export type PurchaseItem = {
 export async function getPurchaseList(): Promise<PurchaseItem[]> {
   // فقط فاکتورهای «تکمیل شده»ٔ سایت (نه قدیمی، نه در جریان)
   const sold = await prisma.$queryRaw<{
-    productId: string; qty: number; meters: number;
+    productId: string; qty: number; meters: number; branchLen: number;
   }[]>`
     SELECT it->>'productId' AS "productId",
            COALESCE(sum((it->>'quantity')::float),0)::float AS qty,
@@ -1000,7 +1006,14 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
              CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
                   THEN (it->>'quantity')::float * (it->>'branchLength')::float / 100.0
                   ELSE (it->>'quantity')::float END
-           ),0)::float AS meters
+           ),0)::float AS meters,
+           -- میانگین وزنی طول شاخه: جمع (تعداد × طول) ÷ جمع تعداد
+           COALESCE(
+             sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                      THEN (it->>'quantity')::float * (it->>'branchLength')::float END)
+             / nullif(sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                               THEN (it->>'quantity')::float END), 0),
+           0)::float AS "branchLen"
     FROM pre_invoices, jsonb_array_elements(items) it
     WHERE it->>'productId' IS NOT NULL
       AND source <> 'ACCESS'
@@ -1063,6 +1076,7 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
     // کالای متری: فروش بر حسب متراژ (متر) — غیر متری: بر حسب عدد
     const soldQty = isMeter ? Number(r.meters ?? 0) : Number(r.qty ?? 0);
     const soldBranches = isMeter ? Number(r.qty ?? 0) : 0;
+    const soldBranchLenCm = isMeter ? Number(r.branchLen ?? 0) : 0;
     const cost = Number(b?.cost ?? 0);
     return {
       productId: r.productId,
@@ -1070,6 +1084,7 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
       isMeter,
       soldQty,
       soldBranches,
+      soldBranchLenCm,
       purchasedQty: purchased,
       remainingQty: Number(b?.remaining ?? 0),
       shortage: Math.max(0, soldQty - purchased),
