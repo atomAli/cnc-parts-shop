@@ -47,8 +47,14 @@ export async function GET(
     );
   if (from && to && from > to)
     return NextResponse.json({ error: "تاریخ شروع باید قبل از تاریخ پایان باشد" }, { status: 400 });
-  // رکورد بدون تاریخ همیشه نمایش داده می‌شود
-  const inRange = (d: string) => !d || (d >= from && d <= to);
+  // بازه خالی = بدون محدودیت. (مقایسه با رشتهٔ خالی اینجا اشتباه درمی‌آید، پس باید صریح چک شود)
+  const inRange = (d: string) => {
+    if (!from && !to) return true;
+    if (!d) return true;
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  };
 
   const user = await prisma.user.findUnique({
     where: { id },

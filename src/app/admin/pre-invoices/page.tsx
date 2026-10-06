@@ -139,11 +139,24 @@ export default function AdminPreInvoicesPage() {
   }, [autoRefresh, filter]);
 
   const updateStatus = async (id: string, newStatus: string) => {
-    await fetch("/api/pre-invoices", {
+    if (
+      newStatus === "CANCELLED" &&
+      !window.confirm(
+        "فاکتور به «لغو شده» منتقل شود؟\n\nاگر تأیید/ثبت شده باشد، اثر حسابداری‌اش (بهای تمام‌شده و سند دفتر) کامل برمی‌گردد."
+      )
+    ) {
+      return;
+    }
+    const res = await fetch("/api/pre-invoices", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status: newStatus }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      window.alert(data?.error || "خطا در تغییر وضعیت");
+      return;
+    }
     fetchInvoices();
     fetchStats();
   };
@@ -368,6 +381,14 @@ export default function AdminPreInvoicesPage() {
                         {STATUS_LABELS[s]}
                       </button>
                     ))}
+                    {inv.status !== "CANCELLED" && (
+                      <button
+                        onClick={() => updateStatus(inv.id, "CANCELLED")}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-700 border border-red-200 hover:bg-red-600 hover:text-white transition-colors duration-150"
+                      >
+                        انتقال به لغو شده
+                      </button>
+                    )}
                     {inv.status === "CANCELLED" && (
                       <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-100 text-red-700">
                         این فاکتور لغو شده است

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { onPreInvoiceStatusChanged } from "@/lib/accounting-new";
+import { cancelPreInvoice, onPreInvoiceStatusChanged } from "@/lib/accounting-new";
 import prisma from "@/lib/prisma";
 import type { PreInvoice } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -189,6 +189,14 @@ export async function PATCH(req: NextRequest) {
 
   if (!id || !status) {
     return NextResponse.json({ error: "id and status required" }, { status: 400 });
+  }
+
+  // «لغو شده» از هر وضعیتی — با بازگردانی کامل اثر حسابداری در صورت وجود
+  if (status === "CANCELLED") {
+    const out = await cancelPreInvoice(id);
+    if (!out.ok) return NextResponse.json({ error: out.error }, { status: 400 });
+    const updated = await prisma.preInvoice.findUnique({ where: { id } });
+    return NextResponse.json({ ...updated, cogsAllocation: null });
   }
 
   const preInvoice = await prisma.preInvoice.update({

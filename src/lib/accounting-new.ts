@@ -401,8 +401,44 @@ export async function deleteAllocation(
 }
 
 
-// ───────────────────────── ۵) دریافت‌های مشتری ────────────────────────
+/**
+ * انتقال فاکتور به «لغو شده» — از هر وضعیتی.
+ * اگر تخصیص تأییدشده داشته باشد اثر حسابداری‌اش (بچ، سند دفتر) کامل برمی‌گردد؛
+ * اگر تخصیص پیش‌نویس داشته باشد همان حذف می‌شود.
+ */
+export async function cancelPreInvoice(
+  preInvoiceId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const alloc = await prisma.cogsAllocation.findUnique({
+      where: { preInvoiceId },
+      select: { id: true, status: true },
+    });
 
+    if (alloc) {
+      if (alloc.status === "APPROVED") {
+        // خودش وضعیت فاکتور را هم «لغو شده» می‌کند
+        const res = await deleteAllocation(alloc.id);
+        if (!res.ok) return res;
+      } else {
+        await prisma.$transaction([
+          prisma.cogsAllocationLine.deleteMany({ where: { allocationId: alloc.id } }),
+          prisma.cogsAllocation.delete({ where: { id: alloc.id } }),
+        ]);
+      }
+    }
+
+    await prisma.preInvoice.update({
+      where: { id: preInvoiceId },
+      data: { status: "CANCELLED" },
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "لغو ناموفق" };
+  }
+}
+
+// ───────────────────────── ۵) دریافت‌های مشتری ────────────────────────
 export async function createReceipt(data: {
   partyId: string;
   preInvoiceId?: string | null;
