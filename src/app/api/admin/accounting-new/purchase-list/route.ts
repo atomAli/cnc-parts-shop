@@ -3,7 +3,7 @@ import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { getPurchaseList, recordPurchase } from "@/lib/accounting-new";
 
-// GET — لیست خرید: کالاهای فاکتورهای سایت (به‌جز لغو‌شده‌ها) + کمبود + خریدهای ثبت‌شده
+// GET — لیست خرید: کالاهای فاکتور فروش + کمبود + خریدهای ثبت‌شده
 export async function GET() {
   const admin = await requireAdmin();
   if (!admin) return unauthorized();

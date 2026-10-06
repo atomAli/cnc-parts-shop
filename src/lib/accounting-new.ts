@@ -986,14 +986,11 @@ export type PurchaseItem = {
 
 /**
  * لیست خرید = کالاهایی که در فاکتور فروش آمده‌اند.
- * «فروش رفته»: همهٔ فاکتورهای سایت/پنل به‌جز «لغو شده» (در انتظار بررسی، تماس گرفته، تکمیل شده)
- *               — فاکتورهای قدیمی Access جزو فروشِ باز نیستند و حساب نمی‌شوند.
- * کمبود = فروش رفته − خریداری‌شده (از فاکتور خرید + خریدهای دستی).
+ * کمبود = تعداد فروخته‌شده − تعداد خریداری‌شده (از فاکتور خرید + خریدهای دستی).
  * خریدهای دستی به همان بچ‌ها می‌چسبند، پس «خرید کل» (KPI) خودبه‌خود شاملشان می‌شود.
  */
 export async function getPurchaseList(): Promise<PurchaseItem[]> {
-  // همهٔ فاکتورهای سایت به‌جز «لغو شده» (نه قدیمی‌ها) — قبلاً فقط DONE بود و فاکتورهای
-  // «تماس گرفته/در انتظار بررسی» دیده نمی‌شدند، پس فروش با فاکتورها نمی‌خواند
+  // فقط فاکتورهای «تکمیل شده»ٔ سایت (نه قدیمی، نه در جریان)
   const sold = await prisma.$queryRaw<{
     productId: string; qty: number; meters: number;
   }[]>`
@@ -1007,7 +1004,7 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
     FROM pre_invoices, jsonb_array_elements(items) it
     WHERE it->>'productId' IS NOT NULL
       AND source <> 'ACCESS'
-      AND status <> 'CANCELLED'
+      AND status = 'DONE'
     GROUP BY 1`;
 
   const bought = await prisma.$queryRaw<{
