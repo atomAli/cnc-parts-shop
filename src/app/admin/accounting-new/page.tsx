@@ -121,7 +121,7 @@ type PurchaseInvoiceOpt = {
   party: { name: string } | null;
 };
 
-/** تب «فاکتور فروش» — خریدهای بدون فاکتور، گروه‌بندی‌شده «هر روز + هر تأمین‌کننده» */
+/** تب «فاکتورهای خرید» — خریدهای بدون فاکتور، گروه‌بندی‌شده «هر روز + هر تأمین‌کننده» */
 type AllocRef = { preInvoiceId: string; qty: number };
 type PendingInv = {
   date: string;
@@ -173,7 +173,7 @@ type Party = {
 const TABS = [
   { id: "approved", label: "تأیید شده" },
   { id: "purchase", label: "لیست خرید" },
-  { id: "invoices", label: "فاکتور فروش" },
+  { id: "invoices", label: "فاکتورهای خرید" },
   { id: "parties", label: "حساب افراد" },
   { id: "batches", label: "آمار خرید کالا" },
 ] as const;
@@ -269,7 +269,7 @@ export default function AccountingNewPage() {
     load();
   }, [load]);
 
-  // تب «فاکتور فروش»
+  // تب «فاکتورهای خرید»
   const [pendings, setPendings] = useState<PendingInv[]>([]);
   const [pinvs, setPInvs] = useState<PInvoice[]>([]);
   const [invLoading, setInvLoading] = useState(false);
@@ -525,7 +525,7 @@ export default function AccountingNewPage() {
     }
   }
 
-  // تب «فاکتور فروش» — ساخت فاکتور خرید برای یک روزِ یک تأمین‌کننده
+  // تب «فاکتورهای خرید» — ساخت فاکتور خرید برای یک روزِ یک تأمین‌کننده
   async function makeInvoice(date: string, supplierId: string) {
     if (!confirm(`فاکتور خرید این روز ساخته شود؟\n${date}`)) return;
     setBusy(`inv:${date}:${supplierId}`);
@@ -1190,7 +1190,7 @@ export default function AccountingNewPage() {
         </div>
       )}
 
-      {/* فاکتور فروش — ساخت فاکتور خرید از خریدهای روزانه */}
+      {/* فاکتورهای خرید — ساخت فاکتور خرید از خریدهای روزانه */}
       {!loading && tab === "invoices" && (
         <div className="space-y-6">
           <div className="rounded-xl border border-gray-200 bg-white p-4 text-xs leading-6 text-gray-600">

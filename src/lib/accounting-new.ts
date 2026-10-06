@@ -1534,7 +1534,7 @@ export async function deleteManualPurchase(batchId: string) {
   return { ok: true };
 }
 
-// ──────────────── ۱۲) تب «فاکتور فروش» — فاکتورِ روزانهٔ خرید ────────────────
+// ──────────────── ۱۲) تب «فاکتورهای خرید» — فاکتورِ روزانهٔ خرید ────────────────
 
 type AllocRef = { preInvoiceId: string; qty: number };
 
@@ -1592,7 +1592,7 @@ export type PurchaseInvoiceRow = {
 };
 
 /**
- * تب «فاکتور فروش»: خریدهایی که هنوز فاکتور نشده‌اند، گروه‌بندی‌شده
+ * تب «فاکتورهای خرید»: خریدهایی که هنوز فاکتور نشده‌اند، گروه‌بندی‌شده
  * «هر روز + هر تأمین‌کننده» + فهرست فاکتورهای خرید ثبت‌شده (قدیمی و ساخته‌شده).
  */
 export async function getPurchaseInvoiceBoard(): Promise<{
