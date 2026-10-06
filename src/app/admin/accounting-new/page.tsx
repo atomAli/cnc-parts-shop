@@ -746,6 +746,20 @@ export default function AccountingNewPage() {
                       0
                     );
                     const allocOk = buyQty > 0 && Math.abs(allocSum - buyQty) < 0.0001;
+                    // کالای متری: مقدار داخلی (و سرور) «متر» است ولی در این فیلد باید «سانتی‌متر» نوشته شود
+                    const allocShown = (id: string) => {
+                      const raw = allocVal(id);
+                      if (raw === "") return "";
+                      const n = Number(raw);
+                      if (!Number.isFinite(n)) return raw;
+                      return it.isMeter ? String(Math.round(n * 10000) / 100) : raw;
+                    };
+                    const allocStored = (shown: string) => {
+                      if (shown === "") return "";
+                      const n = Number(shown);
+                      if (!Number.isFinite(n)) return shown;
+                      return it.isMeter ? String(n / 100) : shown;
+                    };
                     return (
                       <Fragment key={it.productId}>
                         <tr
@@ -949,7 +963,9 @@ export default function AccountingNewPage() {
                               {allocTargets.length > 0 && (
                                 <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
                                   <div className="mb-2 text-xs font-bold text-blue-800">
-                                    این خرید برای کدام فاکتور است؟ — جمع باید دقیقاً برابر تعداد خرید باشد
+                                    این خرید برای کدام فاکتور است؟
+                                    {it.isMeter ? " (واحد: سانتی‌متر)" : ""} — جمع باید دقیقاً
+                                    برابر تعداد خرید باشد
                                   </div>
                                   <div className="flex flex-wrap gap-3 items-end">
                                     {allocTargets.map((t) => (
@@ -961,7 +977,7 @@ export default function AccountingNewPage() {
                                           type="number"
                                           min={0}
                                           step="any"
-                                          value={allocVal(t.invoiceId)}
+                                          value={allocShown(t.invoiceId)}
                                           onChange={(e) =>
                                             setPForm({
                                               ...pForm,
@@ -969,7 +985,7 @@ export default function AccountingNewPage() {
                                                 ...f,
                                                 alloc: {
                                                   ...(f.alloc ?? {}),
-                                                  [t.invoiceId]: e.target.value,
+                                                  [t.invoiceId]: allocStored(e.target.value),
                                                 },
                                               },
                                             })
