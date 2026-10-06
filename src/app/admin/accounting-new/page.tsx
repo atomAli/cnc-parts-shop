@@ -95,6 +95,22 @@ type RecRow = {
   source: string;
 };
 
+/** گزینه‌های منوی فاکتور در «لیست خرید» */
+type SaleInvoiceOpt = {
+  id: string;
+  invoiceNumber: number;
+  customerName: string;
+  customerPhone: string | null;
+  status: string;
+  source: string;
+};
+type PurchaseInvoiceOpt = {
+  id: string;
+  number: number;
+  date: string;
+  party: { name: string } | null;
+};
+
 type Party = {
   id: string;
   name: string;
@@ -136,6 +152,11 @@ export default function AccountingNewPage() {
     >
   >({});
 
+  // فیلتر «لیست خرید» بر اساس فاکتور: "" = همه | "s:<id>" = فاکتور فروش | "p:<id>" = فاکتور خرید
+  const [plistScope, setPlistScope] = useState("");
+  const [saleOpts, setSaleOpts] = useState<SaleInvoiceOpt[]>([]);
+  const [purchaseOpts, setPurchaseOpts] = useState<PurchaseInvoiceOpt[]>([]);
+
   // رکورد دستی روی طرف‌حساب (باز شدن ردیف در «حساب افراد»)
   const [openParty, setOpenParty] = useState<string | null>(null);
   const [partyRecs, setPartyRecs] = useState<RecRow[]>([]);
@@ -156,16 +177,25 @@ export default function AccountingNewPage() {
       if (to) q.set("to", to);
       const qs = q.toString();
 
+      const pq = new URLSearchParams();
+      if (plistScope.startsWith("s:")) pq.set("invoice", plistScope.slice(2));
+      else if (plistScope.startsWith("p:")) pq.set("purchaseInvoice", plistScope.slice(2));
+      const pqs = pq.toString();
+
       const [main, bat, par, pl] = await Promise.all([
         fetch(`/api/admin/accounting-new${qs ? "?" + qs : ""}`).then((r) => r.json()),
         fetch(`/api/admin/accounting-new/batches`).then((r) => r.json()),
         fetch(`/api/admin/accounting-new/parties`).then((r) => r.json().catch(() => ({ rows: [] }))),
-        fetch(`/api/admin/accounting-new/purchase-list`).then((r) => r.json().catch(() => ({ rows: [] }))),
+        fetch(`/api/admin/accounting-new/purchase-list${pqs ? "?" + pqs : ""}`).then((r) =>
+          r.json().catch(() => ({ rows: [] }))
+        ),
       ]);
 
       if (main.kpis) setKpis(main.kpis);
       if (main.approved) setApproved(main.approved);
       if (Array.isArray(pl?.rows)) setPlist(pl.rows);
+      if (Array.isArray(pl?.salesInvoices)) setSaleOpts(pl.salesInvoices);
+      if (Array.isArray(pl?.purchaseInvoices)) setPurchaseOpts(pl.purchaseInvoices);
       if (bat.rows) setBatches(bat.rows);
       const pr = par?.rows ?? par?.parties ?? [];
       if (Array.isArray(pr)) setParties(pr);
@@ -174,7 +204,7 @@ export default function AccountingNewPage() {
     } finally {
       setLoading(false);
     }
-  }, [from, to]);
+  }, [from, to, plistScope]);
 
   useEffect(() => {
     load();
@@ -255,6 +285,42 @@ export default function AccountingNewPage() {
       const d = await res.json().catch(() => ({}));
       if (!res.ok) return notify(false, d.error || "حذف ناموفق بود");
       notify(true, "سند حذف شد");
+      if (openParty) await fetchRecords(openParty);
+      await load();
+    } catch {
+      notify(false, "ارتباط با سرور برقرار نشد");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /**
+   * مرجعوعی کالا — سند فروش پاک نمی‌شود؛ یک سند مثبت جداگانه (نوع ۳۲)
+   * ثبت می‌شود = بدهکاری ما به مشتری، جدا از رقم فاکتور.
+   */
+  async function returnRec(r: RecRow) {
+    if (!openParty) return;
+    const def = String(Math.abs(Math.round(r.amount || 0)));
+    const input = window.prompt(
+      `مرجوعی کالا\n\nسند: ${r.description || "-"}\nمبلغ سند: ${money(r.amount)} تومان\n\n` +
+        `مبلغ مرجوعی را وارد کنید (تومان).\n` +
+        `سند فروش حذف نمی‌شود؛ یک سند مثبت جداگانه ثبت می‌شود (بدهکاری ما به مشتری).`,
+      def
+    );
+    if (input == null) return;
+    const amount = Number(String(input).replace(/[^\d.-]/g, ""));
+    if (!Number.isFinite(amount) || amount <= 0) return notify(false, "مبلغ مرجوعی درست نیست");
+
+    setBusy(r.id);
+    try {
+      const res = await fetch("/api/admin/accounting-new/records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "RETURN", partyId: openParty, amount, refId: r.id }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) return notify(false, d.error || "ثبت مرجوعی ناموفق بود");
+      notify(true, `مرجوعی ${money(amount)} تومان ثبت شد`);
       if (openParty) await fetchRecords(openParty);
       await load();
     } catch {
@@ -511,15 +577,56 @@ export default function AccountingNewPage() {
       {!loading && tab === "purchase" && (
         <div className="space-y-3">
           <div className="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-600 leading-6">
-            فقط کالاهایی که در <b>فاکتورهای «تکمیل شده»ٔ سایت</b> آمده‌اند — فاکتورهای قدیمی و
-            فاکتورهای در جریان حساب نمی‌شوند.
-            «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید هم کمبود را کم می‌کند و هم به
-            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰؛ مقادیر برای دقتِ بیشتر بر حسب <b>سانتی‌متر</b> نمایش داده می‌شوند (قیمت همچنان «هر متر» است) و کمبود دقیقاً با همان شاخه‌های فاکتور نوشته می‌شود (مثلاً «۳۰۰ سانتی‌متر = ۲ شاخهٔ ۱۵۰ سانتی‌متر») که همان تعداد به‌صورت پیش‌فرض در فرم خرید می‌نشیند.
+            با منوی <b>«فاکتور»</b> می‌توانید فقط کالاهای یک فاکتور را ببینید: اگر{" "}
+            <b>فاکتور فروش</b> انتخاب کنید فقط اقلام همان فاکتور نمایش داده می‌شود و چون هیچ
+            خریدی به فاکتور فروش وصل نمی‌شود، «خریداری‌شده» صفر و «کمبود» = فروش همان فاکتور
+            است؛ اگر <b>فاکتور خرید</b> انتخاب کنید فقط ردیف‌های همان فاکتور خرید می‌آید.
+            حالت <b>«همه»</b> جمع کل فاکتورهای «تکمیل شده»ٔ سایت است (فاکتورهای قدیمی و در جریان
+            حساب نمی‌شوند). «کمبود» یعنی هنوز نخریده‌اید و هر خریدی که ثبت کنید هم کمبود را کم
+            می‌کند و هم به «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه ×
+            متراژ هر شاخه ÷ ۱۰۰ و مقادیر بر حسب <b>سانتی‌متر</b> نمایش داده می‌شوند (قیمت همچنان
+            «هر متر» است) و کمبود با همان شاخه‌های فاکتور نوشته می‌شود (مثلاً «۳۰۰ سانتی‌متر = ۲
+            شاخهٔ ۱۵۰ سانتی‌متر»).
+          </div>
+
+          {/* انتخاب فاکتور */}
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs font-bold text-gray-500">فاکتور</label>
+            <select
+              value={plistScope}
+              onChange={(e) => {
+                setPlistScope(e.target.value);
+                setExpanded(null);
+              }}
+              className="border border-gray-300 rounded-lg bg-white px-3 py-1.5 text-sm"
+            >
+              <option value="">همهٔ فاکتورها (جمع کل)</option>
+              <optgroup label="فاکتورهای فروش">
+                {saleOpts.map((s) => (
+                  <option key={s.id} value={`s:${s.id}`}>
+                    #{toFaDigits(String(s.invoiceNumber))} — {s.customerName} ({s.status})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="فاکتورهای خرید">
+                {purchaseOpts.map((p) => (
+                  <option key={p.id} value={`p:${p.id}`}>
+                    #{toFaDigits(String(p.number))} — {p.party?.name ?? "بدون تأمین‌کننده"} (
+                    {toFaDigits(p.date)})
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+            {plistScope !== "" && (
+              <span className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700">
+                نمای فاکتور — فقط همین فاکتور
+              </span>
+            )}
           </div>
 
           {plist.length === 0 ? (
             <div className="rounded-xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-              کالایی در فاکتور فروش نیست.
+              {plistScope === "" ? "کالایی در فاکتور فروش نیست." : "این فاکتور کالایی ندارد."}
             </div>
           ) : (
             <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
@@ -645,7 +752,8 @@ export default function AccountingNewPage() {
                                 )}
                               </div>
 
-                              {/* ثبت خرید — دقیقاً زیر فیلد کمبود */}
+                              {/* ثبت خرید — فقط در حالت «همه» (در نمای فاکتور خریدی ثبت نمی‌شود) */}
+                              {plistScope === "" && (
                               <div className="flex flex-wrap gap-3 items-end">
                                 {it.isMeter ? (
                                   <>
@@ -769,6 +877,7 @@ export default function AccountingNewPage() {
                                   {busy === "__buy" ? "…" : "ثبت خرید"}
                                 </button>
                               </div>
+                              )}
 
                               {/* جمع این خرید */}
                               {it.manual.length > 0 && (
@@ -986,13 +1095,25 @@ export default function AccountingNewPage() {
                                                 {r.source === "ACCESS" ? "قدیمی" : "جدید"}
                                               </td>
                                               <td className="p-2 text-left">
-                                                <button
-                                                  onClick={() => delRec(r)}
-                                                  disabled={busy === r.id}
-                                                  className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
-                                                >
-                                                  {busy === r.id ? "…" : "حذف"}
-                                                </button>
+                                                <div className="flex items-center justify-end gap-1">
+                                                  {r.voucherType === 30 && (
+                                                    <button
+                                                      onClick={() => returnRec(r)}
+                                                      disabled={busy === r.id}
+                                                      title="کالا وارد پروسهٔ مرجوعی می‌شود؛ سند فروش حذف نمی‌شود"
+                                                      className="rounded-lg border border-amber-300 bg-white px-2 py-1 text-xs text-amber-700 hover:bg-amber-50 transition-colors duration-150 disabled:opacity-50"
+                                                    >
+                                                      {busy === r.id ? "…" : "مرجوعی"}
+                                                    </button>
+                                                  )}
+                                                  <button
+                                                    onClick={() => delRec(r)}
+                                                    disabled={busy === r.id}
+                                                    className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs text-red-700 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50"
+                                                  >
+                                                    {busy === r.id ? "…" : "حذف"}
+                                                  </button>
+                                                </div>
                                               </td>
                                             </tr>
                                           ))}

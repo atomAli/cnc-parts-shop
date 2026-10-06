@@ -1,14 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
-import prisma from "@/lib/prisma";
-import { getPurchaseList, recordPurchase } from "@/lib/accounting-new";
+import {
+  getPurchaseList,
+  getPurchaseListInvoices,
+  recordPurchase,
+  type PurchaseListScope,
+} from "@/lib/accounting-new";
 
-// GET — لیست خرید: کالاهای فاکتور فروش + کمبود + خریدهای ثبت‌شده
-export async function GET() {
+// GET — لیست خرید
+//   بدون پارامتر      → جمع همهٔ فاکتورهای تکمیل‌شده
+//   ?invoice=<id>     → فقط کالاهای آن فاکتور فروش
+//   ?purchaseInvoice=<id> → فقط ردیف‌های آن فاکتور خرید
+export async function GET(req: NextRequest) {
   const admin = await requireAdmin();
   if (!admin) return unauthorized();
-  const rows = await getPurchaseList();
-  return NextResponse.json({ rows });
+
+  const sp = req.nextUrl.searchParams;
+  const invoice = sp.get("invoice")?.trim() || "";
+  const purchaseInvoice = sp.get("purchaseInvoice")?.trim() || "";
+
+  let scope: PurchaseListScope = { kind: "ALL" };
+  if (invoice) scope = { kind: "SALES", invoiceId: invoice };
+  else if (purchaseInvoice) scope = { kind: "PURCHASE", purchaseInvoiceId: purchaseInvoice };
+
+  const [rows, meta] = await Promise.all([getPurchaseList(scope), getPurchaseListInvoices()]);
+  return NextResponse.json({
+    rows,
+    salesInvoices: meta.sales,
+    purchaseInvoices: meta.purchases,
+  });
 }
 
 // POST — ثبت خرید دستی برای یک کالا (تعداد × قیمت × تأمین‌کننده)

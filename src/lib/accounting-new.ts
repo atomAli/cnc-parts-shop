@@ -991,49 +991,132 @@ export type PurchaseItem = {
 };
 
 /**
- * لیست خرید = کالاهایی که در فاکتور فروش آمده‌اند.
- * کمبود = تعداد فروخته‌شده − تعداد خریداری‌شده (از فاکتور خرید + خریدهای دستی).
- * خریدهای دستی به همان بچ‌ها می‌چسبند، پس «خرید کل» (KPI) خودبه‌خود شاملشان می‌شود.
+ * لیست خرید — سه حالت نمایش:
+ *  - `ALL` (پیش‌فرض): جمع همهٔ فاکتورهای «تکمیل شده»ٔ سایت
+ *  - `SALES`: فقط کالاهای یک فاکتور فروش؛ «فروش رفته» از همان فاکتور است و
+ *    «خریداری‌شده» صفر، چون هیچ خریدی به فاکتور فروش وصل نمی‌شود
+ *  - `PURCHASE`: فقط ردیف‌های یک فاکتور خرید؛ «خریداری‌شده» از همان فاکتور
+ *
+ * کمبود = فروش رفته − خریداری‌شده. خریدهای دستی به بچ‌ها می‌چسبند، پس
+ * «خرید کل» (KPI) خودبه‌خود شاملشان می‌شود.
  */
-export async function getPurchaseList(): Promise<PurchaseItem[]> {
-  // فقط فاکتورهای «تکمیل شده»ٔ سایت (نه قدیمی، نه در جریان)
-  const sold = await prisma.$queryRaw<{
-    productId: string; qty: number; meters: number; branchLen: number;
-  }[]>`
-    SELECT it->>'productId' AS "productId",
-           COALESCE(sum((it->>'quantity')::float),0)::float AS qty,
-           COALESCE(sum(
-             CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
-                  THEN (it->>'quantity')::float * (it->>'branchLength')::float / 100.0
-                  ELSE (it->>'quantity')::float END
-           ),0)::float AS meters,
-           -- میانگین وزنی طول شاخه: جمع (تعداد × طول) ÷ جمع تعداد
-           COALESCE(
-             sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
-                      THEN (it->>'quantity')::float * (it->>'branchLength')::float END)
-             / nullif(sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
-                               THEN (it->>'quantity')::float END), 0),
-           0)::float AS "branchLen"
-    FROM pre_invoices, jsonb_array_elements(items) it
-    WHERE it->>'productId' IS NOT NULL
-      AND source <> 'ACCESS'
-      AND status = 'DONE'
-    GROUP BY 1`;
+export type PurchaseListScope =
+  | { kind: "ALL" }
+  | { kind: "SALES"; invoiceId: string }
+  | { kind: "PURCHASE"; purchaseInvoiceId: string };
 
-  const bought = await prisma.$queryRaw<{
-    productId: string; qty: number; remaining: number; cost: number; manual: number;
-  }[]>`
-    SELECT "productId",
-           COALESCE(sum(quantity),0)::float              AS qty,
-           COALESCE(sum("remainingQty"),0)::float        AS remaining,
-           COALESCE(sum(quantity * "unitCost"),0)::float AS cost,
-           COALESCE(sum(quantity) FILTER (WHERE "purchaseInvoiceId" IS NULL),0)::float AS manual
-    FROM product_purchase_batches
-    GROUP BY "productId"`;
+type SoldAgg = { productId: string; qty: number; meters: number; branchLen: number };
+type BoughtAgg = { productId: string; qty: number; remaining: number; cost: number; manual: number };
+type ManualRow = {
+  id: string;
+  productId: string;
+  quantity: number;
+  unitCost: number;
+  date: string;
+  supplier: { id: string; name: string } | null;
+};
 
+export async function getPurchaseList(
+  scope: PurchaseListScope = { kind: "ALL" }
+): Promise<PurchaseItem[]> {
+  let sold: SoldAgg[] = [];
+  let bought: BoughtAgg[] = [];
+  let manualRows: ManualRow[] = [];
+
+  if (scope.kind === "SALES") {
+    // فقط اقلام همین فاکتور فروش
+    sold = await prisma.$queryRaw<SoldAgg[]>`
+      SELECT it->>'productId' AS "productId",
+             COALESCE(sum((it->>'quantity')::float),0)::float AS qty,
+             COALESCE(sum(
+               CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                    THEN (it->>'quantity')::float * (it->>'branchLength')::float / 100.0
+                    ELSE (it->>'quantity')::float END
+             ),0)::float AS meters,
+             COALESCE(
+               sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                        THEN (it->>'quantity')::float * (it->>'branchLength')::float END)
+               / nullif(sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                                 THEN (it->>'quantity')::float END), 0),
+             0)::float AS "branchLen"
+      FROM pre_invoices p, jsonb_array_elements(p.items) it
+      WHERE p.id = ${scope.invoiceId} AND it->>'productId' IS NOT NULL
+      GROUP BY 1`;
+  } else if (scope.kind === "PURCHASE") {
+    // فقط ردیف‌های همین فاکتور خرید
+    const [lines, invBatches] = await Promise.all([
+      prisma.$queryRaw<{ productId: string; qty: number }[]>`
+        SELECT "productId", COALESCE(sum(quantity),0)::float AS qty
+        FROM purchase_invoice_lines
+        WHERE "invoiceId" = ${scope.purchaseInvoiceId} AND "productId" IS NOT NULL
+        GROUP BY 1`,
+      prisma.$queryRaw<{ productId: string; remaining: number }[]>`
+        SELECT "productId", COALESCE(sum("remainingQty"),0)::float AS remaining
+        FROM product_purchase_batches
+        WHERE "purchaseInvoiceId" = ${scope.purchaseInvoiceId}
+        GROUP BY 1`,
+    ]);
+    const remMap = new Map(invBatches.map((b) => [b.productId, Number(b.remaining)]));
+    bought = lines.map((l) => ({
+      productId: l.productId,
+      qty: Number(l.qty),
+      // بچی برای این فاکتور ساخته نشده یعنی هنوز مصرف نشده
+      remaining: remMap.get(l.productId) ?? Number(l.qty),
+      cost: 0,
+      manual: 0,
+    }));
+  } else {
+    const [s, b] = await Promise.all([
+      // فقط فاکتورهای «تکمیل شده»ٔ سایت (نه قدیمی، نه در جریان)
+      prisma.$queryRaw<SoldAgg[]>`
+        SELECT it->>'productId' AS "productId",
+               COALESCE(sum((it->>'quantity')::float),0)::float AS qty,
+               COALESCE(sum(
+                 CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                      THEN (it->>'quantity')::float * (it->>'branchLength')::float / 100.0
+                      ELSE (it->>'quantity')::float END
+               ),0)::float AS meters,
+               COALESCE(
+                 sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                          THEN (it->>'quantity')::float * (it->>'branchLength')::float END)
+                 / nullif(sum(CASE WHEN COALESCE((it->>'branchLength')::float,0) > 0
+                                   THEN (it->>'quantity')::float END), 0),
+               0)::float AS "branchLen"
+        FROM pre_invoices, jsonb_array_elements(items) it
+        WHERE it->>'productId' IS NOT NULL
+          AND source <> 'ACCESS'
+          AND status = 'DONE'
+        GROUP BY 1`,
+      prisma.$queryRaw<BoughtAgg[]>`
+        SELECT "productId",
+               COALESCE(sum(quantity),0)::float              AS qty,
+               COALESCE(sum("remainingQty"),0)::float        AS remaining,
+               COALESCE(sum(quantity * "unitCost"),0)::float AS cost,
+               COALESCE(sum(quantity) FILTER (WHERE "purchaseInvoiceId" IS NULL),0)::float AS manual
+        FROM product_purchase_batches
+        GROUP BY "productId"`,
+    ]);
+    sold = s;
+    bought = b;
+    manualRows = await prisma.productPurchaseBatch.findMany({
+      where: { purchaseInvoiceId: null },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        productId: true,
+        quantity: true,
+        unitCost: true,
+        date: true,
+        supplier: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  const sMap = new Map(sold.map((r) => [r.productId, r]));
   const bMap = new Map(bought.map((b) => [b.productId, b]));
 
-  const ids = sold.map((r) => r.productId);
+  const source = scope.kind === "PURCHASE" ? bought : sold;
+  const ids = [...new Set(source.map((r) => r.productId))];
   const products = ids.length
     ? await prisma.product.findMany({
         where: { id: { in: ids } },
@@ -1042,18 +1125,6 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
     : [];
   const prodMap = new Map(products.map((p) => [p.id, p]));
 
-  const manualRows = await prisma.productPurchaseBatch.findMany({
-    where: { purchaseInvoiceId: null },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      productId: true,
-      quantity: true,
-      unitCost: true,
-      date: true,
-      supplier: { select: { id: true, name: true } },
-    },
-  });
   const manualMap = new Map<string, PurchaseItem["manual"]>();
   for (const m of manualRows) {
     const arr = manualMap.get(m.productId) ?? [];
@@ -1068,18 +1139,19 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
     manualMap.set(m.productId, arr);
   }
 
-  const rows: PurchaseItem[] = sold.map((r) => {
-    const prod = prodMap.get(r.productId);
+  const rows: PurchaseItem[] = ids.map((productId) => {
+    const prod = prodMap.get(productId);
     const isMeter = prod?.isMeter === true;
-    const b = bMap.get(r.productId);
+    const r = sMap.get(productId);
+    const b = bMap.get(productId);
     const purchased = Number(b?.qty ?? 0);
     // کالای متری: فروش بر حسب متراژ (متر) — غیر متری: بر حسب عدد
-    const soldQty = isMeter ? Number(r.meters ?? 0) : Number(r.qty ?? 0);
-    const soldBranches = isMeter ? Number(r.qty ?? 0) : 0;
-    const soldBranchLenCm = isMeter ? Number(r.branchLen ?? 0) : 0;
+    const soldQty = isMeter ? Number(r?.meters ?? 0) : Number(r?.qty ?? 0);
+    const soldBranches = isMeter ? Number(r?.qty ?? 0) : 0;
+    const soldBranchLenCm = isMeter ? Number(r?.branchLen ?? 0) : 0;
     const cost = Number(b?.cost ?? 0);
     return {
-      productId: r.productId,
+      productId,
       name: prod?.name ?? "—",
       isMeter,
       soldQty,
@@ -1088,14 +1160,82 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
       purchasedQty: purchased,
       remainingQty: Number(b?.remaining ?? 0),
       shortage: Math.max(0, soldQty - purchased),
-      avgCost: purchased > 0 ? cost / purchased : null,
+      avgCost: purchased > 0 && cost > 0 ? cost / purchased : null,
       manualTotal: Number(b?.manual ?? 0),
-      manual: manualMap.get(r.productId) ?? [],
+      manual: manualMap.get(productId) ?? [],
     };
   });
 
   rows.sort((a, b) => b.shortage - a.shortage || b.soldQty - a.soldQty);
   return rows;
+}
+
+/** فهرست فاکتورها برای منوی بالای «لیست خرید» */
+export async function getPurchaseListInvoices() {
+  const [sales, purchases] = await Promise.all([
+    prisma.preInvoice.findMany({
+      orderBy: { invoiceNumber: "desc" },
+      take: 80,
+      select: {
+        id: true,
+        invoiceNumber: true,
+        customerName: true,
+        customerPhone: true,
+        status: true,
+        source: true,
+      },
+    }),
+    prisma.purchaseInvoice.findMany({
+      orderBy: [{ date: "desc" }, { number: "desc" }],
+      take: 80,
+      select: { id: true, number: true, date: true, party: { select: { name: true } } },
+    }),
+  ]);
+  return { sales, purchases };
+}
+
+/**
+ * مرجعوعی کالا — سند فروش پاک **نمی‌شود** و روند فاکتور دست‌نخورده می‌ماند؛
+ * فقط یک سند مثبت جداگانه (نوع ۳۲ «مرجوعی کالا») ثبت می‌شود که
+ * «بدهکاری ما به مشتری» است و از رقم فاکتور جداست.
+ */
+export async function createReturn(data: {
+  partyId: string;
+  amount: number;
+  refId?: string | null;
+  note?: string | null;
+}) {
+  const amount = Number(data.amount);
+  if (!(amount > 0)) throw new Error("مبلغ مرجوعی باید بزرگ‌تر از صفر باشد");
+
+  const party = await prisma.party.findUnique({ where: { id: data.partyId }, select: { id: true } });
+  if (!party) throw new Error("طرف حساب پیدا نشد");
+
+  let refDesc: string | null = null;
+  if (data.refId) {
+    const ref = await prisma.ledgerEntry.findUnique({
+      where: { id: data.refId },
+      select: { partyId: true, description: true, voucherType: true },
+    });
+    if (!ref) throw new Error("سند مرجع پیدا نشد");
+    if (ref.partyId !== data.partyId) throw new Error("این سند متعلق به این طرف‌حساب نیست");
+    if (ref.voucherType !== 30) throw new Error("مرجوعی فقط روی سند فروش ثبت می‌شود");
+    refDesc = ref.description;
+  }
+
+  const note = data.note?.trim();
+  const description = `مرجوعی کالا${refDesc ? ` ← ${refDesc}` : ""}${note ? ` (${note})` : ""}`;
+  return prisma.ledgerEntry.create({
+    data: {
+      date: toJalali(todayIso()),
+      voucherType: 32,
+      voucher: 1,
+      amount, // مثبت = بستانکار مشتری = بدهکاری ما به مشتری
+      description,
+      partyId: data.partyId,
+      source: "NEW",
+    },
+  });
 }
 
 /** ثبت خرید دستی از تب «لیست خرید» — ساخت یک بچ بدون فاکتور خرید */

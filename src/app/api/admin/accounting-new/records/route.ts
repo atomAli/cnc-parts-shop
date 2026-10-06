@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
-import { createRecord, getPartyRecords, toJalali } from "@/lib/accounting-new";
+import { createRecord, createReturn, getPartyRecords, toJalali } from "@/lib/accounting-new";
 
 // GET — اسناد یک طرف‌حساب (برای باز شدن ردیف در «حساب افراد»)
 export async function GET(req: NextRequest) {
@@ -27,7 +27,14 @@ export async function POST(req: NextRequest) {
 
   const b = await req.json().catch(() => ({}));
   const partyId = typeof b?.partyId === "string" ? b.partyId.trim() : "";
-  const kind = b?.kind === "DEBT" ? "DEBT" : b?.kind === "RECEIPT" ? "RECEIPT" : null;
+  const kind =
+    b?.kind === "DEBT"
+      ? "DEBT"
+      : b?.kind === "RECEIPT"
+        ? "RECEIPT"
+        : b?.kind === "RETURN"
+          ? "RETURN"
+          : null;
   const amount = Number(b?.amount);
   const date = typeof b?.date === "string" ? b.date.trim() : "";
 
@@ -37,6 +44,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "مبلغ باید بزرگ‌تر از صفر باشد" }, { status: 400 });
 
   try {
+    // مرجوعی کالا — سند فروش پاک نمی‌شود؛ سند مثبت جداگانه ثبت می‌شود
+    if (kind === "RETURN") {
+      const out = await createReturn({
+        partyId,
+        amount,
+        refId: typeof b?.refId === "string" && b.refId ? b.refId : null,
+        note: typeof b?.note === "string" ? b.note : null,
+      });
+      return NextResponse.json({ ok: true, record: out });
+    }
     const out = await createRecord({
       partyId,
       kind,
