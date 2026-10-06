@@ -540,14 +540,28 @@ export async function computeKpis(r: DateRange) {
   const fG = r.from ? jalaliToIso(r.from) ?? "0001-01-01" : "0001-01-01";
   const tG = r.to ? jalaliToIso(r.to) ?? "9999-12-31" : "9999-12-31";
 
-  // فروش = فاکتورهایی که تخصیصشان APPROVED شده
-  const salesRows = await prisma.$queryRaw<{ total: number; n: number }[]>`
-    SELECT COALESCE(sum(p."totalPrice"),0)::float AS total, count(*)::int AS n
-    FROM pre_invoices p
-    JOIN cogs_allocations a ON a."preInvoiceId" = p.id
-    WHERE a.status = 'APPROVED'
-      AND to_char(a."approvedAt", 'YYYY-MM-DD') BETWEEN ${fG} AND ${tG}
-  `;
+  // فروش کل = فاکتورهای فروش حسابداری قدیم (sales_invoices)
+  //          + فاکتورهای «تکمیل شده»ٔ سایت (با هر فاکتور جدید عوض می‌شود)
+  const [legacySales, siteSales] = await Promise.all([
+    prisma.salesInvoice.aggregate({
+      _sum: { total: true },
+      _count: true,
+      where: {
+        status: "DONE",
+        AND: [
+          r.from ? { date: { gte: r.from } } : {},
+          r.to ? { date: { lte: r.to } } : {},
+        ],
+      },
+    }),
+    prisma.$queryRaw<{ total: number; n: number }[]>`
+      SELECT COALESCE(sum(p."totalPrice"),0)::float AS total, count(*)::int AS n
+      FROM pre_invoices p
+      WHERE p.source <> 'ACCESS'
+        AND p.status = 'DONE'
+        AND to_char(p."createdAt", 'YYYY-MM-DD') BETWEEN ${fG} AND ${tG}
+    `,
+  ]);
 
   // خرید = بچ‌های ثبت‌شده از فاکتورهای خرید + خریدهای دستی از تب «لیست خرید»
   const purchases = await prisma.$queryRaw<{ total: number; n: number }[]>`
@@ -564,17 +578,21 @@ export async function computeKpis(r: DateRange) {
       AND to_char(a."approvedAt", 'YYYY-MM-DD') BETWEEN ${fG} AND ${tG}
   `;
 
-  const salesTotal = Number(salesRows[0]?.total ?? 0);
+  const salesTotal =
+    Number(legacySales._sum.total ?? 0) + Number(siteSales[0]?.total ?? 0);
+  const salesCount =
+    Number(legacySales._count ?? 0) + Number(siteSales[0]?.n ?? 0);
   const purchaseTotal = Number(purchases[0]?.total ?? 0);
   const cogsTotal = Number(cogs[0]?.total ?? 0);
 
   return {
     sales: salesTotal,
-    salesCount: Number(salesRows[0]?.n ?? 0),
+    salesCount,
     purchases: purchaseTotal,
     purchaseCount: Number(purchases[0]?.n ?? 0),
     cogs: cogsTotal,
-    profit: salesTotal - cogsTotal,
+    // سود = فروش کل − خرید کل (مثل «سود ناخالص» حسابداری قدیم)
+    profit: salesTotal - purchaseTotal,
   };
 }
 
@@ -722,15 +740,22 @@ export async function syncPurchaseBatches() {
 // ───────────────────────── ۸) اتصال به تغییر وضعیت فاکتور ────────────────────────
 
 /**
- * بعد از تغییر وضعیت فاکتور — اگر COMPLETED شد، پیش‌نویس تخصیص COGS می‌سازد.
- * (هیچ سند قطعی نمی‌زند؛ منتظر تأیید مدیر می‌ماند)
+ * بعد از تغییر وضعیت فاکتور — اگر «تکمیل شده» شد و فاکتور از سایت باشد،
+ * بهای تمام‌شده تأیید و سندِ بدهکاری مشتری در «حساب افراد» ثبت می‌شود.
+ * فاکتورهای قدیمی Access از این مسیر رد نمی‌شوند.
  */
 export async function onPreInvoiceStatusChanged(
   preInvoiceId: string,
   status: string,
   adminId?: string
 ) {
-  if (status !== "COMPLETED") return null;
+  if (status !== "DONE") return null;
+
+  const inv = await prisma.preInvoice.findUnique({
+    where: { id: preInvoiceId },
+    select: { source: true },
+  });
+  if (!inv || inv.source === "ACCESS") return null;
 
   // اگر قبلاً تأیید شده باشد همان را برمی‌گرداند (idempotent)
   const existing = await prisma.cogsAllocation.findUnique({
@@ -752,20 +777,20 @@ export async function onPreInvoiceStatusChanged(
 }
 
 /**
- * همگام‌سازی: هر فاکتور COMPLETED که تخصیص ندارد یا تخصیصش در انتظار است
+ * همگام‌سازی: هر فاکتور «تکمیل شده»ٔ سایت که تخصیص ندارد یا تخصیصش در انتظار است
  * را خودکار تأیید می‌کند — چون فرآیند تأیید دستی حذف شده است.
  */
 export async function backfillAutoApprove(): Promise<number> {
   let n = 0;
 
   const missing = await prisma.preInvoice.findMany({
-    where: { status: "COMPLETED", cogsAllocation: null },
+    where: { status: "DONE", source: { not: "ACCESS" }, cogsAllocation: null },
     select: { id: true },
     take: 50,
   });
   for (const m of missing) {
     try {
-      await onPreInvoiceStatusChanged(m.id, "COMPLETED");
+      await onPreInvoiceStatusChanged(m.id, "DONE");
       n++;
     } catch {
       /* رد شد */
@@ -793,7 +818,7 @@ export async function backfillAutoApprove(): Promise<number> {
   });
   for (const p of pending) {
     try {
-      await onPreInvoiceStatusChanged(p.preInvoiceId, "COMPLETED");
+      await onPreInvoiceStatusChanged(p.preInvoiceId, "DONE");
       n++;
     } catch {
       /* رد شد */
@@ -908,7 +933,7 @@ export type PurchaseItem = {
  * خریدهای دستی به همان بچ‌ها می‌چسبند، پس «خرید کل» (KPI) خودبه‌خود شاملشان می‌شود.
  */
 export async function getPurchaseList(): Promise<PurchaseItem[]> {
-  // فقط فاکتورهای «ارسال شده» سایت (نه قدیمی، نه در جریان)
+  // فقط فاکتورهای «تکمیل شده»ٔ سایت (نه قدیمی، نه در جریان)
   const sold = await prisma.$queryRaw<{
     productId: string; qty: number; meters: number;
   }[]>`
@@ -922,7 +947,7 @@ export async function getPurchaseList(): Promise<PurchaseItem[]> {
     FROM pre_invoices, jsonb_array_elements(items) it
     WHERE it->>'productId' IS NOT NULL
       AND source <> 'ACCESS'
-      AND status = 'COMPLETED'
+      AND status = 'DONE'
     GROUP BY 1`;
 
   const bought = await prisma.$queryRaw<{

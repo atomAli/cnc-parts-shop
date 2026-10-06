@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
-import { backfillAutoApprove, computeKpis, parseRange } from "@/lib/accounting-new";
+import { backfillAutoApprove, computeKpis, parseRange, toJalali } from "@/lib/accounting-new";
 
 // GET — داشبورد حسابداری جدید: KPI + پیش‌نویس‌های در انتظار تأیید
 export async function GET(req: NextRequest) {
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     take: 100,
   });
 
-  const approved = await prisma.cogsAllocation.findMany({
+  const approvedRows = await prisma.cogsAllocation.findMany({
     where: { status: "APPROVED" },
     include: {
       preInvoice: {
@@ -44,6 +44,15 @@ export async function GET(req: NextRequest) {
     orderBy: { approvedAt: "desc" },
     take: 50,
   });
+
+  // تاریخ فاکتور به شمسی — قبلاً میلادی نمایش داده می‌شد
+  const approved = approvedRows.map((a) => ({
+    ...a,
+    preInvoice: {
+      ...a.preInvoice,
+      date: toJalali(a.preInvoice.createdAt.toISOString().slice(0, 10)),
+    },
+  }));
 
   return NextResponse.json({ kpis, pending, approved });
 }

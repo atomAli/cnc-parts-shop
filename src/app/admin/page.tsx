@@ -23,7 +23,7 @@ interface DashboardStats {
 
 interface InvoiceStats {
   total: number;
-  byStatus: { PENDING: number; PROCESSING: number; CONTACTED: number; DONE: number; COMPLETED: number };
+  byStatus: { PENDING: number; PROCESSING: number; CONTACTED: number; DONE: number };
   fromWebsite: number;
   recent: Array<{
     id: string;
@@ -42,7 +42,6 @@ const invoiceStatusLabels: Record<string, string> = {
   PROCESSING: "در حال پردازش",
   CONTACTED: "تماس گرفته شد",
   DONE: "تکمیل شده",
-  COMPLETED: "ارسال شده",
 };
 
 const invoiceStatusColors: Record<string, string> = {
@@ -50,7 +49,6 @@ const invoiceStatusColors: Record<string, string> = {
   PROCESSING: "bg-blue-100 text-blue-700",
   CONTACTED: "bg-green-100 text-green-700",
   DONE: "bg-gray-100 text-gray-600",
-  COMPLETED: "bg-blue-100 text-blue-700",
 };
 
 function relativeTime(iso: string) {

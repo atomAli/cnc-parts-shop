@@ -37,6 +37,7 @@ type Alloc = {
     customerPhone: string;
     totalPrice: number;
     createdAt: string;
+    date: string;
   };
   lines: Line[];
 };
@@ -387,7 +388,7 @@ export default function AccountingNewPage() {
         {kpiCard(
           "فروش (کل)",
           kpis?.sales ?? 0,
-          `${toFaDigits(String(kpis?.salesCount ?? 0))} فاکتور تأییدشده`,
+          `${toFaDigits(String(kpis?.salesCount ?? 0))} فاکتور فروش`,
           TrendingUp,
           "text-blue-700"
         )}
@@ -401,7 +402,7 @@ export default function AccountingNewPage() {
         {kpiCard(
           "سود (کل)",
           kpis?.profit ?? 0,
-          `فروش − بهای تمام‌شده (${money(kpis?.cogs ?? 0)})`,
+          `فروش کل − خرید کل`,
           Receipt,
           (kpis?.profit ?? 0) >= 0 ? "text-green-700" : "text-red-700"
         )}
@@ -458,7 +459,7 @@ export default function AccountingNewPage() {
                     <td className="p-3">{toFaDigits(String(a.preInvoice.invoiceNumber ?? "—"))}</td>
                     <td className="p-3">{a.preInvoice.customerName}</td>
                     <td className="p-3 text-xs text-gray-500">
-                      {toFaDigits(String(a.preInvoice.createdAt ?? "").slice(0, 10))}
+                      {toFaDigits(a.preInvoice.date)}
                     </td>
                     <td className="p-3 text-left">{money(a.salesTotal)}</td>
                     <td className="p-3 text-left">{money(a.totalCogs)}</td>
@@ -484,7 +485,7 @@ export default function AccountingNewPage() {
       {!loading && tab === "purchase" && (
         <div className="space-y-3">
           <div className="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-600 leading-6">
-            فقط کالاهایی که در <b>فاکتورهای «ارسال شده» سایت</b> آمده‌اند — فاکتورهای قدیمی و
+            فقط کالاهایی که در <b>فاکتورهای «تکمیل شده»ٔ سایت</b> آمده‌اند — فاکتورهای قدیمی و
             فاکتورهای در جریان حساب نمی‌شوند.
             «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید هم کمبود را کم می‌کند و هم به
             «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰.
