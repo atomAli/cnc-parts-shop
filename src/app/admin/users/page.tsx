@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 import { toFaDigits } from "@/lib/phone";
+import { todayJalali } from "@/lib/jalali";
 
 const toPersianNumber = (n: number) => n.toLocaleString("fa-IR");
 const formatPrice = (n: number) => new Intl.NumberFormat("fa-IR").format(Math.round(n)) + " تومان";
@@ -97,6 +98,172 @@ const inputCls =
   "w-full px-3 py-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none";
 const labelCls = "block text-xs font-medium text-gray-600 mb-1";
 
+const normalizeDigits = (s: string) =>
+  s
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+
+const escHtml = (v: unknown) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+  );
+
+const fmtMoney = (n: number) =>
+  new Intl.NumberFormat("fa-IR").format(Math.round(Number(n) || 0)) + " تومان";
+
+/** HTML کاملاً مستقل برای پنجرهٔ چاپ — بدون هیچ فایل جانبی */
+function buildStatementHtml(
+  user: User,
+  data: { party: { id: string; name: string } | null; invoices: HistoryInvoice[]; movements: HistoryMovement[] },
+  from: string,
+  to: string
+) {
+  const invoices = data.invoices || [];
+  const movements = data.movements || [];
+  const sumInv = invoices.reduce((s, i) => s + (i.total || 0), 0);
+  const sumReceipt = movements.filter((m) => m.label === "دریافتی").reduce((s, m) => s + (m.amount || 0), 0);
+  const sumPayment = movements.filter((m) => m.label === "واریزی").reduce((s, m) => s + (m.amount || 0), 0);
+  const balance = sumInv - sumReceipt;
+
+  const range = from || to ? `از ${from || "ابتدای تاریخ"} تا ${to || "امروز"}` : "کل دوره";
+  const person = data.party?.name || user.name || user.phone || "-";
+
+  const invRows = invoices.length
+    ? invoices
+        .map(
+          (i, idx) => `<tr>
+        <td class="c">${toFaDigits(String(idx + 1))}</td>
+        <td class="c" dir="ltr">${toFaDigits(String(i.number))}</td>
+        <td class="c">${i.date ? toFaDigits(i.date) : "-"}</td>
+        <td class="n">${fmtMoney(i.total)}</td>
+        <td class="c">${escHtml(i.source)}</td>
+        <td>${escHtml(i.note || "")}</td>
+      </tr>`
+        )
+        .join("")
+    : `<tr><td colspan="6" class="empty">رکوردی در این بازه وجود ندارد.</td></tr>`;
+
+  const movRows = movements.length
+    ? movements
+        .map(
+          (m) => `<tr>
+        <td class="c">${m.date ? toFaDigits(m.date) : "-"}</td>
+        <td class="c">${escHtml(m.label)}</td>
+        <td class="n">${fmtMoney(m.amount)}</td>
+        <td class="c" dir="ltr">${toFaDigits(String(m.voucher))}</td>
+        <td class="c">${escHtml(m.source)}</td>
+        <td>${escHtml(m.note || "")}</td>
+      </tr>`
+        )
+        .join("")
+    : `<tr><td colspan="6" class="empty">رکوردی در این بازه وجود ندارد.</td></tr>`;
+
+  return `<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>صورت حساب — ${escHtml(person)}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Tahoma, Arial, sans-serif; font-size: 12px; color: #111; background: #fff; margin: 0; padding: 14px; }
+  h1 { font-size: 17px; margin: 0 0 2px; }
+  .head { border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px; }
+  .sub { font-size: 12px; color: #333; margin: 1px 0; }
+  h2 { font-size: 13px; margin: 14px 0 5px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #888; padding: 4px 6px; text-align: right; }
+  th { background: #eee; font-weight: bold; }
+  td.c { text-align: center; }
+  td.n { white-space: nowrap; }
+  td.empty { text-align: center; color: #777; }
+  .totals { width: 70%; margin-top: 10px; border-collapse: collapse; }
+  .totals td { border: 1px solid #888; padding: 5px 7px; }
+  .totals td.v { text-align: left; white-space: nowrap; }
+  .totals tr.t { background: #f3f3f3; font-weight: bold; }
+  .sign { margin-top: 34px; display: flex; justify-content: space-between; }
+  .sign div { width: 45%; border-top: 1px solid #333; padding-top: 5px; text-align: center; font-size: 11px; color: #444; }
+  @page { size: A4; margin: 12mm; }
+  @media print { body { padding: 0; } h2 { page-break-after: avoid; } tr { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>صورت حساب</h1>
+    <p class="sub">مشتری / طرف‌حساب: <b>${escHtml(person)}</b></p>
+    <p class="sub">شماره تماس: <span dir="ltr">${escHtml(user.phone ? toFaDigits(user.phone) : "-")}</span></p>
+    <p class="sub">بازه: ${escHtml(range)} — تاریخ چاپ: ${escHtml(todayJalali())}</p>
+  </div>
+
+  <h2>فاکتورها (${toFaDigits(String(invoices.length))})</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>شماره</th><th>تاریخ</th><th>مبلغ</th><th>منبع</th><th>شرح</th>
+      </tr>
+    </thead>
+    <tbody>${invRows}</tbody>
+  </table>
+
+  <h2>واریزی و دریافتی‌ها (${toFaDigits(String(movements.length))})</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>تاریخ</th><th>نوع</th><th>مبلغ</th><th>سند</th><th>منبع</th><th>شرح</th>
+      </tr>
+    </thead>
+    <tbody>${movRows}</tbody>
+  </table>
+
+  <table class="totals">
+    <tr><td>جمع فاکتورها</td><td class="v">${fmtMoney(sumInv)}</td></tr>
+    <tr><td>جمع دریافتی‌ها</td><td class="v">${fmtMoney(sumReceipt)}</td></tr>
+    <tr><td>جمع واریزی‌ها</td><td class="v">${fmtMoney(sumPayment)}</td></tr>
+    <tr class="t"><td>مانده حساب (فاکتور − دریافتی)</td><td class="v">${fmtMoney(balance)}</td></tr>
+  </table>
+
+  <div class="sign">
+    <div>امضای مشتری</div>
+    <div>مهر و امضای فروش</div>
+  </div>
+</body>
+</html>`;
+}
+
+/** چاپ در iframe مخفی — بدون popup blocker */
+function printHtml(html: string) {
+  try {
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.cssText =
+      "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) {
+      document.body.removeChild(iframe);
+      return false;
+    }
+    doc.open();
+    doc.write(html);
+    doc.close();
+    const win = iframe.contentWindow;
+    setTimeout(() => {
+      try {
+        win?.focus();
+        win?.print();
+      } catch {
+        /* ignore */
+      }
+      setTimeout(() => {
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 1500);
+    }, 350);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,6 +294,13 @@ export default function AdminUsersPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyDeleting, setHistoryDeleting] = useState("");
   const [historyMsg, setHistoryMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // --- صورت حساب (پرینت) ---
+  const [stmtUser, setStmtUser] = useState<User | null>(null);
+  const [stmtFrom, setStmtFrom] = useState("");
+  const [stmtTo, setStmtTo] = useState("");
+  const [stmtLoading, setStmtLoading] = useState(false);
+  const [stmtMsg, setStmtMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   // debounce جستجو — دیتابیس آلمان است، هر حرف یک کوئری ۱۰۰ms طول می‌کشد
   useEffect(() => {
@@ -203,12 +377,16 @@ export default function AdminUsersPage() {
     setInvoices([]);
   };
 
-  const loadHistory = async (uid: string) => {
+  const loadHistory = async (uid: string, range?: { from?: string; to?: string }) => {
     setHistoryLoading(true);
     setHistoryMsg(null);
     setHistory(null);
     try {
-      const res = await fetch(`/api/admin/users/${uid}/history`);
+      const qs = new URLSearchParams();
+      if (range?.from) qs.set("from", range.from);
+      if (range?.to) qs.set("to", range.to);
+      const q = qs.toString();
+      const res = await fetch(`/api/admin/users/${uid}/history${q ? `?${q}` : ""}`);
       const data = await res.json();
       if (!res.ok) {
         setHistoryMsg({ ok: false, text: data?.error || "خطا در دریافت سوابق" });
@@ -264,6 +442,63 @@ export default function AdminUsersPage() {
       setHistoryMsg({ ok: false, text: "ارتباط با سرور برقرار نشد" });
     } finally {
       setHistoryDeleting("");
+    }
+  };
+
+  // ---------- صورت حساب / پرینت ----------
+  const openStatement = (user: User) => {
+    setStmtUser(user);
+    setStmtFrom("");
+    setStmtTo(todayJalali());
+    setStmtMsg(null);
+  };
+
+  const closeStatement = () => {
+    setStmtUser(null);
+    setStmtMsg(null);
+  };
+
+  const printStatement = async () => {
+    if (!stmtUser) return;
+    const from = normalizeDigits(stmtFrom.trim());
+    const to = normalizeDigits(stmtTo.trim());
+    const DATE_RE = /^\d{4}\/\d{2}\/\d{2}$/;
+    if (from && !DATE_RE.test(from)) {
+      setStmtMsg({ ok: false, text: "تاریخ شروع نامعتبر است (مثال: ۱۴۰۴/۰۱/۰۱)" });
+      return;
+    }
+    if (to && !DATE_RE.test(to)) {
+      setStmtMsg({ ok: false, text: "تاریخ پایان نامعتبر است (مثال: ۱۴۰۵/۱۲/۲۹)" });
+      return;
+    }
+    if (from && to && from > to) {
+      setStmtMsg({ ok: false, text: "تاریخ شروع باید قبل از تاریخ پایان باشد" });
+      return;
+    }
+
+    setStmtLoading(true);
+    setStmtMsg(null);
+    try {
+      const qs = new URLSearchParams();
+      if (from) qs.set("from", from);
+      if (to) qs.set("to", to);
+      const q = qs.toString();
+      const res = await fetch(`/api/admin/users/${stmtUser.id}/history${q ? `?${q}` : ""}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setStmtMsg({ ok: false, text: data?.error || "خطا در دریافت سوابق" });
+        return;
+      }
+      const ok = printHtml(buildStatementHtml(stmtUser, data, from, to));
+      setStmtMsg(
+        ok
+          ? { ok: true, text: "پنجرهٔ چاپ باز شد — در آن «ذخیره به‌صورت PDF» یا پرینتر را انتخاب کنید." }
+          : { ok: false, text: "مرورگر پنجرهٔ چاپ را مسدود کرد؛ دوباره تلاش کنید." }
+      );
+    } catch {
+      setStmtMsg({ ok: false, text: "ارتباط با سرور برقرار نشد" });
+    } finally {
+      setStmtLoading(false);
     }
   };
 
@@ -398,6 +633,12 @@ export default function AdminUsersPage() {
                           className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors duration-150"
                         >
                           سوابق
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openStatement(user); }}
+                          className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          صورت حساب
                         </button>
                       </div>
                     </td>
@@ -811,6 +1052,75 @@ export default function AdminUsersPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ---------- مودال پرینت صورت حساب ---------- */}
+      {stmtUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50" onClick={closeStatement} />
+          <div className="relative z-10 bg-white rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h2 className="font-bold">پرینت صورت حساب</h2>
+              <button onClick={closeStatement} className="p-1 rounded hover:bg-gray-100" aria-label="بستن">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                مشتری: <b>{stmtUser.name || toFaDigits(stmtUser.phone || "-")}</b>
+              </p>
+
+              <div>
+                <p className="text-xs text-gray-500 mb-2">
+                  بازهٔ تاریخ را انتخاب کنید (شمسی). فیلد خالی = بدون محدودیت.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>از تاریخ</label>
+                    <input
+                      dir="ltr"
+                      className={inputCls}
+                      value={stmtFrom}
+                      onChange={(e) => setStmtFrom(e.target.value)}
+                      placeholder={toFaDigits("1404/01/01")}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>تا تاریخ</label>
+                    <input
+                      dir="ltr"
+                      className={inputCls}
+                      value={stmtTo}
+                      onChange={(e) => setStmtTo(e.target.value)}
+                      placeholder={toFaDigits("1405/12/29")}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {stmtMsg && (
+                <p className={`text-sm ${stmtMsg.ok ? "text-green-600" : "text-red-600"}`}>{stmtMsg.text}</p>
+              )}
+
+              <div className="flex justify-end gap-2 border-t pt-4">
+                <button
+                  onClick={closeStatement}
+                  className="px-5 py-2 text-sm font-medium border rounded-lg hover:bg-gray-50"
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={printStatement}
+                  disabled={stmtLoading}
+                  className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-150 disabled:opacity-50"
+                >
+                  {stmtLoading ? "در حال آماده‌سازی..." : "پرینت / ذخیره PDF"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

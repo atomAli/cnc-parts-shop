@@ -30,6 +30,26 @@ export async function GET(
 
   const { id } = await params;
 
+  // بازهٔ تاریخ شمسی — خالی = بدون محدودیت
+  const sp = req.nextUrl.searchParams;
+  const from = (sp.get("from") || "").trim();
+  const to = (sp.get("to") || "").trim();
+  const DATE_RE = /^\d{4}\/\d{2}\/\d{2}$/;
+  if (from && !DATE_RE.test(from))
+    return NextResponse.json(
+      { error: "تاریخ شروع نامعتبر است (مثال: ۱۴۰۴/۰۱/۰۱)" },
+      { status: 400 }
+    );
+  if (to && !DATE_RE.test(to))
+    return NextResponse.json(
+      { error: "تاریخ پایان نامعتبر است (مثال: ۱۴۰۵/۱۲/۲۹)" },
+      { status: 400 }
+    );
+  if (from && to && from > to)
+    return NextResponse.json({ error: "تاریخ شروع باید قبل از تاریخ پایان باشد" }, { status: 400 });
+  // رکورد بدون تاریخ همیشه نمایش داده می‌شود
+  const inRange = (d: string) => !d || (d >= from && d <= to);
+
   const user = await prisma.user.findUnique({
     where: { id },
     select: { id: true, name: true, phone: true, party: { select: { id: true, name: true } } },
@@ -85,7 +105,7 @@ export async function GET(
       source: i.source === "ADMIN" ? "پنل" : "سایت",
       kind: "preInvoice",
     })),
-  ].sort((a, b) => byDateDesc(a, b) || b.number - a.number);
+  ].filter((x) => inRange(x.date)).sort((a, b) => byDateDesc(a, b) || b.number - a.number);
 
   const movements = [
     ...cashMovements.map((m) => ({
