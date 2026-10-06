@@ -94,6 +94,15 @@ type Kpis = {
   profit: number;
 };
 
+type RecRow = {
+  id: string;
+  date: string;
+  voucherType: number;
+  amount: number;
+  description: string;
+  source: string;
+};
+
 type Party = {
   id: string;
   name: string;
@@ -146,6 +155,13 @@ export default function AccountingNewPage() {
     note: "",
   });
 
+  // رکورد دستی روی طرف‌حساب (باز شدن ردیف در «حساب افراد»)
+  const [openParty, setOpenParty] = useState<string | null>(null);
+  const [partyRecs, setPartyRecs] = useState<RecRow[]>([]);
+  const [partyToday, setPartyToday] = useState("");
+  const [recLoading, setRecLoading] = useState(false);
+  const [recForm, setRecForm] = useState({ kind: "RECEIPT", amount: "", date: "", note: "" });
+
   const notify = (ok: boolean, text: string) => {
     setMsg({ ok, text });
     setTimeout(() => setMsg(null), 5000);
@@ -184,6 +200,63 @@ export default function AccountingNewPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function fetchRecords(partyId: string) {
+    setRecLoading(true);
+    try {
+      const res = await fetch(`/api/admin/accounting-new/records?partyId=${encodeURIComponent(partyId)}`);
+      const d = await res.json();
+      setPartyRecs(Array.isArray(d.rows) ? d.rows : []);
+      const today = typeof d.today === "string" ? d.today : "";
+      setPartyToday(today);
+      setRecForm((f) => ({ ...f, date: f.date || today }));
+    } catch {
+      setPartyRecs([]);
+    } finally {
+      setRecLoading(false);
+    }
+  }
+
+  async function toggleParty(partyId: string) {
+    if (openParty === partyId) {
+      setOpenParty(null);
+      setPartyRecs([]);
+      return;
+    }
+    setOpenParty(partyId);
+    setRecForm({ kind: "RECEIPT", amount: "", date: "", note: "" });
+    await fetchRecords(partyId);
+  }
+
+  async function submitRecord() {
+    if (!openParty) return;
+    const amount = Number(recForm.amount);
+    if (!amount || amount <= 0) return notify(false, "مبلغ درست وارد کنید");
+    const date = recForm.date || partyToday;
+    if (!date) return notify(false, "تاریخ را وارد کنید");
+    setBusy("rec");
+    try {
+      const res = await fetch("/api/admin/accounting-new/records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          partyId: openParty,
+          kind: recForm.kind,
+          amount,
+          date,
+          note: recForm.note,
+        }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) return notify(false, d.error || "خطا در ثبت");
+      notify(true, recForm.kind === "DEBT" ? "بدهی ثبت شد" : "دریافت ثبت شد");
+      setRecForm({ kind: recForm.kind, amount: "", date, note: "" });
+      await fetchRecords(openParty);
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function delAlloc(id: string) {
     if (!confirm("تخصیص تأییدشده حذف شود؟ سند دفتر و بهای تمام‌شده پاک و بچ‌ها بازگردانده می‌شود.")) return;
@@ -732,31 +805,147 @@ export default function AccountingNewPage() {
                           : bal > 0.5
                             ? "bg-red-100 text-red-700"
                             : "bg-gray-100 text-gray-600";
+                      const isOpen = openParty === p.id;
                       return (
-                        <tr key={p.id} className="border-t border-gray-100">
-                          <td className="p-3">{p.name}</td>
-                          <td className="p-3 text-xs text-gray-500">{p.kind}</td>
-                          <td className="p-3 text-xs text-gray-500">
-                            {p.phone ? toFaDigits(p.phone) : "—"}
-                          </td>
-                          <td className="p-3 text-left text-xs text-gray-500">
-                            {toFaDigits(String(p.entries ?? 0))}
-                            {(p.newEntries ?? 0) > 0 && (
-                              <span className="text-blue-700"> ({toFaDigits(String(p.newEntries))} جدید)</span>
-                            )}
-                          </td>
-                          <td
-                            className={
-                              "p-3 text-left font-bold " +
-                              (bal < -0.5 ? "text-green-700" : bal > 0.5 ? "text-red-700" : "text-gray-600")
-                            }
+                        <Fragment key={p.id}>
+                          <tr
+                            onClick={() => toggleParty(p.id)}
+                            className="border-t border-gray-100 cursor-pointer hover:bg-gray-50"
                           >
-                            {money(bal)}
-                          </td>
-                          <td className="p-3 text-right">
-                            <span className={"rounded-lg px-2 py-0.5 text-xs " + stateCls}>{state}</span>
-                          </td>
-                        </tr>
+                            <td className="p-3">
+                              <span className="text-gray-400">{isOpen ? "▾" : "▸"}</span> {p.name}
+                            </td>
+                            <td className="p-3 text-xs text-gray-500">{p.kind}</td>
+                            <td className="p-3 text-xs text-gray-500">
+                              {p.phone ? toFaDigits(p.phone) : "—"}
+                            </td>
+                            <td className="p-3 text-left text-xs text-gray-500">
+                              {toFaDigits(String(p.entries ?? 0))}
+                              {(p.newEntries ?? 0) > 0 && (
+                                <span className="text-blue-700"> ({toFaDigits(String(p.newEntries))} جدید)</span>
+                              )}
+                            </td>
+                            <td
+                              className={
+                                "p-3 text-left font-bold " +
+                                (bal < -0.5 ? "text-green-700" : bal > 0.5 ? "text-red-700" : "text-gray-600")
+                              }
+                            >
+                              {money(bal)}
+                            </td>
+                            <td className="p-3 text-right">
+                              <span className={"rounded-lg px-2 py-0.5 text-xs " + stateCls}>{state}</span>
+                            </td>
+                          </tr>
+
+                          {isOpen && (
+                            <tr className="border-t border-gray-200 bg-gray-50">
+                              <td colSpan={6} className="p-4">
+                                <div className="space-y-4">
+                                  {/* ثبت رکورد روی این طرف‌حساب */}
+                                  <div className="rounded-lg border border-gray-200 bg-white p-3">
+                                    <div className="text-sm font-bold mb-3">ثبت رکورد — {p.name}</div>
+                                    <div className="flex flex-wrap gap-3 items-end">
+                                      <div>
+                                        <label className="block text-[11px] text-gray-500 mb-1">نوع</label>
+                                        <select
+                                          value={recForm.kind}
+                                          onChange={(e) => setRecForm({ ...recForm, kind: e.target.value })}
+                                          className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                        >
+                                          <option value="RECEIPT">دریافت (کم می‌شود)</option>
+                                          <option value="DEBT">بدهی (اضافه می‌شود)</option>
+                                        </select>
+                                      </div>
+                                      <div className="flex-1 min-w-[160px]">
+                                        <label className="block text-[11px] text-gray-500 mb-1">مبلغ (تومان)</label>
+                                        <input
+                                          type="number"
+                                          value={recForm.amount}
+                                          onChange={(e) => setRecForm({ ...recForm, amount: e.target.value })}
+                                          placeholder="مثلاً 500000"
+                                          className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[11px] text-gray-500 mb-1">تاریخ</label>
+                                        <input
+                                          value={recForm.date}
+                                          onChange={(e) => setRecForm({ ...recForm, date: e.target.value })}
+                                          placeholder="1405/07/14"
+                                          className="w-[130px] border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                        />
+                                      </div>
+                                      <div className="flex-1 min-w-[160px]">
+                                        <label className="block text-[11px] text-gray-500 mb-1">شرح</label>
+                                        <input
+                                          value={recForm.note}
+                                          onChange={(e) => setRecForm({ ...recForm, note: e.target.value })}
+                                          placeholder="اختیاری"
+                                          className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                        />
+                                      </div>
+                                      <button
+                                        onClick={submitRecord}
+                                        disabled={busy === "rec"}
+                                        className="bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white rounded-lg px-4 py-1.5 text-sm font-medium transition-colors"
+                                      >
+                                        {busy === "rec" ? "..." : "ثبت"}
+                                      </button>
+                                    </div>
+                                    <div className="mt-2 text-[11px] text-gray-500">
+                                      دریافت = مبلغ مثبت در دفتر (نوع ۲۰) — بدهی = مبلغ منفی (نوع ۳۰)
+                                    </div>
+                                  </div>
+
+                                  {/* اسناد این طرف‌حساب */}
+                                  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                                    <div className="px-3 py-2 text-sm font-bold border-b border-gray-100">
+                                      اسناد این طرف‌حساب ({toFaDigits(String(partyRecs.length))})
+                                    </div>
+                                    {recLoading ? (
+                                      <div className="p-4 text-sm text-gray-500">در حال دریافت…</div>
+                                    ) : partyRecs.length === 0 ? (
+                                      <div className="p-4 text-sm text-gray-500">سندی ثبت نشده است.</div>
+                                    ) : (
+                                      <table className="w-full text-xs">
+                                        <thead className="bg-gray-50 text-gray-500">
+                                          <tr>
+                                            <th className="p-2 text-right">تاریخ</th>
+                                            <th className="p-2 text-right">شرح</th>
+                                            <th className="p-2 text-right">نوع</th>
+                                            <th className="p-2 text-left">مبلغ</th>
+                                            <th className="p-2 text-left">منبع</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {partyRecs.map((r) => (
+                                            <tr key={r.id} className="border-t border-gray-100">
+                                              <td className="p-2">{toFaDigits(r.date)}</td>
+                                              <td className="p-2">{r.description}</td>
+                                              <td className="p-2 text-gray-500">{toFaDigits(String(r.voucherType))}</td>
+                                              <td
+                                                className={
+                                                  "p-2 text-left font-bold " +
+                                                  (r.amount < 0 ? "text-green-700" : "text-red-700")
+                                                }
+                                              >
+                                                {money(r.amount)}
+                                              </td>
+                                              <td className="p-2 text-left text-gray-500">
+                                                {r.source === "ACCESS" ? "قدیمی" : "جدید"}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       );
                     })}
                   </tbody>
@@ -773,7 +962,8 @@ export default function AccountingNewPage() {
                   </tfoot>
                 </table>
                 <div className="p-3 text-[11px] text-gray-500 bg-gray-50 border-t border-gray-200">
-                  منفی = طرف حساب بدهکار ماست (طلب ما از او) — مثبت = بستانکار (طلب او از ما)
+                  منفی = طرف حساب بدهکار ماست (طلب ما از او) — مثبت = بستانکار (طلب او از ما).
+                  روی هر ردیف بزنید تا برای همان شخص دریافت یا بدهی ثبت کنید.
                 </div>
               </>
             );

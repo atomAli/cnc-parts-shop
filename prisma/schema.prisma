@@ -553,6 +553,7 @@ model ProductPurchaseBatch {
   reference         String?
   purchaseInvoiceId String?
   purchaseInvoice   PurchaseInvoice? @relation(fields: [purchaseInvoiceId], references: [id])
+  ledgerEntryId     String?
   note              String?
   status            String   @default("ACTIVE")
   createdAt         DateTime @default(now())

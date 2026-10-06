@@ -189,7 +189,12 @@ export async function approveAllocation(allocationId: string, adminId: string): 
       if (alloc.status === "REJECTED") return { ok: false as const, error: "این مورد رد شده است" };
 
       const partyId = alloc.preInvoice.userId
-        ? (await tx.user.findUnique({ where: { id: alloc.preInvoice.userId }, select: { party: { select: { id: true } } } }))?.party?.id
+        ? await ensurePartyForUser(
+            tx,
+            alloc.preInvoice.userId,
+            alloc.preInvoice.customerName,
+            alloc.preInvoice.customerPhone
+          )
         : null;
 
       const items = Array.isArray(alloc.preInvoice.items) ? (alloc.preInvoice.items as any[]) : [];
@@ -424,6 +429,105 @@ export async function createReceipt(data: {
       },
       include: { ledgerEntry: true },
     });
+  });
+}
+
+type Tx = Prisma.TransactionClient;
+
+/**
+ * اگر کاربر طرف‌حساب نداشته باشد می‌سازیم — تا سندِ بدهکاری فاکتور سایت
+ * همیشه در «حساب افراد» ثبت شود (قبلاً بی‌سند می‌ماند).
+ */
+export async function ensurePartyForUser(
+  tx: Tx,
+  userId: string,
+  fallbackName?: string | null,
+  fallbackPhone?: string | null
+): Promise<string | null> {
+  const u = await tx.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, phone: true, party: { select: { id: true } } },
+  });
+  if (!u) return null;
+  if (u.party) return u.party.id;
+  const p = await tx.party.create({
+    data: {
+      name: (fallbackName || u.name || "").trim() || "بدون نام",
+      kind: "CUSTOMER",
+      phone: (fallbackPhone || u.phone || "").trim() || null,
+      userId: u.id,
+    },
+    select: { id: true },
+  });
+  return p.id;
+}
+
+/**
+ * ثبت دستی یک رکورد روی طرف‌حساب از تب «حساب افراد»:
+ *   RECEIPT (دریافت) = مبلغ مثبت (نوع ۲۰) — بدهکاری طرف کم می‌شود
+ *   DEBT    (بدهی)   = مبلغ منفی (نوع ۳۰) — طرف را بیشتر بدهکار می‌کنیم
+ */
+export async function createRecord(data: {
+  partyId: string;
+  kind: "RECEIPT" | "DEBT";
+  amount: number;
+  date: string;
+  note?: string | null;
+  userId: string;
+}) {
+  const amount = Number(data.amount);
+  if (!(amount > 0)) throw new Error("مبلغ باید بزرگ‌تر از صفر باشد");
+  if (!/^\d{4}\/\d{2}\/\d{2}$/.test(data.date))
+    throw new Error("تاریخ شمسی (۱۴۰۵/۰۷/۱۴) وارد کنید");
+
+  const party = await prisma.party.findUnique({
+    where: { id: data.partyId },
+    select: { id: true },
+  });
+  if (!party) throw new Error("طرف حساب پیدا نشد");
+
+  if (data.kind === "RECEIPT") {
+    const r = await createReceipt({
+      partyId: data.partyId,
+      amount,
+      date: data.date,
+      method: "CASH",
+      note: data.note || null,
+      userId: data.userId,
+    });
+    return {
+      kind: "RECEIPT" as const, id: r.id, amount, date: data.date,
+      description: `دریافت ${data.note || ""}`.trim(), source: "NEW",
+    };
+  }
+
+  const e = await prisma.ledgerEntry.create({
+    data: {
+      date: data.date,
+      voucherType: 30,
+      voucher: 1,
+      amount: -amount,
+      description: `بدهی ${data.note || ""}`.trim() || "بدهی دستی",
+      partyId: data.partyId,
+      source: "NEW",
+    },
+  });
+  return {
+    kind: "DEBT" as const, id: e.id, amount: -amount, date: data.date,
+    description: e.description, source: "NEW",
+  };
+}
+
+/** اسناد یک طرف‌حساب — برای باز شدن ردیف در تب «حساب افراد» */
+export async function getPartyRecords(partyId: string) {
+  return prisma.ledgerEntry.findMany({
+    where: { partyId },
+    orderBy: [{ date: "desc" }, { id: "desc" }],
+    take: 100,
+    select: {
+      id: true, date: true, voucherType: true, amount: true,
+      description: true, source: true,
+    },
   });
 }
 
@@ -668,6 +772,20 @@ export async function backfillAutoApprove(): Promise<number> {
     }
   }
 
+  // فاکتورهای تکمیل‌شدهٔ سایت که هنوز در «حساب افراد» بدهکار نشده‌اند
+  const noDebt = await prisma.cogsAllocation.findMany({
+    where: { status: "APPROVED", ledgerEntryId: null },
+    select: { id: true },
+    take: 100,
+  });
+  for (const a of noDebt) {
+    try {
+      if (await createDebtForAllocation(a.id)) n++;
+    } catch {
+      /* رد شد */
+    }
+  }
+
   const pending = await prisma.cogsAllocation.findMany({
     where: { status: "PENDING_APPROVAL" },
     select: { preInvoiceId: true },
@@ -683,6 +801,57 @@ export async function backfillAutoApprove(): Promise<number> {
   }
 
   return n;
+}
+
+/**
+ * سند بدهکاری مشتری برای یک تخصیص تأییدشده — اگر قبلاً ساخته نشده باشد
+ * (مثلاً وقتی فاکتور بدون طرف‌حساب تأیید شده بود) اکنون می‌سازیمش.
+ */
+export async function createDebtForAllocation(allocationId: string): Promise<string | null> {
+  return prisma.$transaction(async (tx) => {
+    const alloc = await tx.cogsAllocation.findUnique({
+      where: { id: allocationId },
+      include: { preInvoice: true },
+    });
+    if (!alloc) return null;
+    if (alloc.ledgerEntryId) {
+      const exists = await tx.ledgerEntry.findUnique({
+        where: { id: alloc.ledgerEntryId },
+        select: { id: true },
+      });
+      if (exists) return alloc.ledgerEntryId;
+    }
+    if (!alloc.preInvoice.userId) return null;
+    const total = Number(alloc.preInvoice.totalPrice ?? 0);
+    if (!(total > 0)) return null;
+
+    const partyId = await ensurePartyForUser(
+      tx,
+      alloc.preInvoice.userId,
+      alloc.preInvoice.customerName,
+      alloc.preInvoice.customerPhone
+    );
+    if (!partyId) return null;
+
+    const now = new Date();
+    const iso = `${now.getUTCFullYear()}-${p2(now.getUTCMonth() + 1)}-${p2(now.getUTCDate())}`;
+    const entry = await tx.ledgerEntry.create({
+      data: {
+        date: toJalali(iso),
+        voucherType: 30,
+        voucher: 1,
+        amount: -total,
+        description: `فاکتور سایت شماره ${alloc.preInvoice.invoiceNumber} — ${alloc.preInvoice.customerName}`,
+        partyId,
+        source: "NEW",
+      },
+    });
+    await tx.cogsAllocation.update({
+      where: { id: allocationId },
+      data: { ledgerEntryId: entry.id },
+    });
+    return entry.id;
+  });
 }
 
 async function requireAllocationId(preInvoiceId: string): Promise<string> {
@@ -847,8 +1016,8 @@ export async function recordPurchase(data: {
   if (!(unitCost >= 0)) throw new Error("قیمت نامعتبر است");
 
   const [product, supplier] = await Promise.all([
-    prisma.product.findUnique({ where: { id: data.productId }, select: { id: true, isMeter: true } }),
-    prisma.party.findUnique({ where: { id: data.supplierId }, select: { id: true, kind: true } }),
+    prisma.product.findUnique({ where: { id: data.productId }, select: { id: true, isMeter: true, name: true } }),
+    prisma.party.findUnique({ where: { id: data.supplierId }, select: { id: true, kind: true, name: true } }),
   ]);
   if (!product) throw new Error("کالا پیدا نشد");
   if (!supplier) throw new Error("تأمین‌کننده پیدا نشد");
@@ -871,20 +1040,46 @@ export async function recordPurchase(data: {
     quantity = Math.round(quantity);
   }
 
-  return prisma.productPurchaseBatch.create({
-    data: {
-      productId: data.productId,
-      supplierId: data.supplierId,
-      quantity,
-      unitCost,
-      remainingQty: quantity,
-      date: toJalali(todayIso()),
-      reference: null,
-      purchaseInvoiceId: null,
-      note: data.note?.trim() || "خرید دستی از لیست خرید",
-      status: "ACTIVE",
-    },
-    include: { supplier: { select: { id: true, name: true } } },
+  // خرید = ما بدهکاریم → مبلغ مثبت در حساب تأمین‌کننده (نوع ۴۰، مطابق دفتر قدیمی)
+  const total = quantity * unitCost;
+  const jDate = toJalali(todayIso());
+
+  return prisma.$transaction(async (tx) => {
+    const batch = await tx.productPurchaseBatch.create({
+      data: {
+        productId: data.productId,
+        supplierId: data.supplierId,
+        quantity,
+        unitCost,
+        remainingQty: quantity,
+        date: jDate,
+        reference: null,
+        purchaseInvoiceId: null,
+        note: data.note?.trim() || "خرید دستی از لیست خرید",
+        status: "ACTIVE",
+      },
+      include: { supplier: { select: { id: true, name: true } } },
+    });
+
+    if (total > 0) {
+      const entry = await tx.ledgerEntry.create({
+        data: {
+          date: jDate,
+          voucherType: 40,
+          voucher: 1,
+          amount: total,
+          description: `خرید ${product.name} از ${supplier.name}`,
+          partyId: data.supplierId,
+          source: "NEW",
+        },
+      });
+      await tx.productPurchaseBatch.update({
+        where: { id: batch.id },
+        data: { ledgerEntryId: entry.id },
+      });
+      return { ...batch, ledgerEntryId: entry.id };
+    }
+    return batch;
   });
 }
 
@@ -896,6 +1091,11 @@ export async function deleteManualPurchase(batchId: string) {
   if (b.remainingQty < b.quantity - 0.0001) {
     throw new Error("بخشی از این خرید مصرف شده؛ قابل حذف نیست");
   }
-  await prisma.productPurchaseBatch.delete({ where: { id: batchId } });
+  await prisma.$transaction(async (tx) => {
+    if (b.ledgerEntryId) {
+      await tx.ledgerEntry.deleteMany({ where: { id: b.ledgerEntryId } });
+    }
+    await tx.productPurchaseBatch.delete({ where: { id: batchId } });
+  });
   return { ok: true };
 }
