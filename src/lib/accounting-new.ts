@@ -1173,9 +1173,10 @@ export async function getPurchaseList(
 /** فهرست فاکتورها برای منوی بالای «لیست خرید» */
 export async function getPurchaseListInvoices() {
   const [sales, purchases] = await Promise.all([
+    // فقط فاکتورهایی که در تب «تأیید شده» هستند (تخصیص بهای تمام‌شده با وضعیت APPROVED)
     prisma.preInvoice.findMany({
+      where: { cogsAllocation: { status: "APPROVED" } },
       orderBy: { invoiceNumber: "desc" },
-      take: 80,
       select: {
         id: true,
         invoiceNumber: true,
