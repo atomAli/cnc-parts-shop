@@ -2,7 +2,6 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { getProductMaxLength, metersToBranches } from "@/lib/meter-product";
-import Link from "next/link";
 import {
   CheckCircle2,
   XCircle,
@@ -368,10 +367,7 @@ export default function AccountingNewPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">حسابداری جدید</h1>
-        <Link href="/admin/accounting" className="text-xs text-blue-700 hover:underline">
-          حسابداری قدیمی (Access)
-        </Link>
+        <h1 className="text-lg font-bold">حسابداری</h1>
       </div>
 
       {/* فیلتر تاریخ دلخواه */}
@@ -516,7 +512,7 @@ export default function AccountingNewPage() {
             فقط کالاهایی که در <b>فاکتورهای «تکمیل شده»ٔ سایت</b> آمده‌اند — فاکتورهای قدیمی و
             فاکتورهای در جریان حساب نمی‌شوند.
             «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید هم کمبود را کم می‌کند و هم به
-            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰ و کمبود هم کامل نوشته می‌شود (مثلاً «۳۲ متر = ۸ شاخهٔ ۴ متری») و همان تعداد به‌صورت پیش‌فرض در فرم خرید می‌نشیند.
+            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰؛ مقادیر برای دقتِ بیشتر بر حسب <b>سانتی‌متر</b> نمایش داده می‌شوند (قیمت همچنان «هر متر» است) و کمبود کامل نوشته می‌شود (مثلاً «۳۲۰۰ سانتی‌متر = ۸ شاخهٔ ۴ متری») که همان تعداد به‌صورت پیش‌فرض در فرم خرید می‌نشیند.
           </div>
 
           {plist.length === 0 ? (
@@ -529,7 +525,7 @@ export default function AccountingNewPage() {
                 <thead className="bg-gray-50 text-gray-500 text-xs">
                   <tr>
                     <th className="p-3 text-right">کالا</th>
-                    <th className="p-3 text-left">فروش رفته (عدد / متر)</th>
+                    <th className="p-3 text-left">فروش رفته (عدد / سانتی‌متر)</th>
                     <th className="p-3 text-left">خریداری‌شده</th>
                     <th className="p-3 text-left">در انبار</th>
                     <th className="p-3 text-left">کمبود</th>
@@ -559,7 +555,9 @@ export default function AccountingNewPage() {
                       branchLength: it.isMeter ? String(branchLenCm) : "",
                     };
                     const suppliers = parties.filter((pp) => pp.kind === "SUPPLIER");
-                    const u = it.isMeter ? "متر" : "عدد";
+                    // مقادیر داخلی بر حسب «متر» ثبت می‌شوند؛ برای دقتِ نمایش ×۱۰۰ → سانتی‌متر
+                    const u = it.isMeter ? "سانتی‌متر" : "عدد";
+                    const q = (v: number) => money(it.isMeter ? v * 100 : v);
                     const meterFrom = Number(f.branchCount) > 0 && Number(f.branchLength) > 0
                       ? (Number(f.branchCount) * Number(f.branchLength)) / 100
                       : 0;
@@ -581,7 +579,7 @@ export default function AccountingNewPage() {
                             )}
                           </td>
                           <td className="p-3 text-left text-gray-600">
-                            {money(it.soldQty)} <span className="text-[11px] text-gray-400">{u}</span>
+                            {q(it.soldQty)} <span className="text-[11px] text-gray-400">{u}</span>
                             {it.isMeter && it.soldBranches > 0 && (
                               <div className="text-[11px] text-amber-700">
                                 {money(it.soldBranches)} شاخه
@@ -589,16 +587,16 @@ export default function AccountingNewPage() {
                             )}
                           </td>
                           <td className="p-3 text-left text-gray-500">
-                            {money(it.purchasedQty)} <span className="text-[11px] text-gray-400">{u}</span>
+                            {q(it.purchasedQty)} <span className="text-[11px] text-gray-400">{u}</span>
                           </td>
                           <td className="p-3 text-left text-gray-500">
-                            {money(it.remainingQty)} <span className="text-[11px] text-gray-400">{u}</span>
+                            {q(it.remainingQty)} <span className="text-[11px] text-gray-400">{u}</span>
                           </td>
                           <td className="p-3 text-left">
                             {it.shortage > 0 ? (
                               <>
                                 <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
-                                  {money(it.shortage)} {u}
+                                  {q(it.shortage)} {u}
                                 </span>
                                 {branchText && (
                                   <div className="mt-1 text-[11px] font-bold text-amber-700">
@@ -622,7 +620,7 @@ export default function AccountingNewPage() {
                               <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2">
                                 <span className="text-xs text-gray-500">کمبود این کالا</span>
                                 <span className="text-lg font-bold text-red-700">
-                                  {money(it.shortage)}
+                                  {q(it.shortage)}
                                 </span>
                                 <span className="text-xs text-gray-500">{u}</span>
                                 {branchText && (
@@ -662,9 +660,9 @@ export default function AccountingNewPage() {
                                       />
                                     </div>
                                     <div className="w-[120px]">
-                                      <label className="block text-[11px] text-gray-500 mb-1">متراژ کل (متر)</label>
+                                      <label className="block text-[11px] text-gray-500 mb-1">متراژ کل (سانتی‌متر)</label>
                                       <div className="border border-dashed border-gray-300 rounded-lg px-2 py-1.5 text-sm bg-white text-blue-700 font-bold">
-                                        {meterFrom > 0 ? money(meterFrom) : "—"}
+                                        {meterFrom > 0 ? money(meterFrom * 100) : "—"}
                                       </div>
                                     </div>
                                   </>
@@ -769,7 +767,7 @@ export default function AccountingNewPage() {
                                           <td className="p-2 text-gray-500">{toFaDigits(m.date)}</td>
                                           <td className="p-2">{m.supplier?.name ?? "—"}</td>
                                           <td className="p-2 text-left">
-                                            {money(m.quantity)} {it.isMeter ? "متر" : "عدد"}
+                                            {q(m.quantity)} {u}
                                           </td>
                                           <td className="p-2 text-left">{money(m.unitCost)}</td>
                                           <td className="p-2 text-left font-bold">{money(m.total)} تومان</td>

@@ -22,11 +22,14 @@ import {
   BookOpen,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import type { LucideIcon } from "lucide-react";
 
-const menuItems = [
+type MenuItem = { href: string; label: string; icon: LucideIcon; accent?: boolean };
+
+const menuItems: MenuItem[] = [
   { href: "/admin", label: "داشبورد", icon: LayoutDashboard },
-  { href: "/admin/accounting-new", label: "حسابداری جدید", icon: BookOpen },
-  { href: "/admin/accounting", label: "حسابداری قدیمی", icon: BookOpen },
+  // حسابداری: دکمهٔ اختصاصیِ سبز تا از بقیهٔ آیتم‌ها جدا باشد
+  { href: "/admin/accounting-new", label: "حسابداری", icon: BookOpen, accent: true },
   { href: "/admin/products", label: "محصولات", icon: Package },
   { href: "/admin/prices", label: "مدیریت قیمت", icon: BadgeDollarSign },
   { href: "/admin/categories", label: "دسته‌بندی‌ها", icon: FolderTree },
@@ -36,6 +39,15 @@ const menuItems = [
   { href: "/admin/users", label: "کاربران", icon: Users },
   { href: "/admin/banners", label: "بنرها", icon: Image },
 ];
+
+function navClass(item: MenuItem, isActive: boolean) {
+  if (item.accent) {
+    return isActive ? "bg-green-600 text-white" : "bg-green-800 text-white hover:bg-green-700";
+  }
+  return isActive
+    ? "bg-blue-600 text-white"
+    : "text-gray-400 hover:bg-gray-800 hover:text-white";
+}
 
 function PendingBadge({ count, active }: { count: number | null; active: boolean }) {
   if (!count || count <= 0) return null;
@@ -119,11 +131,7 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${navClass(item, isActive)}`}
               >
                 <item.icon size={20} />
                 <span>{item.label}</span>
@@ -174,11 +182,7 @@ export default function AdminLayout({
                     key={item.href}
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${navClass(item, isActive)}`}
                   >
                     <item.icon size={20} />
                     <span>{item.label}</span>
