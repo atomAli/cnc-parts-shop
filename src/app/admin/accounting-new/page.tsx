@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
-import { getProductMaxLength } from "@/lib/meter-product";
+import { getProductMaxLength, metersToBranches } from "@/lib/meter-product";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -516,7 +516,7 @@ export default function AccountingNewPage() {
             فقط کالاهایی که در <b>فاکتورهای «تکمیل شده»ٔ سایت</b> آمده‌اند — فاکتورهای قدیمی و
             فاکتورهای در جریان حساب نمی‌شوند.
             «کمبود» یعنی هنوز نخریده‌اید؛ هر خریدی که ثبت کنید هم کمبود را کم می‌کند و هم به
-            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰.
+            «خرید کل» بالای صفحه می‌پیوندد. برای کالاهای متری، متراژ = تعداد شاخه × متراژ هر شاخه ÷ ۱۰۰ و کمبود هم کامل نوشته می‌شود (مثلاً «۳۲ متر = ۸ شاخهٔ ۴ متری») و همان تعداد به‌صورت پیش‌فرض در فرم خرید می‌نشیند.
           </div>
 
           {plist.length === 0 ? (
@@ -539,15 +539,24 @@ export default function AccountingNewPage() {
                 <tbody>
                   {plist.map((it) => {
                     const open = expanded === it.productId;
+                    // کالای متری: کمبود را کامل می‌نویسیم — «۳۲ متر = ۸ شاخهٔ ۴ متری»
+                    const branchLenCm = it.isMeter
+                      ? getProductMaxLength({ name: it.name, isMeter: true })
+                      : 0;
+                    const conv = it.isMeter
+                      ? metersToBranches(it.shortage, branchLenCm)
+                      : { count: 0, exact: false, lengthM: 0 };
+                    const branchText =
+                      conv.count > 0
+                        ? `${conv.exact ? "=" : "≈"} ${money(conv.count)} شاخهٔ ${money(conv.lengthM)} متری`
+                        : "";
                     const f = pForm[it.productId] ?? {
                       quantity: it.shortage > 0 ? String(it.shortage) : "",
                       unitCost: it.avgCost != null ? String(Math.round(it.avgCost)) : "",
                       supplierId: "",
                       supplierQuery: "",
-                      branchCount: "",
-                      branchLength: it.isMeter
-                        ? String(getProductMaxLength({ name: it.name, isMeter: true }))
-                        : "",
+                      branchCount: conv.count > 0 ? String(conv.count) : "",
+                      branchLength: it.isMeter ? String(branchLenCm) : "",
                     };
                     const suppliers = parties.filter((pp) => pp.kind === "SUPPLIER");
                     const u = it.isMeter ? "متر" : "عدد";
@@ -587,9 +596,16 @@ export default function AccountingNewPage() {
                           </td>
                           <td className="p-3 text-left">
                             {it.shortage > 0 ? (
-                              <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
-                                {money(it.shortage)} {u}
-                              </span>
+                              <>
+                                <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
+                                  {money(it.shortage)} {u}
+                                </span>
+                                {branchText && (
+                                  <div className="mt-1 text-[11px] font-bold text-amber-700">
+                                    {branchText}
+                                  </div>
+                                )}
+                              </>
                             ) : (
                               <span className="text-xs text-gray-400">—</span>
                             )}
@@ -609,6 +625,9 @@ export default function AccountingNewPage() {
                                   {money(it.shortage)}
                                 </span>
                                 <span className="text-xs text-gray-500">{u}</span>
+                                {branchText && (
+                                  <span className="text-xs font-bold text-amber-700">{branchText}</span>
+                                )}
                               </div>
 
                               {/* ثبت خرید — دقیقاً زیر فیلد کمبود */}

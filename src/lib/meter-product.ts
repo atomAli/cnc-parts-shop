@@ -66,3 +66,26 @@ export function getProductMaxLength(product: ProductInput): number {
 
   return 400;
 }
+
+/**
+ * کمبودِ یک کالای متری را به «تعداد شاخه» تبدیل می‌کند.
+ * ورودی: متراژ کمبود به متر و طول هر شاخه به سانتی‌متر (همان چیزی که فرم خرید می‌فرستد).
+ * اگر مضرب کامل نباشد، تعداد شاخه‌ها بالا برده می‌شود (چون شاخه را نمی‌شود نصف خرید).
+ */
+export function metersToBranches(
+  meters: number,
+  branchLengthCm: number
+): { count: number; exact: boolean; lengthM: number } {
+  const lenM = Number(branchLengthCm) > 0 ? Number(branchLengthCm) / 100 : 0;
+  const m = Number(meters) || 0;
+  if (m <= 0 || lenM <= 0) return { count: 0, exact: false, lengthM: lenM };
+
+  const raw = m / lenM;
+  const nearest = Math.round(raw);
+  const exact = Math.abs(raw - nearest) < 1e-4;
+  return {
+    count: exact ? nearest : Math.ceil(raw - 1e-9),
+    exact,
+    lengthM: lenM,
+  };
+}
