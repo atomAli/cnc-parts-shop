@@ -873,8 +873,6 @@ export default function AccountingNewPage() {
                 <thead className="bg-gray-50 text-gray-500 text-xs">
                   <tr>
                     <th className="p-3 text-right">کالا</th>
-                    <th className="p-3 text-left">فروش رفته (عدد / سانتی‌متر)</th>
-                    <th className="p-3 text-left">خریداری‌شده</th>
                     <th className="p-3 text-left">در انبار</th>
                     <th className="p-3 text-left">کمبود</th>
                     <th className="p-3 text-left">خرید ثبت‌شده</th>
@@ -896,9 +894,6 @@ export default function AccountingNewPage() {
                         : `${money(cm)} سانتی‌متر`;
                     const conv = it.isMeter
                       ? metersToBranches(it.shortage, branchLenCm)
-                      : { count: 0, exact: false, lengthM: 0 };
-                    const purConv = it.isMeter
-                      ? metersToBranches(it.purchasedQty, branchLenCm)
                       : { count: 0, exact: false, lengthM: 0 };
                     const branchText =
                       conv.count > 0
@@ -970,37 +965,14 @@ export default function AccountingNewPage() {
                               </span>
                             )}
                           </td>
-                          <td className="p-3 text-left text-gray-600">
-                            {q(it.soldQty)} <span className="text-[11px] text-gray-400">{u}</span>
-                            {it.isMeter && it.soldBranches > 0 && (
-                              <div className="text-[11px] text-amber-700">
-                                {money(it.soldBranches)} شاخه × {lenLabel(branchLenCm)}
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3 text-left text-gray-500">
-                            {q(it.purchasedQty)} <span className="text-[11px] text-gray-400">{u}</span>
-                            {it.isMeter && purConv.count > 0 && (
-                              <div className="text-[11px] text-amber-700">
-                                {money(purConv.count)} شاخه × {lenLabel(branchLenCm)}
-                              </div>
-                            )}
-                          </td>
                           <td className="p-3 text-left text-gray-500">
                             {q(it.remainingQty)} <span className="text-[11px] text-gray-400">{u}</span>
                           </td>
                           <td className="p-3 text-left">
                             {it.shortage > 0 ? (
-                              <>
-                                <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
-                                  {q(it.shortage)} {u}
-                                </span>
-                                {branchText && (
-                                  <div className="mt-1 text-[11px] font-bold text-amber-700">
-                                    {branchText}
-                                  </div>
-                                )}
-                              </>
+                              <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
+                                {q(it.shortage)} {u}
+                              </span>
                             ) : (
                               <span className="text-xs text-gray-400">—</span>
                             )}
@@ -1012,7 +984,7 @@ export default function AccountingNewPage() {
 
                         {open && (
                           <tr className="bg-gray-50 border-t border-gray-200">
-                            <td colSpan={6} className="p-4">
+                            <td colSpan={4} className="p-4">
                               {/* فیلد کمبود */}
                               <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2">
                                 <span className="text-xs text-gray-500">کمبود این کالا</span>
@@ -1020,9 +992,6 @@ export default function AccountingNewPage() {
                                   {q(it.shortage)}
                                 </span>
                                 <span className="text-xs text-gray-500">{u}</span>
-                                {branchText && (
-                                  <span className="text-xs font-bold text-amber-700">{branchText}</span>
-                                )}
                               </div>
 
                               {/* ثبت خرید — فقط در حالت «همه» (در نمای فاکتور خریدی ثبت نمی‌شود) */}
@@ -1188,6 +1157,12 @@ export default function AccountingNewPage() {
                                     {it.isMeter ? " (واحد: سانتی‌متر)" : ""} — جمع باید دقیقاً
                                     برابر تعداد خرید باشد
                                   </div>
+                                  {it.isMeter && branchText && (
+                                    <div className="mb-2 text-[11px] font-bold text-amber-700">
+                                      کمبود این کالا {q(it.shortage)} سانتی‌متر است {branchText} —
+                                      همین مقدار را (به سانتی‌متر) بین فاکتورها تقسیم کنید.
+                                    </div>
+                                  )}
                                   <div className="flex flex-wrap gap-3 items-end">
                                     {allocTargets.map((t) => (
                                       <div key={t.invoiceId} className="w-[230px]">
