@@ -1211,6 +1211,8 @@ export type PurchaseItem = {
      * تخصیص حذف شود (ولی برای نمایش تخصیص‌های ثبت‌شده باقی می‌ماند).
      */
     remaining: number;
+    /** فقط کالای متری: طول هر شاخه در همین فاکتور (سانتی‌متر)؛ صفر یعنی نامعلوم */
+    branchLenCm: number;
     /** فقط کالای متری: تعداد شاخه */
     branches: number;
   }[];
@@ -1275,6 +1277,8 @@ type InvSoldRaw = {
   count: number;
   /** متراژ معادل (متر) */
   meters: number;
+  /** طول هر شاخه در همین فاکتور (سانتی‌متر)؛ صفر یعنی نامعلوم */
+  branchLenCm: number;
 };
 
 export async function getPurchaseList(
@@ -1454,6 +1458,7 @@ export async function getPurchaseList(
           productId: it.productId,
           count: qty,
           meters: bl > 0 ? (qty * bl) / 100 : qty,
+          branchLenCm: bl > 0 ? bl : 0,
         });
       }
     }
@@ -1530,10 +1535,20 @@ export async function getPurchaseList(
 
   // مقصد تخصیص خرید: هر کالا با فاکتورهای تأییدشده‌ای که آن را سفارش داشته‌اند
   const invByProduct = new Map<string, PurchaseItem["soldByInvoice"]>();
+  // میانگین وزنی طول شاخه در هر (کالا، فاکتور) — چون ممکن است یک فاکتور چند
+  // ردیف با طول‌های مختلف داشته باشد.
+  const lenAcc = new Map<string, { s: number; c: number }>();
   for (const r of invSoldRaw) {
     const isM = prodMap.get(r.productId)?.isMeter === true;
     const qty = isM ? r.meters : r.count;
     const branches = isM ? r.count : 0;
+    if (isM && r.branchLenCm > 0 && r.count > 0) {
+      const lk = `${r.productId}|${r.invoiceId}`;
+      const a = lenAcc.get(lk) ?? { s: 0, c: 0 };
+      a.s += r.branchLenCm * r.count;
+      a.c += r.count;
+      lenAcc.set(lk, a);
+    }
     const arr = invByProduct.get(r.productId) ?? [];
     const hit = arr.find((x) => x.invoiceId === r.invoiceId);
     if (hit) {
@@ -1546,6 +1561,7 @@ export async function getPurchaseList(
         customerName: r.customerName,
         qty,
         remaining: qty,
+        branchLenCm: r.branchLenCm,
         branches,
       });
     }
@@ -1556,6 +1572,8 @@ export async function getPurchaseList(
     for (const t of arr) {
       const allocated = allocByInvProduct.get(`${pid}|${t.invoiceId}`) ?? 0;
       t.remaining = Math.max(0, t.qty - allocated);
+      const la = lenAcc.get(`${pid}|${t.invoiceId}`);
+      if (la && la.c > 0) t.branchLenCm = la.s / la.c;
     }
     arr.sort((a, b) => b.invoiceNumber - a.invoiceNumber);
   }

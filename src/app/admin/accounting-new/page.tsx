@@ -77,6 +77,8 @@ type PurchaseItem = {
     qty: number;
     /** نیاز باقی‌ماندهٔ این فاکتور (سفارش − خریداری‌شدهٔ قبلی)؛ صفر یعنی تأمین شده */
     remaining: number;
+    /** فقط کالای متری: طول هر شاخه در همین فاکتور (سانتی‌متر)؛ صفر یعنی نامعلوم */
+    branchLenCm: number;
     branches: number;
   }[];
   manual: {
@@ -199,8 +201,8 @@ export default function AccountingNewPage() {
 
   // لیست خرید
   const [plist, setPlist] = useState<PurchaseItem[]>([]);
-  /** نمایش «آرشیو روزانه» کالاهای کامل‌خریداری‌شده */
-  const [showArchive, setShowArchive] = useState(true);
+  /** نمایش «آرشیو روزانه» کالاهای کامل‌خریداری‌شده — پیش‌فرض بسته */
+  const [showArchive, setShowArchive] = useState(false);
   const [pForm, setPForm] = useState<
     Record<
       string,
@@ -873,7 +875,6 @@ export default function AccountingNewPage() {
                 <thead className="bg-gray-50 text-gray-500 text-xs">
                   <tr>
                     <th className="p-3 text-right">کالا</th>
-                    <th className="p-3 text-left">در انبار</th>
                     <th className="p-3 text-left">کمبود</th>
                     <th className="p-3 text-left">خرید ثبت‌شده</th>
                   </tr>
@@ -895,10 +896,6 @@ export default function AccountingNewPage() {
                     const conv = it.isMeter
                       ? metersToBranches(it.shortage, branchLenCm)
                       : { count: 0, exact: false, lengthM: 0 };
-                    const branchText =
-                      conv.count > 0
-                        ? `${conv.exact ? "=" : "≈"} ${money(conv.count)} شاخهٔ ${lenLabel(branchLenCm)}`
-                        : "";
                     const f = pForm[it.productId] ?? {
                       quantity: it.shortage > 0 ? String(it.shortage) : "",
                       unitCost: it.avgCost != null ? String(Math.round(it.avgCost)) : "",
@@ -965,9 +962,6 @@ export default function AccountingNewPage() {
                               </span>
                             )}
                           </td>
-                          <td className="p-3 text-left text-gray-500">
-                            {q(it.remainingQty)} <span className="text-[11px] text-gray-400">{u}</span>
-                          </td>
                           <td className="p-3 text-left">
                             {it.shortage > 0 ? (
                               <span className="rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
@@ -984,7 +978,7 @@ export default function AccountingNewPage() {
 
                         {open && (
                           <tr className="bg-gray-50 border-t border-gray-200">
-                            <td colSpan={4} className="p-4">
+                            <td colSpan={3} className="p-4">
                               {/* فیلد کمبود */}
                               <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2">
                                 <span className="text-xs text-gray-500">کمبود این کالا</span>
@@ -1157,10 +1151,11 @@ export default function AccountingNewPage() {
                                     {it.isMeter ? " (واحد: سانتی‌متر)" : ""} — جمع باید دقیقاً
                                     برابر تعداد خرید باشد
                                   </div>
-                                  {it.isMeter && branchText && (
-                                    <div className="mb-2 text-[11px] font-bold text-amber-700">
-                                      کمبود این کالا {q(it.shortage)} سانتی‌متر است {branchText} —
-                                      همین مقدار را (به سانتی‌متر) بین فاکتورها تقسیم کنید.
+                                  {it.isMeter && (
+                                    <div className="mb-2 text-[11px] text-amber-700">
+                                      کمبود این کالا {q(it.shortage)} سانتی‌متر است — برای هر فاکتور
+                                      تعداد شاخه و اندازهٔ خودش پایین نوشته شده؛ مقدار را به
+                                      سانتی‌متر وارد کنید.
                                     </div>
                                   )}
                                   <div className="flex flex-wrap gap-3 items-end">
@@ -1194,6 +1189,18 @@ export default function AccountingNewPage() {
                                             <span className="text-gray-400"> (از {q(t.qty)})</span>
                                           )}
                                         </div>
+                                        {it.isMeter &&
+                                          (() => {
+                                            const bl =
+                                              t.branchLenCm > 0 ? t.branchLenCm : branchLenCm;
+                                            const c = metersToBranches(t.remaining, bl);
+                                            return c.count > 0 ? (
+                                              <div className="mt-0.5 text-[11px] font-bold text-amber-700">
+                                                {c.exact ? "=" : "≈"} {money(c.count)} شاخهٔ{" "}
+                                                {lenLabel(bl)}
+                                              </div>
+                                            ) : null;
+                                          })()}
                                       </div>
                                     ))}
                                   </div>
