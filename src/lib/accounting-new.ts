@@ -1176,6 +1176,12 @@ export type PurchaseItem = {
   /** کالای متری: مقادیر بر حسب متر است؛ غیر متری: بر حسب عدد */
   isMeter: boolean;
   soldQty: number;
+  /**
+   * تاریخ شمسیِ «کامل شدن» خرید این کالا — روزی که جمع خریدها به مقدار فروش
+   * رسید (کمبود صفر شد). فقط در حالت «همه» محاسبه می‌شود؛ وگرنه null.
+   * رابط کاربری کالاهای کامل‌شده را بر اساس همین تاریخ در «آرشیو روزانه» می‌چیند.
+   */
+  completedAt: string | null;
   /** فقط کالای متری: تعداد شاخه فروخته‌شده */
   soldBranches: number;
   /**
@@ -1199,6 +1205,12 @@ export type PurchaseItem = {
     customerName: string;
     /** همان واحدِ `soldQty` (متر برای کالای متری، عدد برای بقیه) */
     qty: number;
+    /**
+     * نیاز باقی‌ماندهٔ این فاکتور = `qty` منهای مقداری که قبلاً برای همین فاکتور
+     * خریداری/تخصیص شده. صفر یعنی فاکتور تأمین شده و باید از فهرست مقصد
+     * تخصیص حذف شود (ولی برای نمایش تخصیص‌های ثبت‌شده باقی می‌ماند).
+     */
+    remaining: number;
     /** فقط کالای متری: تعداد شاخه */
     branches: number;
   }[];
@@ -1460,6 +1472,29 @@ export async function getPurchaseList(
     : [];
   const prodMap = new Map(products.map((p) => [p.id, p]));
 
+  // روزِ «کامل شدن» خرید هر کالا (تاریخی که جمع خریدها به مقدار فروش رسید).
+  // فقط حالت «همه» معنا دارد؛ در نمای فاکتور خرید/فروش خالی می‌ماند.
+  const completedMap = new Map<string, string>();
+  if (scope.kind === "ALL" && ids.length) {
+    const bds = await prisma.productPurchaseBatch.findMany({
+      where: { productId: { in: ids } },
+      orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+      select: { productId: true, quantity: true, date: true },
+    });
+    const cum = new Map<string, number>();
+    for (const b of bds) {
+      const isM = prodMap.get(b.productId)?.isMeter === true;
+      const r = sMap.get(b.productId);
+      const need = isM ? Number(r?.meters ?? 0) : Number(r?.qty ?? 0);
+      if (!(need > 0)) continue;
+      const next = (cum.get(b.productId) ?? 0) + Number(b.quantity);
+      cum.set(b.productId, next);
+      if (next >= need - 1e-6 && !completedMap.has(b.productId)) {
+        completedMap.set(b.productId, b.date);
+      }
+    }
+  }
+
   const manualMap = new Map<string, PurchaseItem["manual"]>();
   for (const m of manualRows) {
     const arr = manualMap.get(m.productId) ?? [];
@@ -1473,6 +1508,24 @@ export async function getPurchaseList(
       allocations: m.allocations,
     });
     manualMap.set(m.productId, arr);
+  }
+
+  // مقدار خریدی که قبلاً به هر فاکتور تخصیص خورده (کلید: `productId|invoiceId`).
+  // برای حذف فاکتورهای «تأمین‌شده» از فهرست مقصد تخصیص لازم است؛ مثلاً وقتی
+  // خرید فاکتور مستر ماشین انجام شده، نباید دوباره به‌عنوان مقصد ظاهر شود.
+  const allocByInvProduct = new Map<string, number>();
+  if (scope.kind === "ALL") {
+    const allocRows = await prisma.$queryRaw<{ productId: string; preInvoiceId: string; qty: number }[]>`
+      SELECT b."productId" AS "productId",
+             a->>'preInvoiceId' AS "preInvoiceId",
+             COALESCE(sum((a->>'qty')::float),0)::float AS qty
+      FROM product_purchase_batches b
+      JOIN LATERAL jsonb_array_elements(COALESCE(b.allocations, '[]'::jsonb)) a ON TRUE
+      WHERE a->>'preInvoiceId' IS NOT NULL
+      GROUP BY 1, 2`;
+    for (const r of allocRows) {
+      allocByInvProduct.set(`${r.productId}|${r.preInvoiceId}`, Number(r.qty));
+    }
   }
 
   // مقصد تخصیص خرید: هر کالا با فاکتورهای تأییدشده‌ای که آن را سفارش داشته‌اند
@@ -1492,12 +1545,20 @@ export async function getPurchaseList(
         invoiceNumber: r.invoiceNumber,
         customerName: r.customerName,
         qty,
+        remaining: qty,
         branches,
       });
     }
     invByProduct.set(r.productId, arr);
   }
-  for (const arr of invByProduct.values()) arr.sort((a, b) => b.invoiceNumber - a.invoiceNumber);
+  // نیاز باقی‌ماندهٔ هر فاکتور = سفارش − مقدار تخصیص‌یافتهٔ قبلی؛ صفر یعنی تأمین شده
+  for (const [pid, arr] of invByProduct) {
+    for (const t of arr) {
+      const allocated = allocByInvProduct.get(`${pid}|${t.invoiceId}`) ?? 0;
+      t.remaining = Math.max(0, t.qty - allocated);
+    }
+    arr.sort((a, b) => b.invoiceNumber - a.invoiceNumber);
+  }
 
   const rows: PurchaseItem[] = ids.map((productId) => {
     const prod = prodMap.get(productId);
@@ -1514,6 +1575,7 @@ export async function getPurchaseList(
       productId,
       name: prod?.name ?? "—",
       isMeter,
+      completedAt: completedMap.get(productId) ?? null,
       soldQty,
       soldBranches,
       soldBranchLenCm,

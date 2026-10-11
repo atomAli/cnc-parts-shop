@@ -58,6 +58,8 @@ type PurchaseItem = {
   productId: string;
   name: string;
   isMeter: boolean;
+  /** تاریخی که این کالا کامل خریداری شد (کمبود صفر) — برای «آرشیو روزانه» */
+  completedAt: string | null;
   soldQty: number;
   soldBranches: number;
   /** طول واقعی هر شاخه (سانتی‌متر) از فاکتورها؛ صفر یعنی از فیلد استاندارد کالا */
@@ -73,6 +75,8 @@ type PurchaseItem = {
     invoiceNumber: number;
     customerName: string;
     qty: number;
+    /** نیاز باقی‌ماندهٔ این فاکتور (سفارش − خریداری‌شدهٔ قبلی)؛ صفر یعنی تأمین شده */
+    remaining: number;
     branches: number;
   }[];
   manual: {
@@ -195,6 +199,8 @@ export default function AccountingNewPage() {
 
   // لیست خرید
   const [plist, setPlist] = useState<PurchaseItem[]>([]);
+  /** نمایش «آرشیو روزانه» کالاهای کامل‌خریداری‌شده */
+  const [showArchive, setShowArchive] = useState(true);
   const [pForm, setPForm] = useState<
     Record<
       string,
@@ -605,6 +611,26 @@ export default function AccountingNewPage() {
   const qtyShow = (v: number, isMeter: boolean) => (isMeter ? money(Number(v) * 100) : money(v));
   const qtyUnit = (isMeter: boolean) => (isMeter ? "سانتی‌متر" : "عدد");
 
+  // «لیست خرید» در حالت «همه»: هر کالایی که کامل خریداری شد (کمبود صفر)
+  // از فهرست اصلی جدا و در «آرشیو روزانه» — به تفکیک روزِ کامل شدن — نشان داده می‌شود.
+  const isAllScope = plistScope === "";
+  const mainRows = isAllScope ? plist.filter((it) => it.shortage > 0) : plist;
+  const archiveGroups: [string, PurchaseItem[]][] = (() => {
+    if (!isAllScope) return [];
+    const m = new Map<string, PurchaseItem[]>();
+    for (const it of plist) {
+      if (it.shortage > 0) continue;
+      const k = it.completedAt || "بدون تاریخ";
+      const arr = m.get(k) ?? [];
+      arr.push(it);
+      m.set(k, arr);
+    }
+    return [...m.entries()].sort((a, b) =>
+      a[0] === "بدون تاریخ" ? 1 : b[0] === "بدون تاریخ" ? -1 : a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0
+    );
+  })();
+  const archiveCount = archiveGroups.reduce((s, [, arr]) => s + arr.length, 0);
+
   const kpiCard = (
     label: string,
     value: number,
@@ -831,9 +857,15 @@ export default function AccountingNewPage() {
             )}
           </div>
 
-          {plist.length === 0 ? (
+          {mainRows.length === 0 ? (
             <div className="rounded-xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-              {plistScope === "" ? "کالایی در فاکتور فروش نیست." : "این فاکتور کالایی ندارد."}
+              {isAllScope
+                ? archiveCount > 0
+                  ? "همهٔ کالاها خریداری شده‌اند — در «آرشیو روزانه» پایین ببینید."
+                  : "کالایی در فاکتور فروش نیست."
+                : plistScope.startsWith("s:")
+                  ? "این فاکتور کالایی ندارد."
+                  : "این فاکتور خرید کالایی ندارد."}
             </div>
           ) : (
             <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
@@ -849,7 +881,7 @@ export default function AccountingNewPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {plist.map((it) => {
+                  {mainRows.map((it) => {
                     const open = expanded === it.productId;
                     // کالای متری: کمبود را کامل می‌نویسیم — «۳۰۰ سانتی‌متر = ۲ شاخهٔ ۱۵۰ سانتی‌متر»
                     // طول شاخه از خود فاکتورها می‌آید؛ فقط اگر فاکторی نداشت سراغ استاندارد کالا می‌رویم
@@ -890,8 +922,13 @@ export default function AccountingNewPage() {
                       ? (Number(f.branchCount) * Number(f.branchLength)) / 100
                       : 0;
 
-                    // تخصیص تعداد خرید به فاکتورهای تأییدشده‌ای که این کالا را سفارش داشته‌اند
-                    const allocTargets = plistScope === "" ? it.soldByInvoice : [];
+                    // تخصیص تعداد خرید فقط به فاکتورهایی که این کالا را سفارش داده‌اند
+                    // و هنوز تأمین نشده‌اند (نیاز باقی‌مانده > ۰) — فاکتورهای تأمین‌شده
+                    // دیگر به‌عنوان مقصد تخصیص نشان داده نمی‌شوند.
+                    const allocTargets =
+                      plistScope === ""
+                        ? it.soldByInvoice.filter((t) => t.remaining > 0.0001)
+                        : [];
                     const buyQty = it.isMeter
                       ? (Number(f.branchCount) * Number(f.branchLength)) / 100
                       : Math.round(Number(f.quantity));
@@ -1177,7 +1214,10 @@ export default function AccountingNewPage() {
                                           className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
                                         />
                                         <div className="mt-1 text-[11px] text-blue-700">
-                                          سفارش این فاکتور: {q(t.qty)} {u}
+                                          نیاز این فاکتور: {q(t.remaining)} {u}
+                                          {t.remaining < t.qty - 0.0001 && (
+                                            <span className="text-gray-400"> (از {q(t.qty)})</span>
+                                          )}
                                         </div>
                                       </div>
                                     ))}
@@ -1257,6 +1297,82 @@ export default function AccountingNewPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* آرشیو روزانه — کالاهایی که کامل خریداری شده‌اند (کمبود صفر) */}
+          {isAllScope && archiveCount > 0 && (
+            <div className="rounded-xl border border-green-200 bg-green-50 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowArchive((v) => !v)}
+                className="flex w-full items-center justify-between px-4 py-3 text-sm font-bold text-green-800 transition-colors duration-150 hover:bg-green-100"
+              >
+                <span>
+                  آرشیو خریداری‌شده (روزانه) — {toFaDigits(String(archiveCount))} کالا در{" "}
+                  {toFaDigits(String(archiveGroups.length))} روز
+                </span>
+                <span className="text-xs text-green-700">{showArchive ? "بستن ▴" : "نمایش ▾"}</span>
+              </button>
+              {showArchive && (
+                <div className="space-y-4 border-t border-green-200 p-4">
+                  {archiveGroups.map(([date, items]) => (
+                    <div key={date} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                      <div className="flex items-center justify-between bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
+                        <span>{date === "بدون تاریخ" ? date : toFaDigits(date)}</span>
+                        <span className="font-normal text-gray-400">
+                          {toFaDigits(String(items.length))} کالا
+                        </span>
+                      </div>
+                      <table className="w-full text-sm">
+                        <thead className="text-[11px] text-gray-400">
+                          <tr>
+                            <th className="p-2 text-right font-normal">کالا</th>
+                            <th className="p-2 text-left font-normal">فروش رفته</th>
+                            <th className="p-2 text-left font-normal">خریداری‌شده</th>
+                            <th className="p-2 text-left font-normal">میانگین قیمت</th>
+                            <th className="p-2 text-left font-normal">جمع خرید</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((it) => {
+                            const totalCost =
+                              it.avgCost != null ? it.purchasedQty * it.avgCost : it.manualTotal;
+                            return (
+                              <tr key={it.productId} className="border-t border-gray-100">
+                                <td className="p-2">
+                                  {it.name}
+                                  {it.isMeter && (
+                                    <span className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                                      متری
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="p-2 text-left text-gray-600">
+                                  {qtyShow(it.soldQty, it.isMeter)}{" "}
+                                  <span className="text-[11px] text-gray-400">{qtyUnit(it.isMeter)}</span>
+                                </td>
+                                <td className="p-2 text-left font-bold text-green-700">
+                                  {qtyShow(it.purchasedQty, it.isMeter)}{" "}
+                                  <span className="text-[11px] font-normal text-gray-400">
+                                    {qtyUnit(it.isMeter)}
+                                  </span>
+                                </td>
+                                <td className="p-2 text-left text-gray-500">
+                                  {it.avgCost != null ? money(Math.round(it.avgCost)) : "—"}
+                                </td>
+                                <td className="p-2 text-left font-bold text-blue-700">
+                                  {totalCost > 0 ? `${money(totalCost)} تومان` : "—"}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
