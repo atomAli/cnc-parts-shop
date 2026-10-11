@@ -33,10 +33,10 @@ interface PreInvoice {
   user?: { name: string | null; phone: string | null } | null;
 }
 
-const STATUS_OPTIONS = ["PENDING", "CONTACTED", "DONE", "CANCELLED"];
+const STATUS_OPTIONS = ["PENDING", "DONE", "CANCELLED"];
 
 // دکمه‌های «تغییر وضعیت» داخل فاکتور — لغو شده فقط از مسیر حسابداری ساخته می‌شود
-const EDITABLE_STATUSES = ["PENDING", "CONTACTED", "DONE"];
+const EDITABLE_STATUSES = ["PENDING", "DONE"];
 
 interface InvoiceStats {
   total: number;
@@ -76,7 +76,7 @@ const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
   PROCESSING: "bg-blue-100 text-blue-700",
   CONTACTED: "bg-green-100 text-green-700",
-  DONE: "bg-gray-100 text-gray-600",
+  DONE: "bg-green-100 text-green-700",
   CANCELLED: "bg-red-100 text-red-700",
 };
 

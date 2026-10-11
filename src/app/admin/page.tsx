@@ -48,7 +48,7 @@ const invoiceStatusColors: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-700",
   PROCESSING: "bg-blue-100 text-blue-700",
   CONTACTED: "bg-green-100 text-green-700",
-  DONE: "bg-gray-100 text-gray-600",
+  DONE: "bg-green-100 text-green-700",
 };
 
 function relativeTime(iso: string) {
