@@ -9,8 +9,9 @@ import {
   Receipt,
   ShoppingCart,
   TrendingUp,
+  Search,
 } from "lucide-react";
-import { toFaDigits } from "@/lib/phone";
+import { toFaDigits, toEnDigits } from "@/lib/phone";
 
 type Line = {
   id: string;
@@ -230,6 +231,7 @@ export default function AccountingNewPage() {
   const [openParty, setOpenParty] = useState<string | null>(null);
   const [partyRecs, setPartyRecs] = useState<RecRow[]>([]);
   const [partyToday, setPartyToday] = useState("");
+  const [partyQuery, setPartyQuery] = useState("");
   const [recLoading, setRecLoading] = useState(false);
   const [recForm, setRecForm] = useState({ kind: "RECEIPT", amount: "", date: "", note: "" });
 
@@ -1536,12 +1538,20 @@ export default function AccountingNewPage() {
       {!loading && tab === "parties" && (
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
           {(() => {
-            const rows = parties
+            const baseRows = parties
               .filter((p) => (p.entries ?? 0) > 0)
               .sort((a, b) => Math.abs(b.balance ?? 0) - Math.abs(a.balance ?? 0));
+            const q = toEnDigits(partyQuery.trim()).toLowerCase();
+            const rows = q
+              ? baseRows.filter((p) =>
+                  [p.name, p.kind, p.phone]
+                    .map((v) => (v ?? "").toLowerCase())
+                    .some((v) => v.includes(q))
+                )
+              : baseRows;
             const total = rows.reduce((sum, p) => sum + Number(p.balance ?? 0), 0);
 
-            if (rows.length === 0) {
+            if (baseRows.length === 0) {
               return (
                 <div className="p-6 text-center text-sm text-gray-500">هنوز طرف‌حسابی سند ندارد.</div>
               );
@@ -1549,6 +1559,27 @@ export default function AccountingNewPage() {
 
             return (
               <>
+                <div className="p-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2">
+                    <Search size={16} className="text-gray-400 shrink-0" />
+                    <input
+                      value={partyQuery}
+                      onChange={(e) => setPartyQuery(e.target.value)}
+                      placeholder="جستجوی نام، شماره تماس یا نوع…"
+                      className="flex-1 bg-transparent text-sm outline-none"
+                    />
+                    {partyQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setPartyQuery("")}
+                        className="text-gray-400 hover:text-gray-600"
+                        title="پاک کردن"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-xs">
                     <tr>
@@ -1561,6 +1592,13 @@ export default function AccountingNewPage() {
                     </tr>
                   </thead>
                   <tbody>
+                    {rows.length === 0 && (
+                      <tr className="border-t border-gray-100">
+                        <td colSpan={6} className="p-6 text-center text-sm text-gray-500">
+                          طرف‌حسابی با این جستجو یافت نشد.
+                        </td>
+                      </tr>
+                    )}
                     {rows.map((p) => {
                       const bal = Number(p.balance ?? 0);
                       const state = bal < -0.5 ? "بدهکار" : bal > 0.5 ? "بستانکار" : "تسویه";
