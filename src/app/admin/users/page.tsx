@@ -201,8 +201,7 @@ function buildStatementHtml(user: User, data: StatementData, from: string, to: s
     <p class="sub">مشتری / طرف‌حساب: <b>${escHtml(person)}</b></p>
     <p class="sub">شماره تماس: <span dir="ltr">${escHtml(user.phone ? toFaDigits(user.phone) : "-")}</span></p>
     <p class="sub">بازه: ${escHtml(range)} — تاریخ چاپ: ${escHtml(todayJalali())}</p>
-    <p class="sub">منبع: دفتر کل (همان تب «حساب افراد» در حسابداری جدید)</p>
-  </div>
+      </div>
 
   <h2>اسناد دفتر (${toFaDigits(String(totals.count))})</h2>
   <table>
@@ -220,11 +219,6 @@ function buildStatementHtml(user: User, data: StatementData, from: string, to: s
     <tr><td>جمع اسناد بستانکار (طلب او از ما)</td><td class="v">${fmtMoney(totals.credit)}</td></tr>
     <tr class="t"><td>مانده حساب</td><td class="v">${fmtMoney(totals.balance)}</td></tr>
   </table>
-
-  <p class="note">
-    منفی = طرف حساب بدهکار ماست (طلب ما از او) — مثبت = بستانکار (طلب او از ما).
-    ماندهٔ بالا همان «مانده» تب «حساب افراد» در حسابداری جدید است.
-  </p>
 
   <div class="sign">
     <div>امضای مشتری</div>
