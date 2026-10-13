@@ -77,7 +77,7 @@ export default async function ProductPage({ params }: Props) {
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "خانه", item: `${SITE_URL}/` },
       { "@type": "ListItem", position: 2, name: "محصولات", item: `${SITE_URL}/products` },
-      { "@type": "ListItem", position: 3, name: product.category?.name, item: `${SITE_URL}/products?category=${product.category?.slug}` },
+      { "@type": "ListItem", position: 3, name: product.category?.name, item: `${SITE_URL}/category/${product.category?.slug}` },
       { "@type": "ListItem", position: 4, name: product.name, item: `${SITE_URL}/products/${slug}` },
     ],
   }).replace(/</g, "\\u003c");

@@ -296,7 +296,7 @@ export default function Header() {
               {/* Electrical */}
               <div>
                 <Link
-                  href="/products?category=inverter"
+                  href="/category/inverter"
                   className="flex items-center gap-2 mb-4 text-blue-600 hover:text-blue-700 font-bold"
                 >
                   <div className="grid place-items-center w-9 h-9 rounded-xl bg-blue-100">
@@ -308,7 +308,7 @@ export default function Header() {
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=${sub.slug}`}
+                        href={`/category/${sub.slug}`}
                         className="block px-3 py-1.5 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
@@ -322,7 +322,7 @@ export default function Header() {
               {/* Mechanical */}
               <div>
                 <Link
-                  href="/products?category=linear-guide"
+                  href="/category/linear-guide"
                   className="flex items-center gap-2 mb-4 text-amber-600 hover:text-amber-700 font-bold"
                 >
                   <div className="grid place-items-center w-9 h-9 rounded-xl bg-amber-100">
@@ -334,7 +334,7 @@ export default function Header() {
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=${sub.slug}`}
+                        href={`/category/${sub.slug}`}
                         className="block px-3 py-1.5 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
@@ -428,7 +428,7 @@ export default function Header() {
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=${sub.slug}`}
+                        href={`/category/${sub.slug}`}
                         className="block px-4 py-2 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -452,7 +452,7 @@ export default function Header() {
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/products?category=${sub.slug}`}
+                        href={`/category/${sub.slug}`}
                         className="block px-4 py-2 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >

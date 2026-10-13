@@ -72,8 +72,26 @@ const organizationJsonLd = {
   },
 };
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "شیک",
+  alternateName: "Shik",
+  url: siteUrl,
+  inLanguage: "fa-IR",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${siteUrl}/products?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 // The JSON-LD markup is duplicated inline below so it survives SSR
 const organizationLd = JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c");
+const websiteLd = JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c");
 
 export default function RootLayout({
   children,
@@ -86,6 +104,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: organizationLd }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: websiteLd }}
         />
       </head>
       <body className="min-h-full flex flex-col font-[var(--font-vazir)] bg-gray-50 text-gray-900">

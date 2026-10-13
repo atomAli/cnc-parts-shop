@@ -127,7 +127,7 @@ export default function ProductView({
         <span className="mx-2">/</span>
         <Link href="/products" className="hover:text-blue-600">محصولات</Link>
         <span className="mx-2">/</span>
-        <Link href={`/products?category=${product.category.slug}`} className="hover:text-blue-600">{product.category.name}</Link>
+        <Link href={`/category/${product.category.slug}`} className="hover:text-blue-600">{product.category.name}</Link>
         <span className="mx-2">/</span>
         <span className="text-stone-900 font-medium">{product.name}</span>
       </div>
