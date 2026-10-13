@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { toFaDigits } from "@/lib/phone";
-import { getBrandBySlug, fetchProductsPage } from "@/lib/catalog";
+import { getBrandBySlug, fetchProductsPage, parseSort } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import Pagination from "@/components/Pagination";
+import SortSelect from "@/components/SortSelect";
 
 export const revalidate = 86400;
 
@@ -13,7 +14,7 @@ const PER_PAGE = 48;
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string }>;
 }
 
 function decodeSlug(s: string) {
@@ -50,14 +51,18 @@ export default async function BrandPage({ params, searchParams }: Props) {
   const brand = await getBrandBySlug(slug);
   if (!brand) notFound();
 
-  const page = Math.max(1, parseInt((await searchParams).page || "1", 10) || 1);
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page || "1", 10) || 1);
+  const sort = parseSort(sp.sort);
   const { items, total, pages } = await fetchProductsPage(
     { active: true, brandId: brand.id },
     page,
-    PER_PAGE
+    PER_PAGE,
+    sort
   );
 
   const basePath = `/brand/${brand.slug}`;
+  const filterQuery = sort === "default" ? "" : `sort=${sort}`;
   const intro = `محصولات برند ${brand.name} با ضمانت اصالت و قیمت رقابتی در فروشگاه شیک عرضه می‌شود. برای استعلام موجودی، مقایسهٔ مدل‌ها و مشاورهٔ فنی با کارشناسان ما تماس بگیرید.`;
 
   const breadcrumbLd = JSON.stringify({
@@ -93,21 +98,26 @@ export default async function BrandPage({ params, searchParams }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: collectionLd }} />
 
-      <nav className="text-sm text-stone-500 mb-6" aria-label="مسیر">
-        <Link href="/" className="hover:text-blue-600">خانه</Link>
-        <span className="mx-2">/</span>
-        <Link href="/products" className="hover:text-blue-600">محصولات</Link>
-        <span className="mx-2">/</span>
-        <span className="text-stone-900 font-medium">{brand.name}</span>
-      </nav>
+      <section className="rounded-2xl border border-gray-100 bg-stone-50 px-6 py-7 md:px-8 md:py-9 mb-8">
+        <nav className="text-xs text-stone-500 mb-4" aria-label="مسیر">
+          <Link href="/" className="hover:text-blue-600">خانه</Link>
+          <span className="mx-2">/</span>
+          <Link href="/products" className="hover:text-blue-600">محصولات</Link>
+          <span className="mx-2">/</span>
+          <span className="text-stone-900 font-medium">{brand.name}</span>
+        </nav>
 
-      <h1 className="text-2xl md:text-3xl font-black text-stone-900 mb-3">
-        محصولات {brand.name}
-      </h1>
-      <p className="text-stone-600 leading-relaxed max-w-3xl mb-6">{intro}</p>
+        <h1 className="text-2xl md:text-3xl font-black text-stone-900 mb-3">
+          محصولات {brand.name}
+        </h1>
+        <p className="text-stone-600 leading-relaxed max-w-3xl">{intro}</p>
+      </section>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="border-t border-gray-200 mb-6" />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-3 border-b border-gray-200">
         <span className="text-sm text-stone-500">{toFaDigits(total)} محصول</span>
+        <SortSelect basePath={basePath} value={sort} />
       </div>
 
       {items.length === 0 ? (
@@ -122,7 +132,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      <Pagination basePath={basePath} page={page} pages={pages} />
+      <Pagination basePath={basePath} page={page} pages={pages} query={filterQuery} />
     </div>
   );
 }

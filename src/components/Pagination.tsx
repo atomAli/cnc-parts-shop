@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { toFaDigits } from "@/lib/phone";
 
-function pageHref(basePath: string, n: number) {
-  return n <= 1 ? basePath : `${basePath}?page=${n}`;
+function pageHref(basePath: string, n: number, query?: string) {
+  const sp = new URLSearchParams(query ?? "");
+  if (n > 1) sp.set("page", String(n));
+  const qs = sp.toString();
+  return qs ? `${basePath}?${qs}` : basePath;
 }
 
 export default function Pagination({
   basePath,
   page,
   pages,
+  query,
 }: {
   basePath: string;
   page: number;
   pages: number;
+  query?: string;
 }) {
   if (pages <= 1) return null;
 
@@ -26,13 +31,13 @@ export default function Pagination({
   return (
     <nav className="flex items-center justify-center gap-2 mt-8 flex-wrap" aria-label="صفحه‌بندی">
       {page > 1 && (
-        <Link href={pageHref(basePath, page - 1)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
+        <Link href={pageHref(basePath, page - 1, query)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
           قبلی
         </Link>
       )}
       {nums[0] > 1 && (
         <>
-          <Link href={pageHref(basePath, 1)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
+          <Link href={pageHref(basePath, 1, query)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
             {toFaDigits(1)}
           </Link>
           {nums[0] > 2 && <span className="px-1 text-stone-400">…</span>}
@@ -41,7 +46,7 @@ export default function Pagination({
       {nums.map((n) => (
         <Link
           key={n}
-          href={pageHref(basePath, n)}
+          href={pageHref(basePath, n, query)}
           aria-current={n === page ? "page" : undefined}
           className={
             n === page
@@ -55,13 +60,13 @@ export default function Pagination({
       {nums[nums.length - 1] < pages && (
         <>
           {nums[nums.length - 1] < pages - 1 && <span className="px-1 text-stone-400">…</span>}
-          <Link href={pageHref(basePath, pages)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
+          <Link href={pageHref(basePath, pages, query)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
             {toFaDigits(pages)}
           </Link>
         </>
       )}
       {page < pages && (
-        <Link href={pageHref(basePath, page + 1)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
+        <Link href={pageHref(basePath, page + 1, query)} className={`${cell} border-gray-300 text-stone-600 hover:bg-gray-50`}>
           بعدی
         </Link>
       )}
