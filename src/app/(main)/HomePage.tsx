@@ -121,13 +121,15 @@ function ProductCard({ product }: { product: RecentProduct }) {
 function HeroBannerCard({ banner }: { banner: HeroBanner }) {
   const content = (
     <>
-      <div className="grid place-items-center rounded-2xl bg-blue-50 p-8 overflow-hidden">
-        <img
-          src={banner.image || "/logo.png"}
-          alt={banner.title}
-          className="h-40 w-full object-contain"
-        />
-      </div>
+      {banner.image ? (
+        <div className="rounded-2xl bg-blue-50 overflow-hidden">
+          <img src={banner.image} alt={banner.title} className="block h-auto w-full" />
+        </div>
+      ) : (
+        <div className="grid place-items-center rounded-2xl bg-blue-50 p-8 overflow-hidden">
+          <img src="/logo.png" alt={banner.title} className="h-24 w-auto object-contain" />
+        </div>
+      )}
       <div className="mt-6 flex items-center justify-between gap-3">
         <span className="min-w-0 truncate text-sm font-bold text-stone-800" title={banner.title}>
           {banner.title}
