@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Wrench,
@@ -12,6 +13,12 @@ import {
   ShieldCheck,
   Clock,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "تعمیرات تخصصی",
+  description: "تعمیر و بازسازی اسپیندل، سروموتور، اینورتر و برد الکترونیکی توسط کارشناسان مجرب فروشگاه شیک.",
+  alternates: { canonical: "/repairs" },
+};
 
 const repairServices = [
   {

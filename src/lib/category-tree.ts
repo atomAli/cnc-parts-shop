@@ -14,10 +14,14 @@ export async function getAllCategoriesIndex(): Promise<Map<string, string[]>> {
 
 export function collectDescendantIds(childrenByParent: Map<string, string[]>, rootId: string): string[] {
   const out: string[] = [];
+  // محافظت در برابر رکوردهایی که parentId=self دارند (جلوگیری از حلقهٔ بیپایان).
+  const visited = new Set<string>([rootId]);
   const queue = [rootId];
   while (queue.length) {
     const cur = queue.pop()!;
     for (const id of childrenByParent.get(cur) ?? []) {
+      if (visited.has(id)) continue;
+      visited.add(id);
       out.push(id);
       queue.push(id);
     }

@@ -20,9 +20,6 @@ export const metadata: Metadata = {
   },
   description:
     "شیک خرید کنید | فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی از برندهای معتبر جهانی",
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: "fa_IR",
