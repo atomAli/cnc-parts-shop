@@ -308,6 +308,31 @@ export default async function HomePage() {
             </span>
           </Link>
         </div>
+
+        {/* لینک مستقیم به صفحات فرود مهم — بودجه خزیدن به اینها اختصاص مییابد */}
+        <div className="mt-10">
+          <div className="mb-3 text-sm font-bold text-stone-700">دستههای پرطرفدار</div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {[
+              { name: "اسپیندل و قطعات", slug: "spindle" },
+              { name: "سرو موتور", slug: "servo-motors" },
+              { name: "ریل و واگن خطی", slug: "linear-guide" },
+              { name: "پی ال سی PLC", slug: "plc" },
+              { name: "گیربکس", slug: "gearboxes" },
+              { name: "اینورتر و درایو", slug: "inverter" },
+              { name: "بال اسکرو", slug: "ball-screw" },
+              { name: "کنترلر CNC", slug: "controllers" },
+            ].map((category) => (
+              <Link
+                key={category.slug}
+                href={`/category/${category.slug}`}
+                className="chip chip-muted"
+              >
+                {category.name}
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* CTA Section */}
