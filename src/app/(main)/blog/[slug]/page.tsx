@@ -3,8 +3,17 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
+import SpindleGuide from "@/components/blog/SpindleGuide";
 
 type Props = { params: Promise<{ slug: string }> };
+
+/**
+ *article اسپیندل بصورت کامپوننت تعاملی اختصاصی رندر میشود تا ابزارهای
+ * انتخابگر، مقایسه و محاسبهگر بدون کتابخانهٔ اضافی و با تم سایت کار کنند.
+ * متن ذخیرهشده در دیتابیس برای این اسلاگ فقط بعنوان fallback نگه داشته میشود.
+ */
+const INTERACTIVE_SPINDLE_SLUG =
+  "راهنمای-خرید-اسپیندل-آب-خنک-در-ایران-از-توان-و-دور-تا-مدار-خنکاری";
 
 async function getPost(slug: string) {
   return prisma.blogPost.findFirst({ where: { slug, published: true } });
@@ -85,10 +94,14 @@ export default async function BlogPostPage({ params }: Props) {
           </p>
         )}
 
-        <div
-          className="blog-content text-sm leading-8 text-stone-800"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        {post.slug === INTERACTIVE_SPINDLE_SLUG ? (
+          <SpindleGuide />
+        ) : (
+          <div
+            className="blog-content text-sm leading-8 text-stone-800"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        )}
 
         <div className="mt-10 pt-6 border-t border-gray-200">
           <Link href="/blog" className="btn-ghost inline-flex">
