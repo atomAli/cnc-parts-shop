@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { slugifyBlogTitle } from "@/lib/blog-slug";
@@ -37,6 +38,9 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     },
   });
 
+  revalidatePath("/blog");
+  revalidatePath("/sitemap.xml");
+
   return NextResponse.json(post);
 }
 
@@ -46,5 +50,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
 
   const { id } = await params;
   await prisma.blogPost.delete({ where: { id } });
+  revalidatePath("/blog");
+  revalidatePath("/sitemap.xml");
   return NextResponse.json({ ok: true });
 }

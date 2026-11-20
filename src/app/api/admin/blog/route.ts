@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdmin, unauthorized } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { slugifyBlogTitle } from "@/lib/blog-slug";
@@ -39,6 +40,9 @@ export async function POST(req: NextRequest) {
       published: body.published === true,
     },
   });
+
+  revalidatePath("/blog");
+  revalidatePath("/sitemap.xml");
 
   return NextResponse.json(post, { status: 201 });
 }
