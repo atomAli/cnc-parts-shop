@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
@@ -13,6 +13,11 @@ type Props = { params: Promise<{ slug: string }> };
  * متن ذخیرهشده در دیتابیس برای این اسلاگ فقط بعنوان fallback نگه داشته میشود.
  */
 const INTERACTIVE_SPINDLE_SLUG =
+  "راهنمای-خرید-اسپیندل-آب-خنک-از-توان-و-دور-تا-مدار-خنکاری";
+
+// آدرس قدیمی حاوی «در ایران» ممکن است هنوز نزد کاربران و موتورهای جستجو باشد؛
+// با 308 به آدرس تازه هدایت میشود.
+const LEGACY_SPINDLE_SLUG =
   "راهنمای-خرید-اسپیندل-آب-خنک-در-ایران-از-توان-و-دور-تا-مدار-خنکاری";
 
 async function getPost(slug: string) {
@@ -45,6 +50,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const slug = decodeURIComponent((await params).slug);
+  if (slug === LEGACY_SPINDLE_SLUG) {
+    permanentRedirect(`/blog/${encodeURI(INTERACTIVE_SPINDLE_SLUG)}`);
+  }
+
   const post = await getPost(slug);
   if (!post) notFound();
 
