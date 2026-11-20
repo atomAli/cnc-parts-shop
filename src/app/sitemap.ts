@@ -7,6 +7,9 @@ import { SITE_URL } from "@/lib/site";
 
 const baseUrl = SITE_URL;
 
+// مقالات جدید وبلاگ بدون نیاز به دیپلوی دوباره وارد سایت مپ میشوند.
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, changeFrequency: "weekly", priority: 1 },
