@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { normalizeDatabaseUrl } from "./db-url";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -8,9 +9,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrisma(): PrismaClient {
   const pool = new Pool({
-    connectionString:
-      process.env.DATABASE_URL ||
-      "postgresql://localhost:5432/cncparts",
+    connectionString: normalizeDatabaseUrl(process.env.DATABASE_URL),
   });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
