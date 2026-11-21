@@ -71,11 +71,6 @@ export default function SeoListing({
 
       <header className="max-w-3xl mb-8">
         <h1 className="text-2xl md:text-3xl font-black text-stone-900 mb-3">{title}</h1>
-        {note && (
-          <p className="text-sm leading-7 text-stone-600 border-r-4 border-blue-700 bg-blue-50 pr-4 py-3 rounded-lg">
-            {note}
-          </p>
-        )}
       </header>
 
       {/* فیلتر زیردسته و برند — لینک‌های واقعی و سرور-رندر */}
@@ -187,6 +182,11 @@ export default function SeoListing({
       )}
 
       {intro && <p className="mt-8 text-sm leading-8 text-stone-700 mb-3">{intro}</p>}
+      {note && (
+        <p className="text-sm leading-7 text-stone-600 border-r-4 border-blue-700 bg-blue-50 pr-4 py-3 rounded-lg">
+          {note}
+        </p>
+      )}
 
       {pages > 1 && (
         <nav className="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="صفحات">
