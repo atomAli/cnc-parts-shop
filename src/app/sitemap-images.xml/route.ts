@@ -21,7 +21,7 @@ export async function GET() {
     .map((p) => {
       const img = p.images[0];
       if (!img) return "";
-      return `<url><loc>${esc(`${SITE_URL}/products/${p.slug}`)}</loc><lastmod>${p.updatedAt.toISOString()}</lastmod><image:image><image:loc>${esc(img.url)}</image:loc></image:image></url>`;
+      return `<url><loc>${esc(`${SITE_URL}/products/${encodeURI(p.slug)}`)}</loc><lastmod>${p.updatedAt.toISOString()}</lastmod><image:image><image:loc>${esc(img.url)}</image:loc></image:image></url>`;
     })
     .join("");
 

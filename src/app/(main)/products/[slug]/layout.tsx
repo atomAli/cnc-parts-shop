@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import prisma from "@/lib/prisma";
+import { isThinProduct } from "@/lib/product-seo";
 import { SITE_URL } from "@/lib/site";
 
 const siteUrl = SITE_URL;
@@ -44,7 +45,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "website",
       images: image?.url ? [{ url: image.url, alt: product.name }] : undefined,
     },
-    robots: { index: true, follow: true },
+    // محصول بدون توضیح و عکس ارزشی برای نتایج جستجو ندارد؛ لینکهایش با follow دنبال میشود.
+    robots: isThinProduct(product)
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
   };
 }
 

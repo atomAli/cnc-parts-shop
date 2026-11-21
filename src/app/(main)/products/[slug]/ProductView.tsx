@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { ShoppingCart, Shield, ArrowRight, Plus, Minus, Phone, ExternalLink, Pencil, Lock } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { isRailOrScrew, getProductMaxLength } from "@/lib/meter-product";
+import { categoryPath } from "@/lib/category-url";
 
 interface ImageMeta {
   url: string;
@@ -23,7 +24,7 @@ interface ProductDetail {
   sourceUrl?: string;
   isMeter?: boolean | null;
   specs?: Record<string, string>;
-  category: { slug: string; name: string };
+  category: { slug: string; name: string; parentSlug?: string };
   brand: { slug: string; name: string };
   images: ImageMeta[];
 }
@@ -127,7 +128,7 @@ export default function ProductView({
         <span className="mx-2">/</span>
         <Link href="/products" className="hover:text-blue-600">محصولات</Link>
         <span className="mx-2">/</span>
-        <Link href={`/products?category=${product.category.slug}`} className="hover:text-blue-600">{product.category.name}</Link>
+        <Link href={categoryPath({ slug: product.category.slug, parent: product.category.parentSlug ? { slug: product.category.parentSlug } : null })} className="hover:text-blue-600">{product.category.name}</Link>
         <span className="mx-2">/</span>
         <span className="text-stone-900 font-medium">{product.name}</span>
       </div>

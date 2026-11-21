@@ -3,6 +3,7 @@ import { Vazirmatn } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import FullPageNavigation from "@/components/FullPageNavigation";
 import { SITE_URL } from "@/lib/site";
 
 const vazir = Vazirmatn({
@@ -20,9 +21,6 @@ export const metadata: Metadata = {
   },
   description:
     "شیک خرید کنید | فروش تخصصی قطعات سی ان سی، موتور سروو، پی ال سی، اچ ام آی و تجهیزات اتوماسیون صنعتی از برندهای معتبر جهانی",
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: "fa_IR",
@@ -89,6 +87,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-[var(--font-vazir)] bg-gray-50 text-gray-900">
+        <FullPageNavigation />
         <Providers>{children}</Providers>
         <Analytics />
       </body>
