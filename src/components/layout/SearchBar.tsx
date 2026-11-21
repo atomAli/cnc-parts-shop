@@ -92,7 +92,7 @@ export default function SearchBar({
   const goProduct = (slug: string) => {
     setOpen(false);
     setQuery("");
-    router.push(`/products/${slug}`);
+    router.push(`/products/${encodeURI(slug)}`);
   };
 
   return (

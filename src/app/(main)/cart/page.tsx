@@ -133,7 +133,7 @@ export default function CartPage() {
                 )}
               </div>
               <div className="flex-1">
-                <Link href={`/products/${item.slug}`} className="font-bold hover:text-blue-600 transition-colors">
+                <Link href={`/products/${encodeURI(item.slug)}`} className="font-bold hover:text-blue-600 transition-colors">
                   {item.name}
                 </Link>
                 {item.isMeter ? (

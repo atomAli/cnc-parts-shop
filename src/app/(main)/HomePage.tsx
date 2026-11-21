@@ -78,7 +78,7 @@ const features = [
 function ProductCard({ product }: { product: RecentProduct }) {
   return (
     <Link
-      href={`/products/${product.slug}`}
+      href={`/products/${encodeURI(product.slug)}`}
       className="card overflow-hidden transition-colors duration-150 hover:shadow-[var(--shadow-card)]"
     >
       <div className="relative h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
