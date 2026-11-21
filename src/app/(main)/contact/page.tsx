@@ -112,13 +112,13 @@ export default function ContactPage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/category/inverter" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                  <Link href="/products?category=electrical" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
                     <span>قطعات برقی و الکترونیک</span>
                     <ChevronLeft size={16} className="shrink-0" />
                   </Link>
                 </li>
                 <li>
-                  <Link href="/category/linear-guide" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                  <Link href="/products?category=mechanical" className="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
                     <span>قطعات مکانیکی</span>
                     <ChevronLeft size={16} className="shrink-0" />
                   </Link>

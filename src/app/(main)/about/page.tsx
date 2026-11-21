@@ -1,12 +1,5 @@
-import type { Metadata } from "next";
 import { Phone, Mail, MapPin, Building, Users, Award, ShieldCheck, Headset, Target, Eye, ChevronLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "درباره ما",
-  description: "آشنایی با فروشگاه شیک، تأمینکننده تخصصی قطعات CNC و اتوماسیون صنعتی با ضمانت اصالت و پشتیبانی فنی.",
-  alternates: { canonical: "/about" },
-};
 
 const stats = [
   { icon: Building, label: "سال تجربه", value: "۱۵+" },

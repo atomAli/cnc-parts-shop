@@ -1,153 +1,411 @@
-import type { Metadata } from "next";
-import { getFilterNames, getProductListData, type FilterNames, type ProductListFilters } from "@/lib/product-list";
-import { getCategoryCopy } from "@/lib/category-copy";
-import { categoryPath } from "@/lib/category-url";
-import { SITE_URL } from "@/lib/site";
-import ProductsView from "@/components/products/ProductsView";
+"use client";
 
-interface Props {
-  searchParams: Promise<{
-    category?: string;
-    sub?: string;
-    brand?: string;
-    q?: string;
-    page?: string;
-  }>;
+import { Suspense, useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Search, Filter, Grid, List, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/store/cart";
+import { isRailOrScrew } from "@/lib/meter-product";
+
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  price: number | null;
+  brand: string | { name: string };
+  category: { name: string; slug: string; parentSlug?: string; parentName?: string };
+  subcategory?: string;
+  isMeter?: boolean | null;
+  kW?: number | null;
+  categoryOrder?: number;
+  images: { url: string; isPrimary: boolean }[];
+  stock: number;
 }
 
-function normalizeFilters(sp: {
-  category?: string;
-  sub?: string;
-  brand?: string;
-  q?: string;
-  page?: string;
-}): ProductListFilters {
-  return {
-    category: sp.category?.trim() || undefined,
-    sub: sp.sub?.trim() || undefined,
-    brand: sp.brand?.trim() || undefined,
-    q: sp.q?.trim() || undefined,
-    page: Math.max(1, Math.floor(parseInt(sp.page || "1", 10) || 1)),
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string;
+  children?: Category[];
+}
+
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  _count?: { products: number };
+}
+
+function ProductsContent() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const addItem = useCartStore((s) => s.addItem);
+
+  const cat = searchParams.get("category") || "";
+  const sub = searchParams.get("sub") || "";
+  const brand = searchParams.get("brand") || "";
+  const q = searchParams.get("q") || "";
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [sortBy, setSortBy] = useState("kw");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [searchInput, setSearchInput] = useState(q);
+
+  const fetchProducts = useCallback(async (category: string, subcategory: string, brandSlug: string, search: string) => {
+    setLoading(true);
+    const params = new URLSearchParams({ limit: "1000" });
+    if (subcategory) params.set("sub", subcategory);
+    else if (category) params.set("category", category);
+    if (brandSlug) params.set("brand", brandSlug);
+    if (search) params.set("search", search);
+
+    try {
+      const res = await fetch(`/api/products?${params}`);
+      const data = await res.json();
+      setProducts(data.products || []);
+      setTotal(data.pagination?.total || 0);
+    } catch {
+      setProducts([]);
+    }
+    setLoading(false);
+  }, []);
+
+  const fetchBrands = useCallback(async (category: string, subcategory: string) => {
+    const params = new URLSearchParams();
+    if (subcategory) params.set("sub", subcategory);
+    else if (category) params.set("category", category);
+    if (!params.toString()) { setBrands([]); return; }
+
+    try {
+      const res = await fetch(`/api/brands?${params}`);
+      const data = await res.json();
+      setBrands(data || []);
+    } catch {
+      setBrands([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProducts(cat, sub, brand, q);
+    fetchBrands(cat, sub);
+    setSearchInput(q);
+  }, [cat, sub, brand, q, fetchProducts, fetchBrands]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => setCategories(d || []));
+  }, []);
+
+  const navigate = (params: Record<string, string>) => {
+    const sp = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(params)) {
+      if (v) sp.set(k, v);
+      else sp.delete(k);
+    }
+    router.push(`${pathname}?${sp.toString()}`);
   };
-}
 
-/**
- * فیلترهای category/sub/brand صفحات فرود اختصاصی دارند؛ canonical به همانها
- * اشاره میکند تا محتوای تکراری ایجاد نشود. جستجو/صفحهٔ ۱ حذف میشوند.
- */
-function canonicalFor(filters: ProductListFilters, names: FilterNames): string {
-  let path = "/products";
-  if (names.sub) {
-    path = categoryPath({
-      slug: names.sub.slug,
-      parent: names.sub.parentSlug ? { slug: names.sub.parentSlug } : null,
-    });
-  } else if (names.category) path = categoryPath(names.category);
-  else if (names.brand) path = `/brand/${encodeURIComponent(names.brand.slug)}`;
-
-  // صفحهبندی فقط در صفحات فرود معنیدار است؛ در /products حذف میشود.
-  if (path !== "/products" && (filters.page || 1) > 1) {
-    path += `?page=${filters.page}`;
-  }
-  return path;
-}
-
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const filters = normalizeFilters(await searchParams);
-  const names = await getFilterNames(filters);
-  const canonical = canonicalFor(filters, names);
-
-  if (filters.q) {
-    return {
-      title: `جستجو: ${filters.q}`,
-      robots: { index: false, follow: true },
-      alternates: { canonical: "/products" },
-    };
-  }
-
-  const target = names.sub || names.category;
-  const copy = target ? getCategoryCopy(target.slug, target.name) : null;
-  const brandPart = names.brand ? ` | برند ${names.brand.name}` : "";
-
-  const title = names.sub
-    ? `خرید ${names.sub.name} — ${names.category?.name || ""}${brandPart}`
-    : names.category
-      ? `خرید ${names.category.name} — قیمت و انواع${brandPart}`
-      : `محصولات — فروشگاه تخصصی قطعات CNC و اتوماسیون${brandPart}`;
-
-  const description = copy
-    ? copy.short.length > 155
-      ? `${copy.short.slice(0, 152)}…`
-      : copy.short
-    : "انواع قطعات CNC و اتوماسیون صنعتی با ضمانت اصالت، قیمت رقابتی و مشاورهٔ فنی در فروشگاه شیک.";
-
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      url: `${SITE_URL}${canonical}`,
-      type: "website",
-    },
-    robots: { index: true, follow: true },
+  const handleCategoryClick = (slug: string) => {
+    navigate({ category: slug, sub: "", brand: "" });
   };
-}
 
-export default async function ProductsPage({ searchParams }: Props) {
-  const filters = normalizeFilters(await searchParams);
-  const data = await getProductListData(filters);
+  const handleSubcategoryClick = (slug: string) => {
+    navigate({ sub: slug, brand: "" });
+  };
 
-  const crumbs = [
-    { name: "خانه", item: `${SITE_URL}/` },
-    { name: "محصولات", item: `${SITE_URL}/products` },
-    ...(data.names.category
-      ? [{ name: data.names.category.name, item: `${SITE_URL}${categoryPath(data.names.category)}` }]
-      : []),
-    ...(data.names.sub
-      ? [{
-          name: data.names.sub.name,
-          item: `${SITE_URL}${categoryPath({
-            slug: data.names.sub.slug,
-            parent: data.names.sub.parentSlug ? { slug: data.names.sub.parentSlug } : null,
-          })}`,
-        }]
-      : []),
-    ...(data.names.brand
-      ? [{ name: `برند ${data.names.brand.name}`, item: `${SITE_URL}/brand/${encodeURIComponent(data.names.brand.slug)}` }]
-      : []),
-  ];
+  const handleBrandClick = (slug: string) => {
+    navigate({ brand: slug });
+  };
 
-  const breadcrumbLd = JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: crumbs.map((c, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: c.name,
-      item: c.item,
-    })),
-  }).replace(/</g, "\\u003c");
+  const handleClearFilter = () => {
+    router.push(pathname);
+  };
 
-  const itemListLd = JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: data.names.sub?.name || data.names.category?.name || "محصولات",
-    numberOfItems: data.total,
-    itemListElement: data.products.map((p, i) => ({
-      "@type": "ListItem",
-      position: (data.page - 1) * data.products.length + i + 1,
-      url: `${SITE_URL}/products/${encodeURI(p.slug)}`,
-      name: p.name,
-    })),
-  }).replace(/</g, "\\u003c");
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate({ q: searchInput });
+  };
+
+  const sortedProducts = [...products].sort((a, b) => {
+    switch (sortBy) {
+      case "kw": {
+        const ka = a.kW ?? Infinity;
+        const kb = b.kW ?? Infinity;
+        if (ka !== kb) return ka - kb;
+        const oa = a.categoryOrder || 0;
+        const ob = b.categoryOrder || 0;
+        if (oa !== ob) return oa - ob;
+        return a.name.localeCompare(b.name, "fa");
+      }
+      case "price-asc": return (a.price || 0) - (b.price || 0);
+      case "price-desc": return (b.price || 0) - (a.price || 0);
+      case "name": return a.name.localeCompare(b.name, "fa");
+      default: return 0;
+    }
+  });
+
+  const getBrandName = (b: string | { name: string }) =>
+    typeof b === "string" ? b : b?.name || "";
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("fa-IR").format(price) + " تومان";
+
+  const currentCategory = categories.find((c) => c.slug === cat);
+  const currentSubName = currentCategory?.children?.find((s) => s.slug === sub)?.name || "";
+  const currentBrandName = brands.find((b) => b.slug === brand)?.name || "";
+
+  const showBrands = (cat || sub) && brands.length > 0;
+  const activeCat = currentCategory;
+  const activeSub = activeCat?.children?.find((c) => c.slug === sub);
 
   return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbLd }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: itemListLd }} />
-      <ProductsView data={data} filters={filters} />
-    </>
+    <div className="container-page py-8">
+      {/* Breadcrumb */}
+      <div className="text-sm text-stone-500 mb-6">
+        <Link href="/" className="hover:text-blue-600">خانه</Link>
+        <span className="mx-2">/</span>
+        <span className="text-stone-900 font-medium">محصولات</span>
+        {activeCat && (
+          <>
+            <span className="mx-2">/</span>
+            <button onClick={() => handleCategoryClick(activeCat.slug)} className="hover:text-blue-600">{activeCat.name}</button>
+          </>
+        )}
+        {activeSub && (
+          <>
+            <span className="mx-2">/</span>
+            <button onClick={() => handleSubcategoryClick(activeSub.slug)} className="hover:text-blue-600">{activeSub.name}</button>
+          </>
+        )}
+        {currentBrandName && (
+          <>
+            <span className="mx-2">/</span>
+            <span className="text-stone-900 font-medium">{currentBrandName}</span>
+          </>
+        )}
+      </div>
+
+      {/* Search + Sort */}
+      <div className="card mb-6 p-4 flex flex-wrap items-center justify-between gap-4">
+        <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="جستجوی محصول..."
+            className="w-full rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
+          />
+          <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Search size={18} className="text-gray-400 hover:text-blue-600" />
+          </button>
+        </form>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-stone-500">{total} محصول</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="kw">پیش‌فرض</option>
+            <option value="newest">جدیدترین</option>
+            <option value="price-asc">ارزان‌ترین</option>
+            <option value="price-desc">گران‌ترین</option>
+            <option value="name">نام</option>
+          </select>
+          <div className="hidden sm:flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 p-1">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`p-1.5 rounded-full ${viewMode === "grid" ? "bg-blue-600 text-white shadow" : "text-gray-500 hover:text-blue-600"}`}
+            >
+              <Grid size={18} />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 rounded-full ${viewMode === "list" ? "bg-blue-600 text-white shadow" : "text-gray-500 hover:text-blue-600"}`}
+            >
+              <List size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Active subcategory chips */}
+      {activeCat && activeCat.children && activeCat.children.length > 0 && (
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => navigate({ sub: "" })}
+              className={`chip-sub ${!sub ? "chip-sub-active" : ""}`}
+            >
+              همه {activeCat.name}
+            </button>
+            {activeCat.children.map((child) => (
+              <button
+                key={child.id}
+                onClick={() => handleSubcategoryClick(child.slug)}
+                className={`chip-sub ${sub === child.slug ? "chip-sub-active" : ""}`}
+              >
+                {child.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Brand chips */}
+      {showBrands && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-700 text-white text-xs font-black shadow">۱</span>
+            <span className="text-sm font-bold text-stone-700">برند</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => navigate({ brand: "" })}
+              className={!brand ? "chip chip-active" : "chip chip-muted"}
+            >
+              همه برندها
+            </button>
+            {brands.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => handleBrandClick(b.slug)}
+                className={brand === b.slug ? "chip chip-active" : "chip chip-muted"}
+              >
+                {b.name}
+                {b._count && <span className="mr-1 text-xs opacity-70">({b._count.products})</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Products */}
+      {loading ? (
+        <div className="card p-12 text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
+          <p className="text-stone-500 mt-4">در حال بارگذاری...</p>
+        </div>
+      ) : sortedProducts.length === 0 ? (
+        <div className="card p-12 text-center">
+          {q ? (
+            <>
+              <p className="text-stone-800 text-lg font-bold">
+                نتیجه‌ای برای «<span dir="auto">{q}</span>» پیدا نشد
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                عبارت دیگری امتحان کنید یا برند / مدل دقیق‌تر را جستجو کنید.
+              </p>
+            </>
+          ) : (
+            <p className="text-stone-500 text-lg">محصولی یافت نشد</p>
+          )}
+          <button
+            onClick={handleClearFilter}
+            className="btn-primary mt-5"
+          >
+            مشاهده همه محصولات
+          </button>
+        </div>
+      ) : (
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "space-y-4"
+          }
+        >
+          {sortedProducts.map((product) => (
+            <div
+              key={product.id}
+              className={`card overflow-hidden transition-colors duration-150 hover:shadow-[var(--shadow-card)] ${
+                viewMode === "list" ? "flex" : ""
+              }`}
+            >
+              <Link href={`/products/${product.slug}`} className={`block bg-gray-50 relative overflow-hidden ${
+                viewMode === "list" ? "w-48 shrink-0" : "h-48"
+              }`}>
+                {product.images?.[0]?.url ? (
+                  <img
+                    src={product.images[0].url}
+                    alt={product.name}
+                    className="w-full h-full object-contain p-2 transition-transform duration-500 ease-out"
+                  />
+                ) : (
+                  <img
+                    src="/logo.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="opacity-60 max-h-full max-w-full object-contain p-4"
+                  />
+                )}
+                {isRailOrScrew(product) ? (
+                  <span className="absolute top-3 left-3 rounded-full bg-amber-500 px-3 py-1 text-[11px] font-bold text-white shadow">
+                    متری
+                  </span>
+                ) : null}
+              </Link>
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="text-xs text-stone-500 font-medium mb-1">{getBrandName(product.brand)}</div>
+                <Link href={`/products/${product.slug}`} className="font-bold text-stone-800 hover:text-blue-600 transition-colors line-clamp-2">
+                  {product.name}
+                </Link>
+                <div className="mt-2">
+                  {product.price ? (
+                    <span className="text-lg font-bold text-blue-700">{formatPrice(product.price)}</span>
+                  ) : (
+                    <span className="text-sm text-stone-500 font-medium">تماس بگیرید</span>
+                  )}
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  {isRailOrScrew(product) ? (
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="btn-primary w-full justify-center"
+                    >
+                      <ShoppingCart size={16} />
+                      انتخاب متراژ
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        addItem({ id: product.id, name: product.name, slug: product.slug, price: product.price || 0, image: product.images?.[0]?.url })
+                      }
+                      className="btn-primary w-full"
+                    >
+                      <ShoppingCart size={16} />
+                      افزودن به سبد خرید
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container-page py-8">
+        <div className="card p-12 text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
+          <p className="text-stone-500 mt-4">در حال بارگذاری...</p>
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

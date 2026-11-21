@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, SearchX } from "lucide-react";
 
@@ -28,6 +29,7 @@ export default function SearchBar({
   autoFocus?: boolean;
   className?: string;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -84,13 +86,13 @@ export default function SearchBar({
     const q = query.trim();
     if (!q) return;
     setOpen(false);
-    window.location.assign(`/products?q=${encodeURIComponent(q)}`);
+    router.push(`/products?q=${encodeURIComponent(q)}`);
   };
 
   const goProduct = (slug: string) => {
     setOpen(false);
     setQuery("");
-    window.location.assign(`/products/${encodeURI(slug)}`);
+    router.push(`/products/${slug}`);
   };
 
   return (

@@ -47,7 +47,6 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "basic-ftp": "^6.2.6",
     "better-sqlite3": "^13.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",

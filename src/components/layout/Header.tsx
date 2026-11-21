@@ -271,11 +271,6 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link href="/blog" className="block px-4 py-3 text-stone-700 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors font-medium">
-                وبلاگ
-              </Link>
-            </li>
-            <li>
               <Link href="/about" className="block px-4 py-3 text-stone-700 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors font-medium">
                 درباره ما
               </Link>
@@ -301,7 +296,7 @@ export default function Header() {
               {/* Electrical */}
               <div>
                 <Link
-                  href="/category/inverter"
+                  href="/products?category=inverter"
                   className="flex items-center gap-2 mb-4 text-blue-600 hover:text-blue-700 font-bold"
                 >
                   <div className="grid place-items-center w-9 h-9 rounded-xl bg-blue-100">
@@ -313,7 +308,7 @@ export default function Header() {
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/category/${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-3 py-1.5 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
@@ -327,7 +322,7 @@ export default function Header() {
               {/* Mechanical */}
               <div>
                 <Link
-                  href="/category/linear-guide"
+                  href="/products?category=linear-guide"
                   className="flex items-center gap-2 mb-4 text-amber-600 hover:text-amber-700 font-bold"
                 >
                   <div className="grid place-items-center w-9 h-9 rounded-xl bg-amber-100">
@@ -339,7 +334,7 @@ export default function Header() {
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/category/${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-3 py-1.5 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                         onClick={() => setMegaMenuOpen(false)}
                       >
@@ -421,11 +416,6 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link href="/blog" className="block px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium" onClick={() => setMobileMenuOpen(false)}>
-                وبلاگ
-              </Link>
-            </li>
-            <li>
               <button
                 onClick={() => setMobileSubmenu(mobileSubmenu === "electrical" ? null : "electrical")}
                 className="flex items-center justify-between w-full px-4 py-3 text-stone-700 hover:bg-blue-50 rounded-lg font-medium"
@@ -438,7 +428,7 @@ export default function Header() {
                   {electricalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/category/${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-4 py-2 text-sm text-stone-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -462,7 +452,7 @@ export default function Header() {
                   {mechanicalSubs.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={`/category/${sub.slug}`}
+                        href={`/products?category=${sub.slug}`}
                         className="block px-4 py-2 text-sm text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >

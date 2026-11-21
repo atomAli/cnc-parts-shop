@@ -243,7 +243,7 @@ export default function ProfilePage() {
                     <div className="border-t border-gray-100 p-4 space-y-2">
                       {inv.items.map((item, i) => (
                         <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
-                          <a href={`/products/${encodeURI(item.slug)}`} className="text-blue-600 hover:underline">{item.name}</a>
+                          <a href={`/products/${item.slug}`} className="text-blue-600 hover:underline">{item.name}</a>
                           <div className="flex items-center gap-4">
                             <span className="text-gray-500">×{toFaDigits(item.quantity)}</span>
                             <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>

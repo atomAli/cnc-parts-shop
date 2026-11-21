@@ -41,23 +41,6 @@ enum Role {
   USER
   ADMIN
 }
-
-/// مقالات وبلاگ — توسط مدیر از پنل ادمین نوشته میشوند.
-model BlogPost {
-  id        String   @id @default(cuid())
-  title     String
-  slug      String   @unique
-  excerpt   String?
-  content   String
-  image     String?
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([published, createdAt])
-  @@map("blog_posts")
-}
-
 model Category {
   id          String     @id @default(cuid())
   name        String

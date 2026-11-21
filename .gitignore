@@ -55,9 +55,3 @@ skills-lock.json
 
 # فایل بازگردانی مهاجرت تأمین‌کننده‌ها
 .supplier-rollback.json
-
-# واترمارک دسته‌جمعی تصاویر
-.watermark-state.json
-/watermark-backup/
-/wm-preview/
-/watermark-package/
